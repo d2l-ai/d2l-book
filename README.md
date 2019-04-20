@@ -1,4 +1,6 @@
-# d2l-build
+# d2l-book
+
+A tool to build and publish a book. 
 
 [Under developing]
 
