@@ -2,3 +2,4 @@
 /d2l_book.egg-info/
 /dist/
 *.pyc
+**/.ipynb_checkpoints/*
