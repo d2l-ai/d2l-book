@@ -16,41 +16,46 @@ Check [Dive into Deep Learning](https://d2l.ai/) for an example built with
 
 Use `pip` to install the command-line interface.
 
-```{.python .input .sh}
+```sh
 pip install d2l-book
 ```
+
 
 ### Create a new book
 
 Create a new book using the demo book content (the website that you’re viewing now) with this command:
 
-```{.python .input .sh}
+```sh
 d2l-book create mybook --demo
 cd mybook
 ```
 
+
 ### Build the contents for your book
 
-```{.python .input .sh}
+```sh
 d2l-book build ipynb html pdf
 ```
 
+
 ### Publish the contents online
 
-```{.python .input .sh}
+```sh
 d2l-book publish ipynb https://github.com/d2l-ai/notebooks
 d2l-book publish html pdf s3://book.d2l.ai
 ```
 
+
 ## Table of Contents
 
-```{.python .input .toc}
+```toc
 :numbered:
 :maxdepth: 2
 
 guide/index
 examples/index
 ```
+
 
 ## Acknowledgments
 

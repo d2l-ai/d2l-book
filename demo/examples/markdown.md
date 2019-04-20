@@ -2,23 +2,23 @@
 
 ## Insert an image
 
-```{.python .input .none}
+```markdown
 {% label catdog %}
 ![A nice image with a cat and a dog](../img/catdog.jpg)
 ```
 
-{% label catdog %}
+{= label catdog =}
 ![A nice image with a cat and a dog](../img/catdog.jpg)
 
 
 Insert a SVG file
 
-{% label lstm %}
+label lstm
 ![A LSTM cell](../img/lstm.svg)
 
 ## Reference an image
 
-```{.python .input .none}
+```markdown
 {% ref catdog %}
 ```
 

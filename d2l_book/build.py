@@ -11,6 +11,7 @@ import time
 import configparser
 import argparse
 
+
 __all__  = ['build']
 
 def build():
@@ -26,16 +27,18 @@ def build():
 
 
 
-def find_files(pattern, root='.'):
+def find_files(pattern, root):
     fnames = []
     patterns = pattern.split(' ')
     for p in patterns:
+        if len(p) == 0:
+            continue
         p = os.path.join(root, p)
         if os.path.isdir(p):
             p += '*'
         for fn in glob.glob(p):
-            if os.path.isfile(p):
-                fnames.append(p)
+            if not os.path.isfile(p):
+                fnames.append(fn)
     return fnames
 
 def get_mtimes(fnames):
@@ -43,10 +46,11 @@ def get_mtimes(fnames):
         fnames = [fnames]
     return [os.path.getmtime(fn) for fn in fnames]
 
-def get_updated_files(src_fnames, src_dir, tgt_dir, deps_mtime=0):
+def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext, deps_mtime=0):
     updated_fnames = []
     for src_fn in src_fnames:
         tgt_fn = os.path.join(tgt_dir, os.path.relpath(src_fn, src_dir))
+        tgt_fn = os.path.splitext(tgt_fn)[0] + '.' + new_ext
         if (not os.path.exists(tgt_fn) # new
             or os.path.getmtime(src_fn) > os.path.getmtime(tgt_fn) # target is old
             or os.path.getmtime(src_fn) < deps_mtime): # deps is updated
@@ -60,18 +64,16 @@ def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     with open(input_fn, 'r') as f:
         notebook = reader.read(f)
     # evaluate
+    print(run_cells)
     if run_cells:
         notedown.run(notebook, timeout)
     # write
     notebook['metadata'].update({'language_info':{'name':lang}})
-    markdown_template = pkg_resources.resource_filename(
-        'notedown', 'templates/markdown_outputs.tpl')
-    writer = notedown.MarkdownWriter(markdown_template, strip_outputs=False)
-    writer.writers(notebook)
+    with open(output_fn, 'w') as f:
+        f.write(nbformat.writes(notebook))
 
 def mkdir(dirname):
-    if not os.path.exists(dirname):
-        os.mkdir(dirname)
+    os.makedirs(dirname, exist_ok=True)
 
 # def md2ipynb(input_fn, outout_fn):
 
@@ -88,13 +90,15 @@ class Builder(object):
 
     def _find_md_files(self):
         build = self.config['build']
-        excluded_files = find_files(build.get('exclusions', ''))
-        pure_markdowns = find_files(build.get('non-notebooks', ''))
+        excluded_files = find_files(build.get('exclusions', ''), self.src_dir)
+        pure_markdowns = find_files(build.get('non-notebooks', ''), self.src_dir)
         pure_markdowns = [fn for fn in pure_markdowns if fn not in excluded_files]
-        notebooks = find_files(build.get('notebooks', ''))
+
+        notebooks = find_files(build.get('notebooks', ''), self.src_dir)
         notebooks = [fn for fn in notebooks if fn not in pure_markdowns and fn
                      not in pure_markdowns]
-        depends = find_files(build.get('dependences', ''))
+        print(notebooks)
+        depends = find_files(build.get('dependences', ''), self.src_dir)
         logging.info('Found %d notebooks and %d markdowns', len(notebooks), len(pure_markdowns))
         return notebooks, pure_markdowns, depends
 
@@ -106,18 +110,21 @@ class Builder(object):
         depends_mtimes = get_mtimes(depends)
         latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
         updated_notebooks = get_updated_files(
-            notebooks, self.src_dir, self.md_dir, latest_depend)
+            notebooks, self.src_dir, self.md_dir, 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
-            pure_markdowns, self.src_dir, self.md_dir, latest_depend)
+            pure_markdowns, self.src_dir, self.md_dir, 'md', latest_depend)
         logging.info('%d notedowns and %d markdowns are out dated',
                      len(updated_notebooks), len(updated_markdowns))
         for src, tgt in updated_notebooks:
             logging.info('Evaluating %s, save as %s', src, tgt)
+            mkdir(os.path.dirname(tgt))
             start = time.time()
             run_cells = self.config['build'].get('eval_notebook', 'True').lower()
+
             eval_notebook(src, tgt, run_cells=='true')
             logging.info('Finished in %.1f sec', time.time() - start)
 
         for src, tgt in updated_markdowns:
             logging.info('Copy %s to %s', src, tgt)
+            mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
