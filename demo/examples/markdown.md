@@ -1,4 +1,4 @@
-# Images
+# Markdown Cells
 
 ## Insert an image
 

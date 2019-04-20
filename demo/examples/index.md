@@ -2,9 +2,9 @@
 
 Various examples
 
-{% toc
+```toc
 :maxdepth: 2
 
-images
-
-%}
+markdown
+code
+```
