@@ -3,3 +3,4 @@
 /dist/
 *.pyc
 **/.ipynb_checkpoints/*
+/build/
