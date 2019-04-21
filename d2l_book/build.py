@@ -26,6 +26,9 @@ def build():
         commands[cmd]()
 
 
+def rm_ext(filename):
+    return os.path.splitext(filename)[0]
+
 
 def find_files(pattern, root):
     fnames = []
@@ -50,7 +53,7 @@ def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext, deps_mtime=0):
     updated_fnames = []
     for src_fn in src_fnames:
         tgt_fn = os.path.join(tgt_dir, os.path.relpath(src_fn, src_dir))
-        tgt_fn = os.path.splitext(tgt_fn)[0] + '.' + new_ext
+        tgt_fn = rm_ext(tgt_fn) + '.' + new_ext
         if (not os.path.exists(tgt_fn) # new
             or os.path.getmtime(src_fn) > os.path.getmtime(tgt_fn) # target is old
             or os.path.getmtime(src_fn) < deps_mtime): # deps is updated
@@ -72,19 +75,24 @@ def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
         f.write(nbformat.writes(notebook))
 
 def ipynb2rst(input_fn, output_fn):
-    os.system('jupyter nbconvert --to rst '+input_fn + ' --output '+output_fn)
-    #shutil.move(os.path.splitext(input_fn)[0] + '.rst', output_fn)
-    # with open(input_fn, 'r') as f:
-    #     notebook = nbformat.read(f, as_version=4)
-    # writer = nbconvert.RSTExporter()
-    # (body, resources) = writer.from_notebook_node(notebook)
-    # with open(output_fn, 'w') as f:
-    #     f.write(body)
-    # base_dir = os.path.dirname(output_fn)
-    # outputs = resources['outputs']
-    # for fn in outputs:
-    #     with open(os.path.join(base_dir, fn), 'wb') as f:
-    #         f.write(outputs[fn])
+    #os.system('jupyter nbconvert --to rst '+input_fn + ' --output '+
+    #          os.path.relpath(output_fn, os.path.dirname(input_fn)))
+
+    with open(input_fn, 'r') as f:
+        notebook = nbformat.read(f, as_version=4)
+    writer = nbconvert.RSTExporter()
+    image_dir = rm_ext(os.path.basename(output_fn))
+    resources = {'output_files_dir':image_dir}
+    (body, resources) = writer.from_notebook_node(notebook, resources)
+    with open(output_fn, 'w') as f:
+        f.write(body)
+    base_dir = os.path.dirname(output_fn)
+    outputs = resources['outputs']
+    for fn in outputs:
+        full_fn = os.path.join(base_dir, fn)
+        mkdir(os.path.dirname(full_fn))
+        with open(full_fn, 'wb') as f:
+            f.write(outputs[fn])
 
 def mkdir(dirname):
     os.makedirs(dirname, exist_ok=True)
