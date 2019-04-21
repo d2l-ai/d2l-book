@@ -10,7 +10,8 @@
 
 ### SVG Images
 
-Need to install `rsvg-convert` to build latex.
+Need to install `rsvg-convert` to build latex. On macos, you can
+`brew install librsvg`.
 
 ![A LSTM cell](../img/lstm.svg)
 

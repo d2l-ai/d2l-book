@@ -10,7 +10,7 @@ import shutil
 import time
 import configparser
 import argparse
-
+from d2lbook import template
 
 __all__  = ['build']
 
@@ -69,7 +69,6 @@ def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext=None, deps_mtime=0):
             updated_fnames.append((src_fn, tgt_fn))
     return updated_fnames
 
-# can be run in parallel
 def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     # read
     reader = notedown.MarkdownReader(match='strict')
@@ -83,6 +82,48 @@ def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     with open(output_fn, 'w') as f:
         f.write(nbformat.writes(notebook))
 
+def delete_lines(lines, deletes):
+    return [line for i, line in enumerate(lines) if i not in deletes]
+
+def process_rst(body):
+    def indented(line):
+        return line.startswith('   ')
+    def in_code(line, pos):
+        return indented(line) or (line[0:pos].count('``') // 2) == 1
+    def is_blank(line):
+        return len(line.strip()) == 0
+
+    def look_behind(i, cond):
+        indices = []
+        while i < n and cond(lines[i]):
+            indices.append(i)
+            i = i + 1
+        return indices
+    lines = body.split('\n')
+    i, n, deletes = 0, len(lines), []
+    while i < n:
+        line = lines[i]
+        if line.startswith('.. code:: toc'):
+            # convert into rst's toc block
+            lines[i] = '.. toctree::'
+            blanks = look_behind(i+1, is_blank)
+            deletes.extend(blanks)
+            i += len(blanks)
+        elif indented(line) and ':alt:' in line:
+            # Image caption, remove :alt: block, it cause trouble for long captions
+            caps = look_behind(i, lambda l: indented(l) and not is_blank(l))
+            deletes.extend(caps)
+            i += len(caps)
+        elif line.startswith('.. table::'):
+            # Add indent to table caption for long captions
+            caps = look_behind(i+1, lambda l: not indented(l) and not is_blank(l))
+            for j in caps:
+                lines[j] = '   ' + lines[j]
+            i += len(caps) + 1
+        else:
+            i += 1
+    return '\n'.join(delete_lines(lines, deletes))
+
 def ipynb2rst(input_fn, output_fn):
     #os.system('jupyter nbconvert --to rst '+input_fn + ' --output '+
     #          os.path.relpath(output_fn, os.path.dirname(input_fn)))
@@ -94,7 +135,7 @@ def ipynb2rst(input_fn, output_fn):
     resources = {'output_files_dir':image_dir}
     (body, resources) = writer.from_notebook_node(notebook, resources)
 
-    body = body.replace('.. code:: toc\n', '.. toctree::')
+    body = process_rst(body)
 
     with open(output_fn, 'w') as f:
         f.write(body)
@@ -109,56 +150,9 @@ def ipynb2rst(input_fn, output_fn):
 def mkdir(dirname):
     os.makedirs(dirname, exist_ok=True)
 
-_sphinx_conf = """
-project = "TITLE"
-copyright = "COPYRIGHT"
-author = "AUHTOR"
-release = "RELEASE"
-
-extensions = [
-    'recommonmark',
-    'sphinxcontrib.bibtex',
-    'sphinxcontrib.rsvgconverter',
-]
-
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
-numfig = True
-numfig_secnum_depth = 2
-math_numfig = True
-math_number_all = True
-
-html_theme = 'mxtheme'
-html_theme_options = {
-    'primary_color': 'blue',
-    'accent_color': 'deep_orange',
-    'header_links': [
-        # HEADER_LINKS
-    ],
-    'show_footer': False
-}
-html_static_path = ['_static']
-
-
-latex_documents = [
-    ('index', "NAME.tex", "TITLE",
-     author, 'manual'),
-]
-"""
-
-_google_tracker = """
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-  ga('create', 'GOOGLE_ANALYTICS_TRACKING_ID', 'auto');
-  ga('send', 'pageview');
-"""
 
 def write_sphinx_conf(dir_name, config):
-    pyconf = _sphinx_conf
+    pyconf = template.sphinx_conf
     project = config['project']
     for key in project:
         pyconf = pyconf.replace(key.upper(), project[key])
@@ -167,9 +161,9 @@ def write_sphinx_conf(dir_name, config):
 
 def write_sphinx_static(dir_name, config):
     g_id = 'google_analytics_tracking_id'
-    d2l_js = ""
+    d2l_js = template.shorten_sec_num
     if g_id in config['publish']:
-        d2l_js += _google_tracker.replace(g_id.upper(), config['publish'][g_id])
+        d2l_js += template.google_tracker.replace(g_id.upper(), config['publish'][g_id])
     mkdir(os.path.join(dir_name, '_static'))
     with open(os.path.join(dir_name, '_static', 'd2l.js'), 'w') as f:
         f.write(d2l_js)

@@ -1,6 +1,6 @@
 import argparse
 import sys
-from build import build
+from d2lbook.build import build
 import logging
 
 logging.basicConfig(format='[d2lbook:%(filename)s:L%(lineno)d] %(levelname)-6s %(message)s')
