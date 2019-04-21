@@ -9,7 +9,7 @@ setup(
     name='d2l-book',
     version=__version__,
     install_requires=requirements,
-    python_requires='>=3.4',
+    python_requires='>=3.5',
     author='Mu Li',
     author_email='muli.cmu@google.com',
     url='https://book.d2l.ai',

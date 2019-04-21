@@ -21,7 +21,7 @@ def build():
     config =  configparser.ConfigParser()
     config.read('config.ini')
     builder = Builder(config)
-    commands = {'eval': builder.eval_output}
+    commands = {'eval': builder.eval_output, 'rst':builder.get_rst}
     for cmd in args.commands:
         commands[cmd]()
 
@@ -64,13 +64,27 @@ def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     with open(input_fn, 'r') as f:
         notebook = reader.read(f)
     # evaluate
-    print(run_cells)
     if run_cells:
         notedown.run(notebook, timeout)
     # write
     notebook['metadata'].update({'language_info':{'name':lang}})
     with open(output_fn, 'w') as f:
         f.write(nbformat.writes(notebook))
+
+def ipynb2rst(input_fn, output_fn):
+    os.system('jupyter nbconvert --to rst '+input_fn + ' --output '+output_fn)
+    #shutil.move(os.path.splitext(input_fn)[0] + '.rst', output_fn)
+    # with open(input_fn, 'r') as f:
+    #     notebook = nbformat.read(f, as_version=4)
+    # writer = nbconvert.RSTExporter()
+    # (body, resources) = writer.from_notebook_node(notebook)
+    # with open(output_fn, 'w') as f:
+    #     f.write(body)
+    # base_dir = os.path.dirname(output_fn)
+    # outputs = resources['outputs']
+    # for fn in outputs:
+    #     with open(os.path.join(base_dir, fn), 'wb') as f:
+    #         f.write(outputs[fn])
 
 def mkdir(dirname):
     os.makedirs(dirname, exist_ok=True)
@@ -83,7 +97,7 @@ class Builder(object):
         self.src_dir = config['build'].get('source_dir', '.')
         self.tgt_dir = config['build'].get('output_dir', '_build')
         mkdir(self.tgt_dir)
-        self.md_dir = os.path.join(self.tgt_dir, 'md')
+        self.eval_dir = os.path.join(self.tgt_dir, 'eval')
         self.rst_dir = os.path.join(self.tgt_dir, 'rst')
         self.html_dir = os.path.join(self.tgt_dir, 'html')
         self.pdf_dir = os.path.join(self.tgt_dir, 'pdf')
@@ -97,22 +111,19 @@ class Builder(object):
         notebooks = find_files(build.get('notebooks', ''), self.src_dir)
         notebooks = [fn for fn in notebooks if fn not in pure_markdowns and fn
                      not in pure_markdowns]
-        print(notebooks)
         depends = find_files(build.get('dependences', ''), self.src_dir)
-        logging.info('Found %d notebooks and %d markdowns', len(notebooks), len(pure_markdowns))
         return notebooks, pure_markdowns, depends
 
 
     def eval_output(self):
         """Evaluate the notebooks and save them in a different folder"""
-        mkdir(self.md_dir)
         notebooks, pure_markdowns, depends = self._find_md_files()
         depends_mtimes = get_mtimes(depends)
         latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
         updated_notebooks = get_updated_files(
-            notebooks, self.src_dir, self.md_dir, 'ipynb', latest_depend)
+            notebooks, self.src_dir, self.eval_dir, 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
-            pure_markdowns, self.src_dir, self.md_dir, 'md', latest_depend)
+            pure_markdowns, self.src_dir, self.eval_dir, 'md', latest_depend)
         logging.info('%d notedowns and %d markdowns are out dated',
                      len(updated_notebooks), len(updated_markdowns))
         for src, tgt in updated_notebooks:
@@ -128,3 +139,13 @@ class Builder(object):
             logging.info('Copy %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
+
+    def get_rst(self):
+        notebooks = glob.glob(os.path.join(self.eval_dir, '**', '*.ipynb'), recursive=True)
+        updated_notebooks = get_updated_files(
+            notebooks, self.eval_dir, self.rst_dir, 'rst')
+        logging.info('%d rst files are outdated', len(updated_notebooks))
+        for src, tgt in updated_notebooks:
+            logging.info('Convert %s to %s', src, tgt)
+            mkdir(os.path.dirname(tgt))
+            ipynb2rst(src, tgt)
