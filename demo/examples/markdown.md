@@ -48,7 +48,7 @@ Now we can refer this image throuh `:numref:koebel:`: as we can seen from
 
 ### Table
 
-:label:tabel:
+:label:table:
 
 :This a is very long table caption. It will breaks into several lines. And
 contains a math equation as well. $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
@@ -62,7 +62,7 @@ Cite :numref:table:
 
 ### Equations
 
-We define the linear model in :eq:linear:.
+We define the linear model in :eqref:linear:.
 
 $$\hat{\mathbf{y}}=\mathbf X \mathbf{w}+b$$
 

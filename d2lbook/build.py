@@ -10,6 +10,7 @@ import shutil
 import time
 import configparser
 import argparse
+import re
 from d2lbook import template
 
 __all__  = ['build']
@@ -90,7 +91,7 @@ def process_rst(body):
         return line.startswith('   ')
     def in_code(line, pos):
         return indented(line) or (line[0:pos].count('``') // 2) == 1
-    def is_blank(line):
+    def blank(line):
         return len(line.strip()) == 0
 
     def look_behind(i, cond):
@@ -106,23 +107,73 @@ def process_rst(body):
         if line.startswith('.. code:: toc'):
             # convert into rst's toc block
             lines[i] = '.. toctree::'
-            blanks = look_behind(i+1, is_blank)
+            blanks = look_behind(i+1, blank)
             deletes.extend(blanks)
             i += len(blanks)
         elif indented(line) and ':alt:' in line:
             # Image caption, remove :alt: block, it cause trouble for long captions
-            caps = look_behind(i, lambda l: indented(l) and not is_blank(l))
+            caps = look_behind(i, lambda l: indented(l) and not blank(l))
             deletes.extend(caps)
             i += len(caps)
         elif line.startswith('.. table::'):
             # Add indent to table caption for long captions
-            caps = look_behind(i+1, lambda l: not indented(l) and not is_blank(l))
+            caps = look_behind(i+1, lambda l: not indented(l) and not blank(l))
             for j in caps:
                 lines[j] = '   ' + lines[j]
             i += len(caps) + 1
         else:
             i += 1
-    return '\n'.join(delete_lines(lines, deletes))
+
+    # process references, first change :label:my_label: into rst format
+    lines = delete_lines(lines, deletes)
+    deletes = []
+    mark = re.compile(':([-\._\w]+):([-\._\w]+):')
+
+    for i, line in enumerate(lines):
+        pos, new_line = 0, ''
+        while True:
+            match = mark.search(line, pos)
+            if match is None:
+                new_line += line[pos:]
+                break
+            start, end = match.start(), match.end()
+            origin, key, value = match[0], match[1], match[2]
+            new_line += line[pos:start]
+            pos = end
+            if in_code(line, start):
+                new_line += origin # no change if in code
+            else:
+                assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
+                if key == 'label':
+                    new_line += '.. _' + value + ':'
+                elif key in ['ref', 'numref']:
+                    new_line += ':'+key+':`'+value+'`'
+                elif key == 'eqref':
+                    new_line += ':eq:`'+value+'`'
+                elif key == 'eqlabel':
+                    new_line += '   :label: '+value
+                    if blank(lines[i-1]):
+                        deletes.append(i-1)
+                elif key in ['width', 'height']:
+                    new_line += '   :'+key+': '+value
+        lines[i] = new_line
+    lines = delete_lines(lines, deletes)
+
+    # move :width: just below .. figure::
+    i, n= 0, len(lines)
+    while i < n:
+        line = lines[i]
+        if line.startswith('.. figure::'):
+            for j in range(i+1, n):
+                line_j = lines[j]
+                if not indented(line_j) and not blank(line_j):
+                    break
+                if line_j.startswith('   :'):
+                    del lines[j]
+                    lines.insert(i+1, line_j)
+        i += 1
+
+    return '\n'.join(lines)
 
 def ipynb2rst(input_fn, output_fn):
     #os.system('jupyter nbconvert --to rst '+input_fn + ' --output '+
