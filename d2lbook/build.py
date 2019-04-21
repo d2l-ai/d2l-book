@@ -15,6 +15,8 @@ from d2lbook import template
 
 __all__  = ['build']
 
+mark_re = re.compile(':([-\._\w]+):([-\._\w]+):')
+
 def build():
     parser = argparse.ArgumentParser(description='build')
     parser.add_argument('commands', nargs='+', help=' ')
@@ -72,9 +74,15 @@ def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext=None, deps_mtime=0):
 
 def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     # read
-    reader = notedown.MarkdownReader(match='strict')
     with open(input_fn, 'r') as f:
-        notebook = reader.read(f)
+        md = f.read()
+    lines = md.split('\n')
+    for i, line in enumerate(lines):
+        m = mark_re.match(line)
+        if m is not None and m.end() == len(line):
+            lines[i] += '\n'
+    reader = notedown.MarkdownReader(match='strict')
+    notebook= reader.reads('\n'.join(lines))
     # evaluate
     if run_cells:
         notedown.run(notebook, timeout)
@@ -127,12 +135,11 @@ def process_rst(body):
     # process references, first change :label:my_label: into rst format
     lines = delete_lines(lines, deletes)
     deletes = []
-    mark = re.compile(':([-\._\w]+):([-\._\w]+):')
 
     for i, line in enumerate(lines):
         pos, new_line = 0, ''
         while True:
-            match = mark.search(line, pos)
+            match = mark_re.search(line, pos)
             if match is None:
                 new_line += line[pos:]
                 break

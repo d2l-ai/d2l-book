@@ -17,7 +17,7 @@ Check [Dive into Deep Learning](https://d2l.ai/) for an example built with
 Use `pip` to install the command-line interface.
 
 ```sh
-pip install d2l-book
+pip install d2lbook
 ```
 
 
@@ -26,15 +26,17 @@ pip install d2l-book
 Create a new book using the demo book content (the website that you’re viewing now) with this command:
 
 ```sh
-d2l-book create mybook --demo
+d2lbook create mybook --demo
 cd mybook
 ```
 
 
 ### Build the contents for your book
 
+It will build both HTML and PDF formats
+
 ```sh
-d2l-book build ipynb html pdf
+d2lbook build all
 ```
 
 
@@ -52,7 +54,6 @@ d2l-book publish html pdf s3://book.d2l.ai
 :numbered:
 :maxdepth: 2
 
-guide/index
 examples/index
 ```
 

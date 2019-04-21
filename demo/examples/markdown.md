@@ -4,7 +4,6 @@
 ## Images
 
 ![A nice image with a cat and a dog](../img/catdog.jpg)
-
 :width:400px:
 
 
@@ -17,14 +16,14 @@ Need to install `rsvg-convert` to build latex. On macos, you can
 
 ## Reference
 
+### Section
 :label:my_sec:
 
-### Section
-
 ```
+### Section
 :label:my_sec:
-### Section
 ```
+
 
 We learn from :ref:my_sec: that we can reference a section through `:ref:`.
 
@@ -32,24 +31,23 @@ We learn from :ref:my_sec: that we can reference a section through `:ref:`.
 ### Image
 
 ```
-:label:koebel:
 ![Estimating the length of a footg](../img/koebel.jpg)
+:label:koebel:
 :width:400px:
 ```
 
-:label:koebel:
-
 ![Estimating the length of a footg](../img/koebel.jpg)
-
+:label:koebel:
 :width:400px:
+
 
 Now we can refer this image throuh `:numref:koebel:`: as we can seen from
 :numref:koebel:, we saw people in a line.
 
 ### Table
 
-:label:table:
 
+:label:table:
 :This a is very long table caption. It will breaks into several lines. And
 contains a math equation as well. $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
 
@@ -65,5 +63,4 @@ Cite :numref:table:
 We define the linear model in :eqref:linear:.
 
 $$\hat{\mathbf{y}}=\mathbf X \mathbf{w}+b$$
-
 :eqlabel:linear:
