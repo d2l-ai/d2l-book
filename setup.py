@@ -6,6 +6,7 @@ requirements = [
     'sphinx>=1.7',
     'recommonmark',
     'sphinxcontrib-bibtex',
+    'sphinxcontrib-svg2pdfconverter'
 ]
 
 setup(

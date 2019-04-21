@@ -29,6 +29,7 @@ def build():
         'eval' : builder.eval_output,
         'rst' : builder.build_rst,
         'html' : builder.build_html,
+        'pdf' : builder.build_pdf,
         'all' : builder.build_all,
     }
     for cmd in args.commands:
@@ -116,7 +117,8 @@ release = "RELEASE"
 
 extensions = [
     'recommonmark',
-    'sphinxcontrib.bibtex'
+    'sphinxcontrib.bibtex',
+    'sphinxcontrib.rsvgconverter',
 ]
 
 templates_path = ['_templates']
@@ -253,10 +255,15 @@ class Builder(object):
 
     def build_html(self):
         os.system(' '.join(['sphinx-build', self.rst_dir, self.html_dir,
-                            '-c', self.rst_dir, self.sphinx_opts]))
+                            '-b html -c', self.rst_dir, self.sphinx_opts]))
 
+    def build_pdf(self):
+        os.system(' '.join(['sphinx-build ', self.rst_dir, self.pdf_dir,
+                            '-b latex -c', self.rst_dir, self.sphinx_opts]))
+        os.system(' '.join(['cd', self.pdf_dir, '&& make']))
 
     def build_all(self):
         self.eval_output()
         self.build_rst()
         self.build_html()
+        self.build_pdf()
