@@ -1,10 +1,10 @@
 import argparse
 import sys
-from .build import build
+from build import build
 import logging
 
-logging.basicConfig(format='%(asctime)s %(levelname)-6s [%(filename)s:L%(lineno)d] %(message)s',
-    datefmt='%Y-%m-%d:%H:%M:%S')
+logging.basicConfig(format='[d2lbook:%(filename)s:L%(lineno)d] %(levelname)-6s %(message)s')
+
 logging.getLogger().setLevel(logging.INFO)
 
 commands = {'build': build}

@@ -19,16 +19,22 @@ def build():
     parser.add_argument('commands', nargs='+', help=' ')
     args = parser.parse_args(sys.argv[2:])
     config =  configparser.ConfigParser()
-    config.read('config.ini')
+    config_fname = 'config.ini'
+    if not os.path.exists(config_fname):
+        logging.fatal('No config file found.')
+        exit(-1)
+    config.read(config_fname)
     builder = Builder(config)
-    commands = {'eval': builder.eval_output, 'rst':builder.get_rst}
+    commands = {
+        'eval' : builder.eval_output,
+        'rst' : builder.build_rst,
+        'html' : builder.build_html,
+    }
     for cmd in args.commands:
         commands[cmd]()
 
-
 def rm_ext(filename):
     return os.path.splitext(filename)[0]
-
 
 def find_files(pattern, root):
     fnames = []
@@ -49,11 +55,12 @@ def get_mtimes(fnames):
         fnames = [fnames]
     return [os.path.getmtime(fn) for fn in fnames]
 
-def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext, deps_mtime=0):
+def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext=None, deps_mtime=0):
     updated_fnames = []
     for src_fn in src_fnames:
         tgt_fn = os.path.join(tgt_dir, os.path.relpath(src_fn, src_dir))
-        tgt_fn = rm_ext(tgt_fn) + '.' + new_ext
+        if new_ext is not None:
+            tgt_fn = rm_ext(tgt_fn) + '.' + new_ext
         if (not os.path.exists(tgt_fn) # new
             or os.path.getmtime(src_fn) > os.path.getmtime(tgt_fn) # target is old
             or os.path.getmtime(src_fn) < deps_mtime): # deps is updated
@@ -97,7 +104,50 @@ def ipynb2rst(input_fn, output_fn):
 def mkdir(dirname):
     os.makedirs(dirname, exist_ok=True)
 
-# def md2ipynb(input_fn, outout_fn):
+_sphinx_conf = """
+project = "TITLE"
+copyright = "COPYRIGHT"
+author = "AUHTOR"
+release = "RELEASE"
+
+extensions = [
+    'recommonmark',
+    'sphinxcontrib.bibtex'
+]
+
+templates_path = ['_templates']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+numfig = True
+numfig_secnum_depth = 2
+math_numfig = True
+math_number_all = True
+
+html_theme = 'mxtheme'
+html_theme_options = {
+    'primary_color': 'blue',
+    'accent_color': 'deep_orange',
+    'header_links': [
+        # HEADER_LINKS
+    ],
+    'show_footer': False
+}
+html_static_path = ['_static']
+
+
+latex_documents = [
+    ('index', "NAME.tex", "TITLE",
+     author, 'manual'),
+]
+"""
+
+def write_sphinx_conf(dir_name, config):
+    pyconf = _sphinx_conf
+    project = config['project']
+    for key in project:
+        pyconf = pyconf.replace(key.upper(), project[key])
+    with open(os.path.join(dir_name, 'conf.py'), 'w') as f:
+        f.write(pyconf)
 
 class Builder(object):
     def __init__(self, config):
@@ -109,6 +159,7 @@ class Builder(object):
         self.rst_dir = os.path.join(self.tgt_dir, 'rst')
         self.html_dir = os.path.join(self.tgt_dir, 'html')
         self.pdf_dir = os.path.join(self.tgt_dir, 'pdf')
+        self.sphinx_opts = '-j 4'
 
     def _find_md_files(self):
         build = self.config['build']
@@ -148,7 +199,7 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
 
-    def get_rst(self):
+    def build_rst(self):
         notebooks = glob.glob(os.path.join(self.eval_dir, '**', '*.ipynb'), recursive=True)
         updated_notebooks = get_updated_files(
             notebooks, self.eval_dir, self.rst_dir, 'rst')
@@ -157,3 +208,22 @@ class Builder(object):
             logging.info('Convert %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
             ipynb2rst(src, tgt)
+
+        # prepare sphinx env
+        write_sphinx_conf(self.rst_dir, self.config)
+        for res in self.config['build']['resources'].split():
+            src = os.path.join(self.src_dir, res)
+            if os.path.isdir(src):
+                src += '**'
+            updated = get_updated_files(glob.glob(src, recursive=True),
+                                        self.src_dir, self.rst_dir)
+            for src, tgt in updated:
+                if os.path.isdir(src):
+                    continue
+                logging.info('Copy %s to %s', src, tgt)
+                mkdir(os.path.dirname(tgt))
+                shutil.copyfile(src, tgt)
+
+    def build_html(self):
+        os.system(' '.join(['sphinx-build', self.rst_dir, self.html_dir,
+                            '-c', self.rst_dir, self.sphinx_opts]))

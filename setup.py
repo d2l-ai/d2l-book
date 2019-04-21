@@ -1,12 +1,15 @@
 from setuptools import setup, find_packages
-from d2l_book import __version__
+from d2lbook import __version__
 
 requirements = [
-    'jupyter'
+    'jupyter',
+    'sphinx>=1.7',
+    'recommonmark',
+    'sphinxcontrib-bibtex',
 ]
 
 setup(
-    name='d2l-book',
+    name='d2lbook',
     version=__version__,
     install_requires=requirements,
     python_requires='>=3.5',
@@ -18,7 +21,7 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'd2l-book = d2l_book.main:main',
+            'd2lbook = d2lbook.main:main',
         ]
     },
 )
