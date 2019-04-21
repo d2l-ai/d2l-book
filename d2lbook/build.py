@@ -29,6 +29,7 @@ def build():
         'eval' : builder.eval_output,
         'rst' : builder.build_rst,
         'html' : builder.build_html,
+        'all' : builder.build_all,
     }
     for cmd in args.commands:
         commands[cmd]()
@@ -91,6 +92,9 @@ def ipynb2rst(input_fn, output_fn):
     image_dir = rm_ext(os.path.basename(output_fn))
     resources = {'output_files_dir':image_dir}
     (body, resources) = writer.from_notebook_node(notebook, resources)
+
+    body = body.replace('.. code:: toc\n', '.. toctree::')
+
     with open(output_fn, 'w') as f:
         f.write(body)
     base_dir = os.path.dirname(output_fn)
@@ -141,6 +145,16 @@ latex_documents = [
 ]
 """
 
+_google_tracker = """
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'GOOGLE_ANALYTICS_TRACKING_ID', 'auto');
+  ga('send', 'pageview');
+"""
+
 def write_sphinx_conf(dir_name, config):
     pyconf = _sphinx_conf
     project = config['project']
@@ -148,6 +162,15 @@ def write_sphinx_conf(dir_name, config):
         pyconf = pyconf.replace(key.upper(), project[key])
     with open(os.path.join(dir_name, 'conf.py'), 'w') as f:
         f.write(pyconf)
+
+def write_sphinx_static(dir_name, config):
+    g_id = 'google_analytics_tracking_id'
+    d2l_js = ""
+    if g_id in config['publish']:
+        d2l_js += _google_tracker.replace(g_id.upper(), config['publish'][g_id])
+    mkdir(os.path.join(dir_name, '_static'))
+    with open(os.path.join(dir_name, '_static', 'd2l.js'), 'w') as f:
+        f.write(d2l_js)
 
 class Builder(object):
     def __init__(self, config):
@@ -199,18 +222,9 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
 
-    def build_rst(self):
-        notebooks = glob.glob(os.path.join(self.eval_dir, '**', '*.ipynb'), recursive=True)
-        updated_notebooks = get_updated_files(
-            notebooks, self.eval_dir, self.rst_dir, 'rst')
-        logging.info('%d rst files are outdated', len(updated_notebooks))
-        for src, tgt in updated_notebooks:
-            logging.info('Convert %s to %s', src, tgt)
-            mkdir(os.path.dirname(tgt))
-            ipynb2rst(src, tgt)
-
-        # prepare sphinx env
+    def prepare_sphinx_env(self):
         write_sphinx_conf(self.rst_dir, self.config)
+        write_sphinx_static(self.rst_dir, self.config)
         for res in self.config['build']['resources'].split():
             src = os.path.join(self.src_dir, res)
             if os.path.isdir(src):
@@ -224,6 +238,25 @@ class Builder(object):
                 mkdir(os.path.dirname(tgt))
                 shutil.copyfile(src, tgt)
 
+
+    def build_rst(self):
+        notebooks = glob.glob(os.path.join(self.eval_dir, '**', '*.ipynb'), recursive=True)
+        updated_notebooks = get_updated_files(
+            notebooks, self.eval_dir, self.rst_dir, 'rst')
+        logging.info('%d rst files are outdated', len(updated_notebooks))
+        for src, tgt in updated_notebooks:
+            logging.info('Convert %s to %s', src, tgt)
+            mkdir(os.path.dirname(tgt))
+            ipynb2rst(src, tgt)
+
+        self.prepare_sphinx_env()
+
     def build_html(self):
         os.system(' '.join(['sphinx-build', self.rst_dir, self.html_dir,
                             '-c', self.rst_dir, self.sphinx_opts]))
+
+
+    def build_all(self):
+        self.eval_output()
+        self.build_rst()
+        self.build_html()
