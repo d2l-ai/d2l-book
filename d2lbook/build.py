@@ -15,7 +15,7 @@ from d2lbook import template
 
 __all__  = ['build']
 
-mark_re = re.compile(':([-\._\w]+):([-\._\w]+):')
+mark_re = re.compile(':([-\/\\._\w\d]+):([-\/\\\._\w\d]+):')
 
 def build():
     parser = argparse.ArgumentParser(description='build')
@@ -73,14 +73,18 @@ def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext=None, deps_mtime=0):
     return updated_fnames
 
 def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
-    # read
+    # process: add empty lines before and after a mark, otherwise it confuses
+    # the rst parser...
     with open(input_fn, 'r') as f:
         md = f.read()
     lines = md.split('\n')
+    in_code = False
     for i, line in enumerate(lines):
+        if line.startswith('```'):
+            in_code ^= True
         m = mark_re.match(line)
-        if m is not None and m.end() == len(line):
-            lines[i] += '\n'
+        if m is not None and not in_code and m.end() == len(line):
+            lines[i] = '\n'+line+'\n'
     reader = notedown.MarkdownReader(match='strict')
     notebook= reader.reads('\n'.join(lines))
     # evaluate
@@ -98,7 +102,7 @@ def process_rst(body):
     def indented(line):
         return line.startswith('   ')
     def in_code(line, pos):
-        return indented(line) or (line[0:pos].count('``') // 2) == 1
+        return indented(line) or (line[0:pos].count('``') % 2) == 1
     def blank(line):
         return len(line.strip()) == 0
 
@@ -150,10 +154,12 @@ def process_rst(body):
             if in_code(line, start):
                 new_line += origin # no change if in code
             else:
-                assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
+                print(origin, line[0:start].count('``')//2)
+                print(line)
+               # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
                 if key == 'label':
                     new_line += '.. _' + value + ':'
-                elif key in ['ref', 'numref']:
+                elif key in ['ref', 'numref', 'cite']:
                     new_line += ':'+key+':`'+value+'`'
                 elif key == 'eqref':
                     new_line += ':eq:`'+value+'`'
@@ -163,6 +169,11 @@ def process_rst(body):
                         deletes.append(i-1)
                 elif key in ['width', 'height']:
                     new_line += '   :'+key+': '+value
+                elif key == 'bibliography':
+                    new_line += '.. bibliography:: ' + value
+                else:
+                    logging.fatal('unknown key', key)
+
         lines[i] = new_line
     lines = delete_lines(lines, deletes)
 

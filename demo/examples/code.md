@@ -1,4 +1,5 @@
 # Code Cells
+:label:sec.code:
 
 ```{.python .input}
 %matplotlib inline
