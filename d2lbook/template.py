@@ -54,31 +54,9 @@ google_tracker = """
 
 shorten_sec_num = """
 $(document).ready(function () {
-    $('h2').each(function(){
-        $(this).html($(this).html().replace(/^\d+.\d+./, ''))
-    });
-    $('h3').each(function(){
-        $(this).html($(this).html().replace(/^\d+.\d+./, ''))
-    });
-    $('h4').each(function(){
-        $(this).html($(this).html().replace(/^\d+.\d+./, ''))
-    });
-    $('h5').each(function(){
-        $(this).html($(this).html().replace(/^\d+.\d+./, ''))
-    });
-    $('h6').each(function(){
-        $(this).html($(this).html().replace(/^\d+.\d+./, ''))
-    });
     $('.localtoc').each(function(){
         $(this).find('a').each(function(){
             $(this).html($(this).html().replace(/^\d+\.\d+\./, ''))
-        });
-    });
-    $('.toctree-wrapper').each(function(){
-        $(this).find('a').each(function(){
-            if ($(this).text().match(/^\d+\.\d+.\d+\./) != null) {
-                $(this).html($(this).html().replace(/^\d+\.\d+\./, ''))
-            }
         });
     });
 });
