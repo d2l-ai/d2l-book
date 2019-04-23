@@ -1,6 +1,5 @@
 import os
 import sys
-import glob
 import notedown
 import nbformat
 import nbconvert
@@ -177,21 +176,21 @@ def ipynb2rst(input_fn, output_fn):
         with open(full_fn, 'wb') as f:
             f.write(outputs[fn])
 
-def write_sphinx_conf(dir_name, config):
+def write_sphinx_conf(config):
     pyconf = template.sphinx_conf
-    project = config['project']
-    for key in project:
+    for key in config.project:
         pyconf = pyconf.replace(key.upper(), project[key])
-    with open(os.path.join(dir_name, 'conf.py'), 'w') as f:
+    with open(os.path.join(config.rst_dir, 'conf.py'), 'w') as f:
         f.write(pyconf)
 
-def write_sphinx_static(dir_name, config):
+def write_sphinx_static(config):
     g_id = 'google_analytics_tracking_id'
     d2l_js = template.shorten_sec_num
-    if g_id in config['publish']:
-        d2l_js += template.google_tracker.replace(g_id.upper(), config['publish'][g_id])
-    mkdir(os.path.join(dir_name, '_static'))
-    with open(os.path.join(dir_name, '_static', 'd2l.js'), 'w') as f:
+    if g_id in config.deploy:
+        d2l_js += template.google_tracker.replace(g_id.upper(), config.deploy[g_id])
+    static_dirname = os.path.join(config.rst_dir, '_static')
+    mkdir(static_dirname)
+    with open(os.path.join(static_dirname, 'd2l.js'), 'w') as f:
         f.write(d2l_js)
 
 class Builder(object):
@@ -241,9 +240,7 @@ class Builder(object):
         write_sphinx_static(self.config)
         for res in self.config.build['resources'].split():
             src = os.path.join(self.config.src_dir, res)
-            if os.path.isdir(src):
-                src += '**'
-            updated = get_updated_files(glob.glob(src, recursive=True),
+            updated = get_updated_files(find_files(src),
                                         self.config.src_dir, self.config.rst_dir)
             for src, tgt in updated:
                 if os.path.isdir(src):
@@ -253,7 +250,7 @@ class Builder(object):
                 shutil.copyfile(src, tgt)
 
     def build_rst(self):
-        notebooks = glob.glob(os.path.join(self.config.eval_dir, '**', '*.ipynb'), recursive=True)
+        notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
         updated_notebooks = get_updated_files(
             notebooks, self.config.eval_dir, self.config.rst_dir, 'rst')
         logging.info('%d rst files are outdated', len(updated_notebooks))

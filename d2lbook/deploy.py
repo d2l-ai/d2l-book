@@ -6,7 +6,6 @@ from d2lbook.utils import *
 
 __all__  = ['deploy']
 
-
 def deploy(config):
     parser = argparse.ArgumentParser(description='deploy')
     parser.add_argument('commands', nargs='+', help=' ')

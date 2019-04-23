@@ -1,25 +1,27 @@
 import os
+import glob
 
 def rm_ext(filename):
     return os.path.splitext(filename)[0]
 
-def find_files(pattern, root):
+def find_files(pattern, root=None):
     fnames = []
     patterns = pattern.split(' ')
     for p in patterns:
         if len(p) == 0:
             continue
-        p = os.path.join(root, p)
+        if root is not None:
+            p = os.path.join(root, p)
         if os.path.isdir(p):
-            p += '*'
-        for fn in glob.glob(p):
-            if not os.path.isfile(p):
+            p += '**'
+        for fn in glob.glob(p, recursive=True):
+            if os.path.isfile(fn):
                 fnames.append(fn)
     return fnames
 
 def get_mtimes(fnames):
     if isinstance(fnames, str):
-        fnames = [fnames]
+        return os.path.getmtime(fnames)
     return [os.path.getmtime(fn) for fn in fnames]
 
 def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext=None, deps_mtime=0):
@@ -29,8 +31,8 @@ def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext=None, deps_mtime=0):
         if new_ext is not None:
             tgt_fn = rm_ext(tgt_fn) + '.' + new_ext
         if (not os.path.exists(tgt_fn) # new
-            or os.path.getmtime(src_fn) > os.path.getmtime(tgt_fn) # target is old
-            or os.path.getmtime(src_fn) < deps_mtime): # deps is updated
+            or get_mtimes(src_fn) > get_mtimes(tgt_fn) # target is old
+            or get_mtimes(tgt_fn) < deps_mtime): # deps is updated
             updated_fnames.append((src_fn, tgt_fn))
     return updated_fnames
 
