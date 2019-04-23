@@ -114,8 +114,6 @@ def process_rst(body):
             if in_code(line, start):
                 new_line += origin # no change if in code
             else:
-                print(origin, line[0:start].count('``')//2)
-                print(line)
                # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
                 if key == 'label':
                     new_line += '.. _' + value + ':'
@@ -209,7 +207,7 @@ def write_sphinx_conf(config):
 
 def write_sphinx_static(config):
     g_id = 'google_analytics_tracking_id'
-    d2l_js = template.shorten_sec_num
+    d2l_js = '' # template.shorten_sec_num
     if g_id in config.deploy:
         d2l_js += template.google_tracker.replace(g_id.upper(), config.deploy[g_id])
     static_dirname = os.path.join(config.rst_dir, '_static')
@@ -222,6 +220,9 @@ class Builder(object):
         self.config = config
         mkdir(self.config.tgt_dir)
         self.sphinx_opts = '-j 4'
+        if config.build['warning_is_error'].lower() == 'true':
+            self.sphinx_opts += ' -W'
+        self.done = {'eval':False, 'html':False, 'rst':False, 'pdf':False}
 
     def _find_md_files(self):
         build = self.config.build
@@ -237,6 +238,9 @@ class Builder(object):
 
     def eval_output(self):
         """Evaluate the notebooks and save them in a different folder"""
+        if self.done['eval']:
+            pass
+        self.done['eval'] = True
         notebooks, pure_markdowns, depends = self._find_md_files()
         depends_mtimes = get_mtimes(depends)
         latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
@@ -259,7 +263,8 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
 
-    def prepare_sphinx_env(self):
+
+    def _prepare_sphinx_env(self):
         write_sphinx_conf(self.config)
         write_sphinx_static(self.config)
         for res in self.config.build['resources'].split():
@@ -274,6 +279,10 @@ class Builder(object):
                 shutil.copyfile(src, tgt)
 
     def build_rst(self):
+        if self.done['rst']:
+            pass
+        self.done['rst'] = True
+        self.eval_output()
         notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
         updated_notebooks = get_updated_files(
             notebooks, self.config.eval_dir, self.config.rst_dir, 'rst')
@@ -283,13 +292,21 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             ipynb2rst(src, tgt)
 
-        self.prepare_sphinx_env()
+        self._prepare_sphinx_env()
 
     def build_html(self):
+        if self.done['html']:
+            pass
+        self.done['html'] = True
+        self.build_rst()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
 
     def build_pdf(self):
+        if self.done['pdf']:
+            pass
+        self.done['pdf'] = True
+        self.build_rst()
         run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
                  '-b latex -c', self.config.rst_dir, self.sphinx_opts])
         run_cmd(['cd', self.config.pdf_dir, '&& make'])

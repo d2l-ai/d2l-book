@@ -11,7 +11,6 @@ def deploy(config):
     parser.add_argument('commands', nargs='+', help=' ')
     args = parser.parse_args(sys.argv[2:])
     deployer = Deployer(config)
-    print(deployer)
     commands = {
         'html' : deployer.deploy_html,
         'pdf' : deployer.deploy_pdf,

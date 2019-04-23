@@ -1,12 +1,7 @@
-# d2l-book
+# Build pipeline
 
-A tool to build and publish a book. 
 
-[Under developing]
-
-## Build pipeline
-
-![](./build.svg)
+![](../img/build.svg)
 
 The source files are markdown files. They are either purely markdown files or
 juypyter notebooks saved in the markdown format with output removed. For the

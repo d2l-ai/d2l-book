@@ -15,7 +15,6 @@ need to specify the file extension.
 :maxdepth: 2
 :numbered:
 
-index
 guide/index
 ```
 `````
@@ -23,16 +22,16 @@ guide/index
 ## Images
 
 
-We can specify the image caption in `[]`. In addition, we can use
-`:width:value:` for the image width, similar `:height:` for height.
+We can put the image caption in `[]`. In addition, we can use
+`:width:value:` to specify the image width, similar `:height:value:` for height.
 
 ```
-![Estimating the length of a footg](../img/koebel.jpg)
-:width:300px:
+![Estimating the length of a foot](../img/koebel.jpg)
+:width:400px:
 ```
 
-![Estimating the length of a footg](../img/koebel.jpg)
-:width:300px:
+![Estimating the length of a foot](../img/koebel.jpg)
+:width:400px:
 
 
 ### SVG Images
@@ -44,50 +43,98 @@ output, you need to install `rsvg-convert`. On Macos, you can simply
 
 ![A LSTM cell in SVG](../img/lstm.svg)
 
+## Tables
 
-## Cross Reference
+You can insert table caption before the table by starting it with a `:`. Note
+that you need to leave an empty line between the caption and the table itself.
 
+```
+: The number is computed by $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
+
+| Year | Number | Comment |
+| ---  | --- | --- |
+| 2018 | 100 | Good year |
+| 2019 | 200 | Even better |
+```
+
+: The number is computed by $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
+
+| Year | Number | Comment |
+| ---  | --- | --- |
+| 2018 | 100 | Good year |
+| 2019 | 200 | Even better |
+
+## Cross References
 
 We often want to reference sections, figures, tables and equations in a book.
 
-### Section
-:label:my.sec0:
+### Referencing Sections
+:label:my-sec3:
 
-
-We can put a label immediately after the section title. The label format is
-`:label:TEXT:`, you can replace `TEXT` with any string contains char in
-`a-zA-Z0-9._-`. For example
+We can put a label immediately after the section title to allow this section to
+be referenced by its label. The label format is
+`:label:TEXT:`, you can replace `TEXT` with any string contains chars in
+`a-zA-Z0-9._-`. For example, we create a label called `my-sec3` for this section.
 
 ```
-### Section
-:label:my.sec0:
+### Referencing Sections
+:label:my-sec3:
 ```
 
-Then we can ref to it through `:ref:TEXT:`, e.g. :ref:my.sec0:. We can cross
-reference label from other files as well, e.g. :ref:sec.code:.
+Then we can reference this section through `:ref:my-sec3:`, i.e. :ref:my-sec3:,
+which will display the referenced section title with a clickable link. We can
+also use a numbered version by `:numref:my-sec3:`, i.e. :numref:my-sec3:.
 
-### Image
+If the label is incorrect, say we put `my-sec2` here, the build log will
+contains a warning such as
 
+```
+WARNING: undefined label: my-sec2
+```
+
+You can turn it into error by setting `warning_is_error = True` in
+`config.ini`.
+
+Besides, we can cross
+reference label from other files as well, e.g. :numref:sec.code:. This applies
+to figures, tables and equations as well.
+
+
+### Referencing Images
 
 Similarly we can have a `:label:TEXT:` after the image. Then it can be
-referenced through `:numref:TEXT:`. The difference between `ref` to `numref` is
-that the former will have a the section title as link text while the later is
-the figure number such as `Fig 1.1`. .
+referenced through `:numref:TEXT:`. For example,
 
 ```
-![A nice image with a cat and a dog](../img/catdog.jpg)
+![A nice image with a cat and a dog.](../img/catdog.jpg)
 :width:300px:
 :label:img.catdog:
 ```
 
 
-![A nice image with a cat and a dog](../img/catdog.jpg)
+![A nice image with a cat and a dog.](../img/catdog.jpg)
 :width:300px:
 :label:img.catdog:
 
-As can be seen from :numref:img.catdog:, there is a cat and a dog.
+As can be seen from :numref:img.catdog:, there is a cat and a dog. We can also
+use `:ref:img.catdog:`(e.g. :ref:img.catdog:) to replace the figure ID with its
+caption.
 
-### Table
+### Referencing Tables
+
+We can also put a `:label:TEXT:` after the table to cite it later.
+
+```
+:This a is very long table caption. It will breaks into several lines. And
+contains a math equation as well. $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
+
+| Year | Number | Comment |
+| ---  | --- | --- |
+| 2018 | 100 | Good year |
+:label:table:
+
+```
+
 
 :This a is very long table caption. It will breaks into several lines. And
 contains a math equation as well. $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
@@ -95,22 +142,32 @@ contains a math equation as well. $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
 | Year | Number | Comment |
 | ---  | --- | --- |
 | 2018 | 100 | Good year |
-| 2019 | 200 | Even better |
 :label:table:
 
-Cite :numref:table:
+Cite it :numref:table:.
 
-### Equations
+### Referencing Equations
 
-We define the linear model in :eqref:linear:.
+The difference here is that we need to use `eqlabel` instead of `label`. For
+example
+
+```
+$$\hat{\mathbf{y}}=\mathbf X \mathbf{w}+b$$
+:eqlabel:linear:
+```
 
 $$\hat{\mathbf{y}}=\mathbf X \mathbf{w}+b$$
 :eqlabel:linear:
 
-## Citation
+Then use `:eqref:linear:` to refer this equation. For example,
+In :eqref:linear:, we define the linear model.
 
-First put your bib file at somewhere. All references will be displayed on the HTML page it
-inserted, but them will be put at the end in the PDF always.
+
+## Citations
+
+First put your bib file at somewhere. All references will be displayed on the
+place it inserted in HTML. But in PDF, all references will be moved to end of
+the document.
 
 ```
 :bibliography:../refs.bib:
