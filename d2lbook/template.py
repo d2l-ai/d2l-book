@@ -24,7 +24,7 @@ html_theme_options = {
     'primary_color': 'blue',
     'accent_color': 'deep_orange',
     'header_links': [
-        # HEADER_LINKS
+        HEADER_LINKS
     ],
     'show_footer': False
 }

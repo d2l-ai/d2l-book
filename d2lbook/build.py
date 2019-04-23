@@ -198,10 +198,22 @@ def ipynb2rst(input_fn, output_fn):
         with open(full_fn, 'wb') as f:
             f.write(outputs[fn])
 
+def convert_header_links(header_links):
+    items = header_links.replace('\n','').split(',')
+    assert len(items) % 3 == 0, header_links
+    header_links = ''
+    for i in range(0, len(items), 3):
+        header_links += "('%s', '%s', True, '%s')," % (
+            items[i], items[i+1], items[i+2])
+    return header_links
+
 def write_sphinx_conf(config):
     pyconf = template.sphinx_conf
+    config.project['header_links'] = convert_header_links(
+        config.project['header_links'])
     for key in config.project:
         pyconf = pyconf.replace(key.upper(), config.project[key])
+
     with open(os.path.join(config.rst_dir, 'conf.py'), 'w') as f:
         f.write(pyconf)
 
@@ -239,7 +251,7 @@ class Builder(object):
     def eval_output(self):
         """Evaluate the notebooks and save them in a different folder"""
         if self.done['eval']:
-            pass
+            return
         self.done['eval'] = True
         notebooks, pure_markdowns, depends = self._find_md_files()
         depends_mtimes = get_mtimes(depends)
@@ -280,7 +292,7 @@ class Builder(object):
 
     def build_rst(self):
         if self.done['rst']:
-            pass
+            return
         self.done['rst'] = True
         self.eval_output()
         notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
@@ -296,7 +308,7 @@ class Builder(object):
 
     def build_html(self):
         if self.done['html']:
-            pass
+            return
         self.done['html'] = True
         self.build_rst()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
@@ -304,7 +316,7 @@ class Builder(object):
 
     def build_pdf(self):
         if self.done['pdf']:
-            pass
+            return
         self.done['pdf'] = True
         self.build_rst()
         run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
