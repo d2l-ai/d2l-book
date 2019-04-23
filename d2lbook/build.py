@@ -137,18 +137,42 @@ def process_rst(body):
         lines[i] = new_line
     lines = delete_lines(lines, deletes)
 
-    # move :width: just below .. figure::
-    i, n= 0, len(lines)
-    while i < n:
-        line = lines[i]
+    def move(i, j): # move line i to line j
+        lines.insert(j, lines[i])
+        if i > j:
+            del lines[i+1]
+        else:
+            del lines[i]
+
+    # move :width: or :width: just below .. figure::
+    for i, line in enumerate(lines):
         if line.startswith('.. figure::'):
-            for j in range(i+1, n):
+            for j in range(i+1, len(lines)):
                 line_j = lines[j]
                 if not indented(line_j) and not blank(line_j):
                     break
                 if line_j.startswith('   :'):
-                    del lines[j]
-                    lines.insert(i+1, line_j)
+                    move(j, i+1)
+
+    # move .. _label: before a image, a section, or a table
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith('.. _'):
+            for j in range(i-1, -1, -1):
+                line_j = lines[j]
+                if (line_j.startswith('.. table:')
+                    or line_j.startswith('.. figure:')):
+                    move(i, j-1)
+                    lines.insert(j-1, '')
+                    i += 1
+                    break
+                if (len(set(line_j)) == 1
+                    and line_j[0] in ['=','~','_', '-']):
+                    move(i, j-2)
+                    lines.insert(j-2, '')
+                    i += 1
+                    break
         i += 1
 
     return '\n'.join(lines)
@@ -179,7 +203,7 @@ def ipynb2rst(input_fn, output_fn):
 def write_sphinx_conf(config):
     pyconf = template.sphinx_conf
     for key in config.project:
-        pyconf = pyconf.replace(key.upper(), project[key])
+        pyconf = pyconf.replace(key.upper(), config.project[key])
     with open(os.path.join(config.rst_dir, 'conf.py'), 'w') as f:
         f.write(pyconf)
 

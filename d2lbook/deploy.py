@@ -25,7 +25,7 @@ class Deployer(object):
 
     def deploy_html(self):
         assert self.config.deploy['s3_bucket'] is not '', 'empty target URL'
-        bash_fname = os.path.join(os.dirname(__file__), 'upload_doc_s3.sh')
+        bash_fname = os.path.join(os.path.dirname(__file__), 'upload_doc_s3.sh')
         run_cmd(['bash', bash_fname, self.config.html_dir, self.config.deploy['s3_bucket']])
 
     def deploy_pdf(self):

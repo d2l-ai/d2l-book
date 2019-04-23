@@ -48,3 +48,5 @@ aws s3 sync --exclude '*.*' --include '*.woff' --include '*.woff2' \
      $DIR $BUCKET
 
 aws s3 sync --delete $DIR $BUCKET --acl 'public-read' --quiet
+
+rm -rf $DIR

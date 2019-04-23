@@ -89,7 +89,6 @@ As can be seen from :numref:img.catdog:, there is a cat and a dog.
 
 ### Table
 
-:label:table:
 :This a is very long table caption. It will breaks into several lines. And
 contains a math equation as well. $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
 
@@ -97,6 +96,7 @@ contains a math equation as well. $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
 | ---  | --- | --- |
 | 2018 | 100 | Good year |
 | 2019 | 200 | Even better |
+:label:table:
 
 Cite :numref:table:
 
