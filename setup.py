@@ -6,6 +6,8 @@ requirements = [
     'sphinx>=1.7',
     'recommonmark',
     'sphinxcontrib-bibtex',
+    'mu-notedown',
+    'mxtheme',
     'sphinxcontrib-svg2pdfconverter'
 ]
 
