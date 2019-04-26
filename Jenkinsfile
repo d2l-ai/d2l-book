@@ -5,6 +5,8 @@ stage("Build and Publish") {
       sh '''#!/bin/bash
       set -ex
       export PATH=${PATH}:~/miniconda3/bin
+      which python
+      which activate
       rm -rf env
       python -m venv env
       source activate env/bin/activate
