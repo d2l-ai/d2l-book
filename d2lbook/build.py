@@ -38,12 +38,10 @@ def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     with open(input_fn, 'r') as f:
         md = f.read()
     lines = md.split('\n')
-    in_code = False
+    in_code = CharInMDCode(lines)
     for i, line in enumerate(lines):
-        if line.startswith('```'):
-            in_code ^= True
         m = mark_re.match(line)
-        if m is not None and not in_code and m.end() == len(line):
+        if m is not None and not in_code.in_code(i,0) and m.end() == len(line):
             lines[i] = '\n'+line+'\n'
     reader = notedown.MarkdownReader(match='strict')
     notebook= reader.reads('\n'.join(lines))
@@ -58,11 +56,52 @@ def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
 def delete_lines(lines, deletes):
     return [line for i, line in enumerate(lines) if i not in deletes]
 
+class CharInMDCode(object):
+    # indicating if a char is in a code block in markdown
+    def __init__(self, lines):
+        in_code = []
+        code_block_mark = None
+        for line in lines:
+            if not code_block_mark:
+                if self._get_code_block_mark(line):
+                    code_block_mark = self._get_code_block_mark(line)
+                    in_code.append([True]*len(line))
+                else:
+                    char_in_code = False
+                    code_line = [False] * len(line)
+                    for i, char in enumerate(line):
+                        if char == '`':
+                            char_in_code ^= True
+                        if char_in_code:
+                            code_line[i] = True
+                    in_code.append(code_line)
+            if code_block_mark:
+                in_code.append([True]*len(line))
+                if line.strip().startswith(code_block_mark):
+                    code_block_mark = None
+        self._in_code = in_code
+
+    def _match_back_quote(self, line):
+        mark = ''
+        for char in line:
+            if char == '`':
+                mark += '`'
+            else:
+                break
+        return mark
+
+    def _get_code_block_mark(self, line):
+        ls = line.strip()
+        if ls.startswith('```'):
+            return self._match_back_quote(ls)
+        return None
+
+    def in_code(self, line_i, pos):
+        return self._in_code[line_i][pos]
+
 def process_rst(body):
     def indented(line):
         return line.startswith('   ')
-    def in_code(line, pos):
-        return indented(line) or (line[0:pos].count('``') % 2) == 1
     def blank(line):
         return len(line.strip()) == 0
 
@@ -100,6 +139,7 @@ def process_rst(body):
     lines = delete_lines(lines, deletes)
     deletes = []
 
+    in_code = CharInMDCode(lines)
     for i, line in enumerate(lines):
         pos, new_line = 0, ''
         while True:
@@ -109,9 +149,10 @@ def process_rst(body):
                 break
             start, end = match.start(), match.end()
             origin, key, value = match[0], match[1], match[2]
+            print(origin)
             new_line += line[pos:start]
             pos = end
-            if in_code(line, start):
+            if in_code.in_code(i, start):
                 new_line += origin # no change if in code
             else:
                # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
@@ -119,6 +160,7 @@ def process_rst(body):
                     new_line += '.. _' + value + ':'
                 elif key in ['ref', 'numref', 'cite']:
                     new_line += ':'+key+':`'+value+'`'
+                    print(new_line)
                 elif key == 'eqref':
                     new_line += ':eq:`'+value+'`'
                 elif key == 'eqlabel':
