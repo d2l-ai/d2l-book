@@ -10,6 +10,7 @@ stage("Build and Publish") {
       cd demo
       d2lbook build html pdf
       '''
+
       if (env.BRANCH_NAME == 'master') {
         sh '''#!/bin/bash
         source activate env/bin/activate
