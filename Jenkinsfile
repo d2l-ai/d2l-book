@@ -4,7 +4,7 @@ stage("Build and Publish") {
       checkout scm
       sh '''#!/bin/bash
       set -ex
-      export PATH=${PATH}:~/miniconda3/bin
+      export PATH=~/miniconda3/bin:${PATH}
       which python
       which activate
       rm -rf env
