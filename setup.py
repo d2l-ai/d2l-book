@@ -8,7 +8,8 @@ requirements = [
     'sphinxcontrib-bibtex',
     'mu-notedown',
     'mxtheme',
-    'sphinxcontrib-svg2pdfconverter'
+    'sphinxcontrib-svg2pdfconverter',
+    'awscli'
 ]
 
 setup(
