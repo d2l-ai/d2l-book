@@ -9,7 +9,7 @@ requirements = [
     'mu-notedown',
     'mxtheme',
     'sphinxcontrib-svg2pdfconverter',
-    'awscli'
+    'awscli',
 ]
 
 setup(

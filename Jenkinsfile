@@ -10,6 +10,7 @@ stage("Build and Publish") {
       conda activate d2l-book-build
       pip install .
       cd demo
+      pip install matplotlib numpy
       d2lbook build html pdf
       '''
 
