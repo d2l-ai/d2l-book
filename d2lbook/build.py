@@ -128,7 +128,9 @@ def process_rst(body):
                 elif key in ['width', 'height']:
                     new_line += '   :'+key+': '+value
                 elif key == 'bibliography':
-                    new_line += '.. bibliography:: ' + value
+                    # a hard coded plain bibtex style...
+                    new_line += ('.. bibliography:: ' + value +
+                                 '\n   :style: plain\n   :all:')
                 else:
                     logging.fatal('unknown key', key)
 
