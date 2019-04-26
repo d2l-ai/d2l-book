@@ -5,12 +5,17 @@ stage("Build and Publish") {
       sh '''#!/bin/bash
       set -ex
       rm -rf env
-      pip install .
+      python setup.py install
       source activate env/bin/activate
       cd demo
       d2lbook build html pdf
-      d2lbook deploy html pdf
       '''
+      if (env.BRANCH_NAME == 'master') {
+        sh '''#!/bin/bash
+        source activate env/bin/activate
+        d2lbook deploy html pdf
+      '''
+      }
     }
   }
 }
