@@ -16,7 +16,9 @@ stage("Build and Publish") {
 
       if (env.BRANCH_NAME == 'master') {
         sh '''#!/bin/bash
-        source activate env/bin/activate
+        set -ex
+        export PATH=~/miniconda3/bin:${PATH}
+        conda activate d2l-book-build
         d2lbook deploy html pdf
       '''
       }
