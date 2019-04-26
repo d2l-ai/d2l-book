@@ -5,7 +5,7 @@ stage("Build and Publish") {
       sh '''#!/bin/bash
       set -ex
       export PATH=~/miniconda3/bin:${PATH}
-      conda env remove --name d2l-book-build -y
+      rm -rf ~/miniconda3/envs/d2l-book-build
       conda create --name d2l-book-build -y
       conda activate d2l-book-build
       pip install .
