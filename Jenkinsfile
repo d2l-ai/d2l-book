@@ -5,8 +5,9 @@ stage("Build and Publish") {
       sh '''#!/bin/bash
       set -ex
       rm -rf env
-      ~/miniconda3/bin/pip install .
+      python -m venv env
       source activate env/bin/activate
+      ~/miniconda3/bin/pip install .
       cd demo
       d2lbook build html pdf
       '''
