@@ -19,6 +19,7 @@ stage("Build and Publish") {
         set -ex
         export PATH=~/miniconda3/bin:${PATH}
         conda activate d2l-book-build
+        cd demo
         d2lbook deploy html pdf
       '''
       }

@@ -1,5 +1,6 @@
 import configparser
 import os
+import logging
 
 class Config():
     def __init__(self, config_fname):
