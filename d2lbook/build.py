@@ -14,7 +14,10 @@ from d2lbook.utils import *
 
 __all__  = ['build']
 
-mark_re = re.compile(':([-\/\\._\w\d]+):([-\/\\\._\w\d]+):')
+# our special mark in markdown, e.g. :label:`chapter_intro`
+mark_re_md = re.compile(':([-\/\\._\w\d]+):`([-\/\\\._\w\d]+)`')
+# the according one in rst, changed ` to ``
+mark_re = re.compile(':([-\/\\._\w\d]+):``([-\/\\\._\w\d]+)``')
 
 def build(config):
     parser = argparse.ArgumentParser(description='build')
@@ -40,7 +43,7 @@ def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     lines = md.split('\n')
     in_code = CharInMDCode(lines)
     for i, line in enumerate(lines):
-        m = mark_re.match(line)
+        m = mark_re_md.match(line)
         if m is not None and not in_code.in_code(i,0) and m.end() == len(line):
             lines[i] = '\n'+line+'\n'
     reader = notedown.MarkdownReader(match='strict')
@@ -149,7 +152,6 @@ def process_rst(body):
                 break
             start, end = match.start(), match.end()
             origin, key, value = match[0], match[1], match[2]
-            print(origin)
             new_line += line[pos:start]
             pos = end
             if in_code.in_code(i, start):
@@ -160,7 +162,6 @@ def process_rst(body):
                     new_line += '.. _' + value + ':'
                 elif key in ['ref', 'numref', 'cite']:
                     new_line += ':'+key+':`'+value+'`'
-                    print(new_line)
                 elif key == 'eqref':
                     new_line += ':eq:`'+value+'`'
                 elif key == 'eqlabel':
