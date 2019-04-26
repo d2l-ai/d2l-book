@@ -5,11 +5,8 @@ stage("Build and Publish") {
       sh '''#!/bin/bash
       set -ex
       export PATH=~/miniconda3/bin:${PATH}
-      which python
-      which activate
-      rm -rf env
-      python -m venv env
-      source activate env/bin/activate
+      conda create --name d2l-book-test
+      source activate d2l-book-test
       pip install .
       cd demo
       d2lbook build html pdf
