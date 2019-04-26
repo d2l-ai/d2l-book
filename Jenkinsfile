@@ -5,7 +5,7 @@ stage("Build and Publish") {
       sh '''#!/bin/bash
       set -ex
       rm -rf env
-      python -m venv env
+      ~/miniconda3/bin/python -m venv env
       source activate env/bin/activate
       ~/miniconda3/bin/pip install .
       cd demo
