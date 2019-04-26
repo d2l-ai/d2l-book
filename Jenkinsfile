@@ -6,7 +6,7 @@ stage("Build and Publish") {
       set -ex
       export PATH=~/miniconda3/bin:${PATH}
       rm -rf ~/miniconda3/envs/d2l-book-build
-      conda create --name d2l-book-build -y
+      conda create --name d2l-book-build pip -y
       conda activate d2l-book-build
       pip install .
       cd demo

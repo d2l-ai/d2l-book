@@ -23,6 +23,8 @@ setup(
     description="Create an online book with Jupyter Notebooks and Sphinx",
     license='Apache-2.0',
     packages=find_packages(),
+    include_package_data=True,
+    package_data={'d2lbook':['config_default.ini', 'upload_doc_s3.sh']},
     entry_points={
         'console_scripts': [
             'd2lbook = d2lbook.main:main',

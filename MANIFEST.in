@@ -1,4 +1,0 @@
-include d2lbook/config_default.ini
-include d2lbook/upload_doc_s3.sh
-include demo/*
-include demo/*/*
