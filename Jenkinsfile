@@ -4,10 +4,11 @@ stage("Build and Publish") {
       checkout scm
       sh '''#!/bin/bash
       set -ex
+      export PATH=${PATH}:~/miniconda3/bin
       rm -rf env
-      ~/miniconda3/bin/python -m venv env
+      python -m venv env
       source activate env/bin/activate
-      ~/miniconda3/bin/pip install .
+      pip install .
       cd demo
       d2lbook build html pdf
       '''
