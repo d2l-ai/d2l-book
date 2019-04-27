@@ -194,7 +194,7 @@ def process_rst(body):
                 line_j = lines[j]
                 if not indented(line_j) and not blank(line_j):
                     break
-                if line_j.startswith('   :'):
+                if line_j.startswith('   :width:') or line_j.startswith('   :height:'):
                     move(j, i+1)
 
     # move .. _label: before a image, a section, or a table
