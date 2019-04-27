@@ -78,7 +78,7 @@ class CharInMDCode(object):
                         if char_in_code:
                             code_line[i] = True
                     in_code.append(code_line)
-            if code_block_mark:
+            else:
                 in_code.append([True]*len(line))
                 if line.strip().startswith(code_block_mark):
                     code_block_mark = None

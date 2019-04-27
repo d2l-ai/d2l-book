@@ -1,5 +1,5 @@
 # Code Cells
-:label:sec.code:
+:label:`sec_code`
 
 ```{.python .input}
 %matplotlib inline
