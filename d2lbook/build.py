@@ -264,7 +264,7 @@ def write_sphinx_conf(config):
 
 def write_sphinx_static(config):
     g_id = 'google_analytics_tracking_id'
-    d2l_js = template.shorten_sec_num
+    d2l_js = template.shorten_sec_num + template.replace_qr
     if g_id in config.deploy:
         d2l_js += template.google_tracker.replace(g_id.upper(), config.deploy[g_id])
     static_dirname = os.path.join(config.rst_dir, '_static')
