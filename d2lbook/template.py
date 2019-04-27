@@ -1,5 +1,9 @@
 
 sphinx_conf = """
+import sys
+sys.path.insert(0, '..')
+sys.path.insert(0, '.')
+
 project = "NAME"
 copyright = "COPYRIGHT"
 author = "AUHTOR"
@@ -9,6 +13,7 @@ extensions = [
     'recommonmark',
     'sphinxcontrib.bibtex',
     'sphinxcontrib.rsvgconverter',
+    'sphinx.ext.autodoc',
 ]
 
 templates_path = ['_templates']

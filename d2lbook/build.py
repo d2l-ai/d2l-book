@@ -124,6 +124,16 @@ def process_rst(body):
             blanks = look_behind(i+1, blank)
             deletes.extend(blanks)
             i += len(blanks)
+        elif line.startswith('.. code:: eval_rst'):
+            # make it a rst block
+            deletes.append(i)
+            for j in range(i+1, len(lines)):
+                line_j = lines[j]
+                if indented(line_j):
+                    lines[j] = line_j[3:]
+                elif not blank(line_j):
+                    break
+            i = j
         elif indented(line) and ':alt:' in line:
             # Image caption, remove :alt: block, it cause trouble for long captions
             caps = look_behind(i, lambda l: indented(l) and not blank(l))
@@ -138,7 +148,7 @@ def process_rst(body):
         else:
             i += 1
 
-    # process references, first change :label:my_label: into rst format
+    # change :label:my_label: into rst format
     lines = delete_lines(lines, deletes)
     deletes = []
 
