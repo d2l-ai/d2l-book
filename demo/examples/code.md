@@ -7,7 +7,23 @@
 1+2
 ```
 
-```{.python .input  n=2}
+```bash
+ls .
+```
+
+```
+1+2+3
+```
+
+```{.python .input}
+%matplotlib inline
+
+print(['test']*10)
+1+2
+```
+
+
+```{.python .input  n=3}
 from IPython import display
 from matplotlib import pyplot as plt
 import numpy as np
