@@ -65,6 +65,8 @@ that you need to leave an empty line between the caption and the table itself.
 | 2018 | 100 | Good year |
 | 2019 | 200 | Even better, add something to make this column wider  |
 
+(If the Table caption number)
+
 ## Cross References
 
 We often want to reference sections, figures, tables and equations in a book.
