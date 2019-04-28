@@ -50,7 +50,11 @@ def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     notebook= reader.reads('\n'.join(lines))
     # evaluate
     if run_cells:
+        # change to the notebook directory to resolve the relpaths properly
+        cwd = os.getcwd()
+        os.chdir(os.path.join(cwd, os.path.dirname(input_fn)))
         notedown.run(notebook, timeout)
+        os.chdir(cwd)
     # write
     notebook['metadata'].update({'language_info':{'name':lang}})
     with open(output_fn, 'w') as f:
@@ -315,6 +319,7 @@ class Builder(object):
             notebooks, self.config.src_dir, self.config.eval_dir, 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
             pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', latest_depend)
+        self._copy_resources(self.config.src_dir, self.config.eval_dir)
         logging.info('%d notedowns and %d markdowns are out dated',
                      len(updated_notebooks), len(updated_markdowns))
         for src, tgt in updated_notebooks:
@@ -330,20 +335,21 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
 
-
-    def _prepare_sphinx_env(self):
-        write_sphinx_conf(self.config)
-        write_sphinx_static(self.config)
+    def _copy_resources(self, src_dir, tgt_dir):
         for res in self.config.build['resources'].split():
-            src = os.path.join(self.config.src_dir, res)
-            updated = get_updated_files(find_files(src),
-                                        self.config.src_dir, self.config.rst_dir)
+            src = os.path.join(src_dir, res)
+            updated = get_updated_files(find_files(src), src_dir, tgt_dir)
             for src, tgt in updated:
                 if os.path.isdir(src):
                     continue
                 logging.info('Copy %s to %s', src, tgt)
                 mkdir(os.path.dirname(tgt))
                 shutil.copyfile(src, tgt)
+
+    def _prepare_sphinx_env(self):
+        write_sphinx_conf(self.config)
+        write_sphinx_static(self.config)
+        self._copy_resources(self.config.src_dir, self.config.rst_dir)
 
     def build_rst(self):
         if self.done['rst']:
