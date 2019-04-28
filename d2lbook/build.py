@@ -144,7 +144,6 @@ def process_rst(body):
         elif line.startswith('.. parsed-literal::'):
             # add a output class so we can add customized css
             lines[i] += '\n   :class: output'
-            print(lines[i])
             i += 1
         elif indented(line) and ':alt:' in line:
             # Image caption, remove :alt: block, it cause trouble for long captions
