@@ -65,7 +65,8 @@ that you need to leave an empty line between the caption and the table itself.
 | 2018 | 100 | Good year |
 | 2019 | 200 | Even better, add something to make this column wider  |
 
-(If the Table caption number)
+If the Table caption number doesn't show properly, you may need to update
+`pandoc` to the latest version.
 
 ## Cross References
 
