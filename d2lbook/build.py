@@ -52,7 +52,7 @@ def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     if run_cells:
         # change to the notebook directory to resolve the relpaths properly
         cwd = os.getcwd()
-        os.chdir(os.path.join(cwd, os.path.dirname(input_fn)))
+        os.chdir(os.path.join(cwd, os.path.dirname(output_fn)))
         notedown.run(notebook, timeout)
         os.chdir(cwd)
     # write
