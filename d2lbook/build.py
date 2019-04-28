@@ -29,6 +29,7 @@ def build(config):
         'rst' : builder.build_rst,
         'html' : builder.build_html,
         'pdf' : builder.build_pdf,
+        'pkg' : builder.build_pkg,
         'all' : builder.build_all,
     }
     for cmd in args.commands:
@@ -300,7 +301,7 @@ class Builder(object):
         self.sphinx_opts = '-j 4'
         if config.build['warning_is_error'].lower() == 'true':
             self.sphinx_opts += ' -W'
-        self.done = {'eval':False, 'html':False, 'rst':False, 'pdf':False}
+        self.done = {'eval':False, 'html':False, 'rst':False, 'pdf':False, 'pkg':False}
 
     def _find_md_files(self):
         build = self.config.build
@@ -393,8 +394,17 @@ class Builder(object):
                  '-b latex -c', self.config.rst_dir, self.sphinx_opts])
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
 
+    def build_pkg(self):
+        if self.done['pkg']:
+            return
+        self.done['pkg'] = True
+        self.eval_output()
+        run_cmd(['cd', self.config.eval_dir, '&& zip -r',
+                 os.path.basename(self.config.pkg_fname) , '*'])
+
     def build_all(self):
         self.eval_output()
         self.build_rst()
         self.build_html()
         self.build_pdf()
+        self.build_pkg()

@@ -26,3 +26,7 @@ class Config():
         self.rst_dir = os.path.join(self.tgt_dir, 'rst')
         self.html_dir = os.path.join(self.tgt_dir, 'html')
         self.pdf_dir = os.path.join(self.tgt_dir, 'pdf')
+
+        # some targets names
+        self.pdf_fname = os.path.join(self.pdf_dir, self.project['name']+'.pdf')
+        self.pkg_fname = os.path.join(self.eval_dir, self.project['name']+'.zip')
