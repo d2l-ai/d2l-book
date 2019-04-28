@@ -4,7 +4,9 @@ stage("Build and Publish") {
       checkout scm
       sh '''#!/bin/bash
       set -ex
+      echo $PATH
       export PATH=~/miniconda3/bin:${PATH}
+      echo $PATH
       rm -rf ~/miniconda3/envs/d2l-book-build
       conda create --name d2l-book-build pip -y
       conda activate d2l-book-build
