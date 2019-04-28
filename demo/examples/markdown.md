@@ -55,7 +55,7 @@ that you need to leave an empty line between the caption and the table itself.
 | Year | Number | Comment |
 | ---  | --- | --- |
 | 2018 | 100 | Good year |
-| 2019 | 200 | Even better |
+| 2019 | 200 | Even better, add something to make this column wider |
 ```
 
 : The number is computed by $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
@@ -63,7 +63,10 @@ that you need to leave an empty line between the caption and the table itself.
 | Year | Number | Comment |
 | ---  | --- | --- |
 | 2018 | 100 | Good year |
-| 2019 | 200 | Even better |
+| 2019 | 200 | Even better, add something to make this column wider  |
+
+If the Table caption number doesn't show properly, you may need to update
+`pandoc` to the latest version.
 
 ## Cross References
 

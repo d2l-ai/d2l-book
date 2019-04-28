@@ -7,7 +7,7 @@ requirements = [
     'recommonmark',
     'sphinxcontrib-bibtex',
     'mu-notedown',
-    'mxtheme',
+    'mxtheme>=0.3.3',
     'sphinxcontrib-svg2pdfconverter',
     'awscli',
 ]

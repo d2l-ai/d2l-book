@@ -14,6 +14,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinxcontrib.rsvgconverter',
     'sphinx.ext.autodoc',
+    # 'IPython.sphinxext.ipython_console_highlighting',
 ]
 
 templates_path = ['_templates']

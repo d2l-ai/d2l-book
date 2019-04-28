@@ -138,6 +138,11 @@ def process_rst(body):
                 elif not blank(line_j):
                     break
             i = j
+        elif line.startswith('.. parsed-literal::'):
+            # add a output class so we can add customized css
+            lines[i] += '\n   :class: output'
+            print(lines[i])
+            i += 1
         elif indented(line) and ':alt:' in line:
             # Image caption, remove :alt: block, it cause trouble for long captions
             caps = look_behind(i, lambda l: indented(l) and not blank(l))
@@ -336,13 +341,15 @@ class Builder(object):
             shutil.copyfile(src, tgt)
 
     def _copy_resources(self, src_dir, tgt_dir):
-        for res in self.config.build['resources'].split():
+        resources = self.config.build['resources']
+        logging.info('Copy resources "%s" from %s to %s',
+                     resources, src_dir, tgt_dir)
+        for res in resources.split():
             src = os.path.join(src_dir, res)
             updated = get_updated_files(find_files(src), src_dir, tgt_dir)
             for src, tgt in updated:
                 if os.path.isdir(src):
                     continue
-                logging.info('Copy %s to %s', src, tgt)
                 mkdir(os.path.dirname(tgt))
                 shutil.copyfile(src, tgt)
 

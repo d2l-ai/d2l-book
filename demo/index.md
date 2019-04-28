@@ -26,6 +26,8 @@ Use `pip` to install the command-line interface.
 pip install d2lbook
 ```
 
+In addition, you also need to install `pandoc`, e.g. `conda install pandoc`.
+
 
 ### Create a new book (under developing)
 
