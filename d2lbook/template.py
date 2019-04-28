@@ -4,9 +4,9 @@ import sys
 sys.path.insert(0, '..')
 sys.path.insert(0, '.')
 
-project = "NAME"
+project = "TITLE"
 copyright = "COPYRIGHT"
-author = "AUHTOR"
+author = "AUTHOR"
 release = "RELEASE"
 
 extensions = [
@@ -37,10 +37,14 @@ html_theme_options = {
 html_static_path = ['_static']
 
 
-# latex_documents = [
-#     (master_doc, "NAME.tex", "TITLE",
-#      author, 'manual'),
-# ]
+latex_documents = [
+    (master_doc, "NAME.tex", "TITLE",
+     author, 'manual'),
+]
+
+latex_engine = 'xelatex' # for utf-8 supports
+latex_show_pagerefs = True
+latex_show_urls = 'footnote'
 
 
 def setup(app):
