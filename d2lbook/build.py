@@ -243,9 +243,6 @@ def process_rst(body):
     return '\n'.join(lines)
 
 def ipynb2rst(input_fn, output_fn):
-    #os.system('jupyter nbconvert --to rst '+input_fn + ' --output '+
-    #          os.path.relpath(output_fn, os.path.dirname(input_fn)))
-
     with open(input_fn, 'r') as f:
         notebook = nbformat.read(f, as_version=4)
     writer = nbconvert.RSTExporter()
@@ -274,11 +271,18 @@ def convert_header_links(header_links):
             items[i], items[i+1], items[i+2])
     return header_links
 
+def get_static_fname(fname, config):
+    if not fname:
+        return fname
+    return os.path.join(config.rst_dir, '_static', os.path.basename(fname))
+
 def write_sphinx_conf(config):
     pyconf = template.sphinx_conf
     config.project['header_links'] = convert_header_links(
         config.project['header_links'])
+    config.project['favicon'] = get_static_fname(config.project['favicon'], config)
     for key in config.project:
+        print(key, config.project[key])
         pyconf = pyconf.replace(key.upper(), config.project[key])
 
     with open(os.path.join(config.rst_dir, 'conf.py'), 'w') as f:
@@ -289,10 +293,14 @@ def write_sphinx_static(config):
     d2l_js = template.shorten_sec_num + template.replace_qr
     if g_id in config.deploy:
         d2l_js += template.google_tracker.replace(g_id.upper(), config.deploy[g_id])
-    static_dirname = os.path.join(config.rst_dir, '_static')
-    mkdir(static_dirname)
-    with open(os.path.join(static_dirname, 'd2l.js'), 'w') as f:
+    js_fname = get_static_fname('d2l.js', config)
+    mkdir(os.path.dirname(js_fname))
+    with open(js_fname, 'w') as f:
         f.write(d2l_js)
+    favicon = config.project['favicon']
+    if favicon:
+        shutil.copyfile(os.path.join('static', favicon),
+                        os.path.join(static_dirname, favicon))
 
 class Builder(object):
     def __init__(self, config):
@@ -360,6 +368,8 @@ class Builder(object):
         write_sphinx_conf(self.config)
         write_sphinx_static(self.config)
         self._copy_resources(self.config.src_dir, self.config.rst_dir)
+
+
 
     def build_rst(self):
         if self.done['rst']:
