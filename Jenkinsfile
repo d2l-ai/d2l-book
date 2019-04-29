@@ -3,13 +3,9 @@ stage("Build and Publish") {
     ws('workspace/d2l-book') {
       checkout scm
       sh '''set -ex
-      conda remove -n d2l-book-build --all -y
-      conda create -n d2l-book-build pip -y
-      conda activate d2l-book-build
-      pip install .
-      cd demo
-      pip install matplotlib numpy
-      d2lbook build html pdf
+      env
+      echo ${EXECUTOR_NUMBER}
+      echo ${env.EXECUTOR_NUMBER}
       '''
 
       if (env.BRANCH_NAME == 'master') {
