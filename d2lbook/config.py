@@ -9,8 +9,6 @@ class Config():
             logging.fatal('You can use "d2lbook create ." to create a default config')
             exit(-1)
         config = configparser.ConfigParser()
-        print(os.path.join(
-            os.path.dirname(__file__), 'config_default.ini'))
         default_config_name = os.path.join(
             os.path.dirname(__file__), 'config_default.ini')
         config.read(default_config_name)

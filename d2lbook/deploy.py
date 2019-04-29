@@ -37,7 +37,7 @@ class Deployer(object):
         if not url.endswith('/'):
             url += '/'
         logging.info('cp %s to %s', self.config.pdf_fname, url)
-        run_cmd(['aws s3 cp', self.config.pdf_fname, url, "--acl 'public-read' --quite"])
+        run_cmd(['aws s3 cp', self.config.pdf_fname, url, "--acl 'public-read' --quiet"])
 
     def deploy_pkg(self):
         self._check()
@@ -45,4 +45,4 @@ class Deployer(object):
         if not url.endswith('/'):
             url += '/'
         logging.info('cp %s to %s', self.config.pkg_fname, url)
-        run_cmd(['aws s3 cp', self.config.pkg_fname, url, "--acl 'public-read' --quite"])
+        run_cmd(['aws s3 cp', self.config.pkg_fname, url, "--acl 'public-read' --quiet"])
