@@ -29,4 +29,4 @@ class Config():
 
         # some targets names
         self.pdf_fname = os.path.join(self.pdf_dir, self.project['name']+'.pdf')
-        self.pkg_fname = os.path.join(self.eval_dir, self.project['name']+'.zip')
+        self.pkg_fname = os.path.join(self.tgt_dir, self.project['name']+'.zip')

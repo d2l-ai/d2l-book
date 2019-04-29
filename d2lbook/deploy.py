@@ -34,11 +34,15 @@ class Deployer(object):
     def deploy_pdf(self):
         self._check()
         url = self.config.deploy['s3_bucket']
+        if not url.endswith('/'):
+            url += '/'
         logging.info('cp %s to %s', self.config.pdf_fname, url)
-        run_cmd(['aws s3 cp', self.config.pdf_fname, url, "--acl 'public-read'"])
+        run_cmd(['aws s3 cp', self.config.pdf_fname, url, "--acl 'public-read' --quite"])
 
     def deploy_pkg(self):
         self._check()
         url = self.config.deploy['s3_bucket']
+        if not url.endswith('/'):
+            url += '/'
         logging.info('cp %s to %s', self.config.pkg_fname, url)
-        run_cmd(['aws s3 cp', self.config.pdf_fname, url, "--acl 'public-read'"])
+        run_cmd(['aws s3 cp', self.config.pkg_fname, url, "--acl 'public-read' --quite"])

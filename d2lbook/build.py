@@ -399,8 +399,11 @@ class Builder(object):
             return
         self.done['pkg'] = True
         self.eval_output()
+        zip_fname = 'out.zip'
         run_cmd(['cd', self.config.eval_dir, '&& zip -r',
-                 os.path.basename(self.config.pkg_fname) , '*'])
+                 zip_fname, '*'])
+        shutil.move(os.path.join(self.config.eval_dir, zip_fname),
+                    self.config.pkg_fname)
 
     def build_all(self):
         self.eval_output()
