@@ -1,5 +1,6 @@
 import os
 import glob
+import shutil
 
 def rm_ext(filename):
     return os.path.splitext(filename)[0]
@@ -38,6 +39,11 @@ def get_updated_files(src_fnames, src_dir, tgt_dir, new_ext=None, deps_mtime=0):
 
 def mkdir(dirname):
     os.makedirs(dirname, exist_ok=True)
+
+def copy(src, tgt):
+    mkdir(os.path.dirname(tgt))
+    shutil.copy(src, tgt)
+
 
 def run_cmd(cmd):
     if isinstance(cmd, str):

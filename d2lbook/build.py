@@ -9,8 +9,8 @@ import shutil
 import time
 import argparse
 import re
-from d2lbook import template
 from d2lbook.utils import *
+from d2lbook.sphinx import prepare_sphinx_env
 
 __all__  = ['build']
 
@@ -262,46 +262,6 @@ def ipynb2rst(input_fn, output_fn):
         with open(full_fn, 'wb') as f:
             f.write(outputs[fn])
 
-def convert_header_links(header_links):
-    items = header_links.replace('\n','').split(',')
-    assert len(items) % 3 == 0, header_links
-    header_links = ''
-    for i in range(0, len(items), 3):
-        header_links += "('%s', '%s', True, '%s')," % (
-            items[i], items[i+1], items[i+2])
-    return header_links
-
-def get_static_fname(fname, config):
-    if not fname:
-        return fname
-    return os.path.join(config.rst_dir, '_static', os.path.basename(fname))
-
-def write_sphinx_conf(config):
-    pyconf = template.sphinx_conf
-    config.project['header_links'] = convert_header_links(
-        config.project['header_links'])
-    config.project['favicon'] = get_static_fname(config.project['favicon'], config)
-    for key in config.project:
-        print(key, config.project[key])
-        pyconf = pyconf.replace(key.upper(), config.project[key])
-
-    with open(os.path.join(config.rst_dir, 'conf.py'), 'w') as f:
-        f.write(pyconf)
-
-def write_sphinx_static(config):
-    g_id = 'google_analytics_tracking_id'
-    d2l_js = template.shorten_sec_num + template.replace_qr
-    if g_id in config.deploy:
-        d2l_js += template.google_tracker.replace(g_id.upper(), config.deploy[g_id])
-    js_fname = get_static_fname('d2l.js', config)
-    mkdir(os.path.dirname(js_fname))
-    with open(js_fname, 'w') as f:
-        f.write(d2l_js)
-    favicon = config.project['favicon']
-    if favicon:
-        shutil.copyfile(os.path.join('static', favicon),
-                        os.path.join(static_dirname, favicon))
-
 class Builder(object):
     def __init__(self, config):
         self.config = config
@@ -364,13 +324,6 @@ class Builder(object):
                 mkdir(os.path.dirname(tgt))
                 shutil.copyfile(src, tgt)
 
-    def _prepare_sphinx_env(self):
-        write_sphinx_conf(self.config)
-        write_sphinx_static(self.config)
-        self._copy_resources(self.config.src_dir, self.config.rst_dir)
-
-
-
     def build_rst(self):
         if self.done['rst']:
             return
@@ -384,8 +337,8 @@ class Builder(object):
             logging.info('Convert %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
             ipynb2rst(src, tgt)
-
-        self._prepare_sphinx_env()
+        prepare_sphinx_env(self.config)
+        self._copy_resources(self.config.src_dir, self.config.rst_dir)
 
     def build_html(self):
         if self.done['html']:
