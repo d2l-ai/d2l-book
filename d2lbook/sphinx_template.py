@@ -36,6 +36,7 @@ html_theme_options = {
 }
 html_static_path = ['_static']
 
+html_favicon = 'FAVICON'
 
 latex_documents = [
     (master_doc, "NAME.tex", "TITLE",
