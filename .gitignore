@@ -1,4 +1,5 @@
 *.pdf
+*.svg
 /d2lbook.egg-info/
 /dist/
 *.pyc

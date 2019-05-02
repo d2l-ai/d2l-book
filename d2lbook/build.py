@@ -9,6 +9,8 @@ import shutil
 import time
 import argparse
 import re
+import random
+import string
 from d2lbook.utils import *
 from d2lbook.sphinx import prepare_sphinx_env
 
@@ -246,19 +248,20 @@ def ipynb2rst(input_fn, output_fn):
     with open(input_fn, 'r') as f:
         notebook = nbformat.read(f, as_version=4)
     writer = nbconvert.RSTExporter()
-    image_dir = rm_ext(os.path.basename(output_fn))
-    resources = {'output_files_dir':image_dir}
+    letters = string.ascii_lowercase
+    rand_str = ''.join(random.choice(letters) for i in range(4))
+    resources = {'unique_key':
+                 'output_'+rm_ext(os.path.basename(output_fn))+'_'+rand_str}
     (body, resources) = writer.from_notebook_node(notebook, resources)
 
     body = process_rst(body)
 
     with open(output_fn, 'w') as f:
         f.write(body)
-    base_dir = os.path.dirname(output_fn)
     outputs = resources['outputs']
+    base_dir = os.path.dirname(output_fn)
     for fn in outputs:
         full_fn = os.path.join(base_dir, fn)
-        mkdir(os.path.dirname(full_fn))
         with open(full_fn, 'wb') as f:
             f.write(outputs[fn])
 
