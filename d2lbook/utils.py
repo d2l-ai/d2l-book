@@ -48,4 +48,6 @@ def copy(src, tgt):
 def run_cmd(cmd):
     if isinstance(cmd, str):
         cmd = [cmd]
-    os.system(' '.join(cmd))
+    ret = os.system(' '.join(cmd))
+    if ret != 0:
+        exit(-1)
