@@ -25,6 +25,8 @@ numfig_secnum_depth = 2
 math_numfig = True
 math_number_all = True
 
+suppress_warnings = ['misc.highlighting_failure']
+
 html_theme = 'mxtheme'
 html_theme_options = {
     'primary_color': 'blue',
