@@ -50,7 +50,7 @@ latex_show_pagerefs = True
 latex_show_urls = 'footnote'
 
 latex_elements = {
-'preamble': '\setcounter{tocdepth}{2}'
+'preamble': '\setcounter{tocdepth}{1}'
 }
 
 
