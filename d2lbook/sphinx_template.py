@@ -49,6 +49,10 @@ latex_engine = 'xelatex' # for utf-8 supports
 latex_show_pagerefs = True
 latex_show_urls = 'footnote'
 
+latex_elements = {
+'preamble': '\setcounter{tocdepth}{2}'
+}
+
 
 def setup(app):
     app.add_javascript('d2l.js')
