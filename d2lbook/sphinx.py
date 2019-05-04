@@ -37,7 +37,6 @@ class SphinxEnv(object):
                 continue
             sphinx_fname = os.path.join(self.config.rst_dir, '_static',
                                         os.path.basename(fname))
-            print(fname, sphinx_fname)
             utils.copy(fname, sphinx_fname)
             self._update_pyconf(key, os.path.join(
                 '_static', os.path.basename(fname)))

@@ -295,9 +295,9 @@ class Builder(object):
         depends_mtimes = get_mtimes(depends)
         latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
         updated_notebooks = get_updated_files(
-            notebooks, self.config.src_dir, self.config.eval_dir, 'ipynb', latest_depend)
+            notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
-            pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', latest_depend)
+            pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
         self._copy_resources(self.config.src_dir, self.config.eval_dir)
         logging.info('%d notedowns and %d markdowns are out dated',
                      len(updated_notebooks), len(updated_markdowns))
@@ -313,6 +313,14 @@ class Builder(object):
             logging.info('Copy %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
+
+        src_pattern = self.config.build['non-notebooks'] + ' ' + self.config.build['notebooks']
+        removed_notebooks = get_removed_files(src_pattern, self.config.src_dir,
+                                              self.config.eval_dir, 'md', 'ipynb')
+        if removed_notebooks:
+            logging.info('Clean removed notebooks %s', ','.join(removed_notebooks))
+            for fn in removed_notebooks:
+                os.remove(fn)
 
     def _copy_resources(self, src_dir, tgt_dir):
         resources = self.config.build['resources']
@@ -334,7 +342,7 @@ class Builder(object):
         self.eval_output()
         notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
         updated_notebooks = get_updated_files(
-            notebooks, self.config.eval_dir, self.config.rst_dir, 'rst')
+            notebooks, self.config.eval_dir, self.config.rst_dir, 'ipynb', 'rst')
         logging.info('%d rst files are outdated', len(updated_notebooks))
         for src, tgt in updated_notebooks:
             logging.info('Convert %s to %s', src, tgt)
