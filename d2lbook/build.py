@@ -32,6 +32,7 @@ def build(config):
         'html' : builder.build_html,
         'pdf' : builder.build_pdf,
         'pkg' : builder.build_pkg,
+        'linkcheck' : builder.linkcheck,
         'all' : builder.build_all,
     }
     for cmd in args.commands:
@@ -272,7 +273,8 @@ class Builder(object):
         self.sphinx_opts = '-j 4'
         if config.build['warning_is_error'].lower() == 'true':
             self.sphinx_opts += ' -W'
-        self.done = {'eval':False, 'html':False, 'rst':False, 'pdf':False, 'pkg':False}
+        self.done = {'eval':False, 'html':False, 'rst':False,
+                     'check_link':False, 'pdf':False, 'pkg':False}
 
     def _find_md_files(self):
         build = self.config.build
@@ -359,6 +361,14 @@ class Builder(object):
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
 
+    def linkcheck(self):
+        if self.done['check_link']:
+            return
+        self.done['check_link'] = True
+        self.build_rst()
+        run_cmd(['sphinx-build', self.config.rst_dir, self.config.linkcheck_dir,
+                 '-b linkcheck -c', self.config.rst_dir, self.sphinx_opts])
+
     def build_pdf(self):
         if self.done['pdf']:
             return
@@ -366,6 +376,7 @@ class Builder(object):
         self.build_rst()
         run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
                  '-b latex -c', self.config.rst_dir, self.sphinx_opts])
+
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
 
     def build_pkg(self):
