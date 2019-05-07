@@ -33,6 +33,7 @@ def build(config):
         'pdf' : builder.build_pdf,
         'pkg' : builder.build_pkg,
         'linkcheck' : builder.linkcheck,
+        'outputcheck' : builder.outputcheck,
         'all' : builder.build_all,
     }
     for cmd in args.commands:
@@ -288,6 +289,30 @@ class Builder(object):
         depends = find_files(build['dependencies'], src_dir)
         return notebooks, pure_markdowns, depends
 
+    def _get_updated_md_files(self):
+        notebooks, pure_markdowns, depends = self._find_md_files()
+        depends_mtimes = get_mtimes(depends)
+        latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
+        updated_notebooks = get_updated_files(
+            notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
+        updated_markdowns = get_updated_files(
+            pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
+        return updated_notebooks, updated_markdowns
+
+    def outputcheck(self):
+        notebooks, _, _ = self._find_md_files()
+        reader = notedown.MarkdownReader()
+        error = False
+        for fn in notebooks:
+            with open(fn, 'r') as f:
+                notebook= reader.read(f)
+            for c in notebook.cells:
+                if 'outputs' in c and len(c['outputs']):
+                    logging.error("Found execution outputs in %s", fn)
+                    error = True
+        if error:
+            exit(-1)
+
     def eval_output(self):
         """Evaluate the notebooks and save them in a different folder"""
         if self.done['eval']:
@@ -300,9 +325,9 @@ class Builder(object):
             notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
             pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
-        self._copy_resources(self.config.src_dir, self.config.eval_dir)
         logging.info('%d notedowns and %d markdowns are out dated',
                      len(updated_notebooks), len(updated_markdowns))
+        self._copy_resources(self.config.src_dir, self.config.eval_dir)
         for src, tgt in updated_notebooks:
             logging.info('Evaluating %s, save as %s', src, tgt)
             mkdir(os.path.dirname(tgt))
