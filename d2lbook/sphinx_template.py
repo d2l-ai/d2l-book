@@ -26,6 +26,9 @@ math_numfig = True
 math_number_all = True
 
 suppress_warnings = ['misc.highlighting_failure']
+linkcheck_ignore = [r'.*localhost.*']
+linkcheck_timeout = 5
+linkcheck_workers = 20
 
 html_theme = 'mxtheme'
 html_theme_options = {
