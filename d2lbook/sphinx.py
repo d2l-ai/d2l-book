@@ -57,6 +57,8 @@ class SphinxEnv(object):
         if g_id in self.config.deploy:
             d2l_js += template.google_tracker.replace(
                 g_id.upper(), self.config.deploy[g_id])
+
+        os.makedirs(os.path.join(self.config.rst_dir, '_static'), exist_ok=True)
         fname = os.path.join(self.config.rst_dir, '_static', 'd2l.js')
         logging.info('write into %s', fname)
         with open(fname, 'w') as f:
