@@ -3,7 +3,7 @@ from d2lbook import __version__
 
 requirements = [
     'jupyter',
-    'sphinx>=1.7',
+    'sphinx==1.8.5',  # sphinx 2.0 has a bug in search
     'recommonmark',
     'sphinxcontrib-bibtex',
     'mu-notedown',
