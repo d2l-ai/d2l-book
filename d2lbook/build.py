@@ -13,6 +13,7 @@ import random
 import string
 from d2lbook.utils import *
 from d2lbook.sphinx import prepare_sphinx_env
+from d2lbook.config import Config
 
 __all__  = ['build']
 
@@ -21,21 +22,18 @@ mark_re_md = re.compile(':([-\/\\._\w\d]+):`([-\/\\\._\w\d]+)`')
 # the according one in rst, changed ` to ``
 mark_re = re.compile(':([-\/\\._\w\d]+):``([-\/\\\._\w\d]+)``')
 
-def build(config):
-    parser = argparse.ArgumentParser(description='build')
-    parser.add_argument('commands', nargs='+', help=' ')
+def build():
+    parser = argparse.ArgumentParser(description='build the documents')
+    commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'outputcheck',
+                'all']
+    parser.add_argument('commands', nargs='+', choices=commands)
     args = parser.parse_args(sys.argv[2:])
+    config = Config()
     builder = Builder(config)
-    commands = {
-        'eval' : builder.eval_output,
-        'rst' : builder.build_rst,
-        'html' : builder.build_html,
-        'pdf' : builder.build_pdf,
-        'pkg' : builder.build_pkg,
-        'linkcheck' : builder.linkcheck,
-        'outputcheck' : builder.outputcheck,
-        'all' : builder.build_all,
-    }
+    funcs = [builder.eval_output, builder.build_rst,builder.build_html,
+             builder.build_pdf, builder.build_pkg, builder.linkcheck,
+             builder.outputcheck, builder.build_all]
+    run_commands = dict((c, f) for c, f in zip(commands, funcs))
     for cmd in args.commands:
         commands[cmd]()
 

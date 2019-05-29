@@ -3,7 +3,7 @@ import os
 import logging
 
 class Config():
-    def __init__(self, config_fname):
+    def __init__(self, config_fname='config.ini'):
         if not os.path.exists(config_fname):
             logging.fatal('Failed to find the config', config_fname)
             logging.fatal('You can use "d2lbook create ." to create a default config')
