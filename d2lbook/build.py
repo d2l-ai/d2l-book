@@ -9,8 +9,7 @@ import shutil
 import time
 import argparse
 import re
-import random
-import string
+import hashlib
 from d2lbook.utils import *
 from d2lbook.sphinx import prepare_sphinx_env
 from d2lbook.config import Config
@@ -243,10 +242,9 @@ def ipynb2rst(input_fn, output_fn):
     with open(input_fn, 'r') as f:
         notebook = nbformat.read(f, as_version=4)
     writer = nbconvert.RSTExporter()
-    letters = string.ascii_lowercase
-    rand_str = ''.join(random.choice(letters) for i in range(4))
+    sig = hashlib.sha1(input_fn.encode()).hexdigest()[:6]
     resources = {'unique_key':
-                 'output_'+rm_ext(os.path.basename(output_fn))+'_'+rand_str}
+                 'output_'+rm_ext(os.path.basename(output_fn))+'_'+sig}
     (body, resources) = writer.from_notebook_node(notebook, resources)
 
     body = process_rst(body)
