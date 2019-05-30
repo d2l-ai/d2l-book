@@ -13,6 +13,7 @@ import random
 import string
 from d2lbook.utils import *
 from d2lbook.sphinx import prepare_sphinx_env
+from d2lbook.config import Config
 
 __all__  = ['build']
 
@@ -21,24 +22,16 @@ mark_re_md = re.compile(':([-\/\\._\w\d]+):`([-\/\\\._\w\d]+)`')
 # the according one in rst, changed ` to ``
 mark_re = re.compile(':([-\/\\._\w\d]+):``([-\/\\\._\w\d]+)``')
 
-def build(config):
-    parser = argparse.ArgumentParser(description='build')
-    parser.add_argument('commands', nargs='+', help=' ')
-    args = parser.parse_args(sys.argv[2:])
-    builder = Builder(config)
-    commands = {
-        'eval' : builder.eval_output,
-        'rst' : builder.build_rst,
-        'html' : builder.build_html,
-        'pdf' : builder.build_pdf,
-        'pkg' : builder.build_pkg,
-        'linkcheck' : builder.linkcheck,
-        'outputcheck' : builder.outputcheck,
-        'all' : builder.build_all,
-    }
-    for cmd in args.commands:
-        commands[cmd]()
+commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'outputcheck', 'all']
 
+def build():
+    parser = argparse.ArgumentParser(description='Build the documents')
+    parser.add_argument('commands', nargs='+', choices=commands)
+    args = parser.parse_args(sys.argv[2:])
+    config = Config()
+    builder = Builder(config)
+    for cmd in args.commands:
+        getattr(builder, cmd)()
 
 def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     # process: add empty lines before and after a mark, otherwise it confuses
@@ -274,8 +267,7 @@ class Builder(object):
         self.sphinx_opts = '-j 4'
         if config.build['warning_is_error'].lower() == 'true':
             self.sphinx_opts += ' -W'
-        self.done = {'eval':False, 'html':False, 'rst':False,
-                     'check_link':False, 'pdf':False, 'pkg':False}
+        self.done = dict((cmd, False) for cmd in commands)
 
     def _find_md_files(self):
         build = self.config.build
@@ -313,7 +305,7 @@ class Builder(object):
         if error:
             exit(-1)
 
-    def eval_output(self):
+    def eval(self):
         """Evaluate the notebooks and save them in a different folder"""
         if self.done['eval']:
             return
@@ -362,11 +354,11 @@ class Builder(object):
                 mkdir(os.path.dirname(tgt))
                 shutil.copyfile(src, tgt)
 
-    def build_rst(self):
+    def rst(self):
         if self.done['rst']:
             return
         self.done['rst'] = True
-        self.eval_output()
+        self.eval()
         notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
         updated_notebooks = get_updated_files(
             notebooks, self.config.eval_dir, self.config.rst_dir, 'ipynb', 'rst')
@@ -378,46 +370,46 @@ class Builder(object):
         prepare_sphinx_env(self.config)
         self._copy_resources(self.config.src_dir, self.config.rst_dir)
 
-    def build_html(self):
+    def html(self):
         if self.done['html']:
             return
         self.done['html'] = True
-        self.build_rst()
+        self.rst()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
 
     def linkcheck(self):
-        if self.done['check_link']:
+        if self.done['linkcheck']:
             return
-        self.done['check_link'] = True
-        self.build_rst()
+        self.done['linkcheck'] = True
+        self.rst()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.linkcheck_dir,
                  '-b linkcheck -c', self.config.rst_dir, self.sphinx_opts])
 
-    def build_pdf(self):
+    def pdf(self):
         if self.done['pdf']:
             return
         self.done['pdf'] = True
-        self.build_rst()
+        self.rst()
         run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
                  '-b latex -c', self.config.rst_dir, self.sphinx_opts])
 
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
 
-    def build_pkg(self):
+    def pkg(self):
         if self.done['pkg']:
             return
         self.done['pkg'] = True
-        self.eval_output()
+        self.eval()
         zip_fname = 'out.zip'
         run_cmd(['cd', self.config.eval_dir, '&& zip -r',
                  zip_fname, '*'])
         shutil.move(os.path.join(self.config.eval_dir, zip_fname),
                     self.config.pkg_fname)
 
-    def build_all(self):
-        self.eval_output()
-        self.build_rst()
-        self.build_html()
-        self.build_pdf()
-        self.build_pkg()
+    def all(self):
+        self.eval()
+        self.rst()
+        self.html()
+        self.pdf()
+        self.pkg()

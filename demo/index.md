@@ -92,8 +92,8 @@ d2l-book deploy ipynb
 :numbered:
 :maxdepth: 2
 
-guide/index
 examples/index
+develop/index
 ```
 
 
