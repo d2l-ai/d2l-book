@@ -8,7 +8,7 @@ def rm_ext(filename):
 
 def find_files(pattern, root=None):
     fnames = []
-    patterns = pattern.split(' ')
+    patterns = pattern.replace('\n',' ').split(' ')
     for p in patterns:
         if len(p) == 0:
             continue

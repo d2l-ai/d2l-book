@@ -315,6 +315,7 @@ class Builder(object):
             notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
             pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
+
         logging.info('%d notedowns and %d markdowns are out dated',
                      len(updated_notebooks), len(updated_markdowns))
         self._copy_resources(self.config.src_dir, self.config.eval_dir)
