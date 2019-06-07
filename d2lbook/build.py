@@ -21,7 +21,8 @@ mark_re_md = re.compile(':([-\/\\._\w\d]+):`([-\/\\\._\w\d]+)`')
 # the according one in rst, changed ` to ``
 mark_re = re.compile(':([-\/\\._\w\d]+):``([-\/\\\._\w\d]+)``')
 
-commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'outputcheck', 'all']
+commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck',
+            'outputcheck', 'lib', 'all']
 
 def build():
     parser = argparse.ArgumentParser(description='Build the documents')
@@ -180,12 +181,94 @@ class Builder(object):
         shutil.move(os.path.join(self.config.eval_dir, zip_fname),
                     self.config.pkg_fname)
 
+    def lib(self):
+        save_mark = self.config.library['save_mark']
+        if not save_mark:
+            logging.info('No save mark is specified, ignoring...')
+            return
+        lib_fname = self.config.library['save_filename']
+        logging.info('Matching with the partten: "%s"', save_mark)
+
+        root = os.path.join(self.config.src_dir, self.config.build['index'] + '.md')
+        notebooks = get_toc(root)
+        notebooks_enabled, _, _ = self._find_md_files()
+        notebooks = [nb for nb in notebooks if nb in notebooks_enabled]
+        with open(lib_fname, 'w') as f:
+            for nb in notebooks:
+                blocks = get_codes_to_save(nb, save_mark)
+                if blocks:
+                    logging.info('Found %d blocks in %s', len(blocks), nb)
+                    for block in blocks:
+                        logging.info(' --- %s', block[0])
+                        codes = '# Defined in file: %s\n%s\n\n' %(
+                            nb, '\n'.join(block))
+                        f.write(codes)
+
+            lib_name = os.path.dirname(lib_fname)
+            assert not '/' in lib_name, lib_name
+            f.write('import sys\n'+lib_name+' = sys.modules[__name__]\n')
+        logging.info('Saved into %s', lib_fname)
+
     def all(self):
         self.eval()
         self.rst()
         self.html()
         self.pdf()
         self.pkg()
+
+def get_codes_to_save(input_fn, save_mark):
+    """get the codes blocks (import, class, def) and will be saved"""
+    reader = notedown.MarkdownReader(match='strict')
+    with open(input_fn, 'r') as f:
+        nb = reader.read(f)
+    saved = []
+    for cell in nb.cells:
+        if cell.cell_type == 'code':
+            lines = cell.source.split('\n')
+            for i, l in enumerate(lines):
+                if l.strip().startswith('#') and save_mark in l:
+                    block = [lines[i+1]]
+                    if lines[i+1].startswith('def') or lines[i+1].startswith('class'):
+                        for j in range(i+2, len(lines)):
+                            l = lines[j]
+                            if not l.startswith(' '):
+                                break
+                            block.append(l)
+                    else: # import or from
+                        for j in range(i+2, len(lines)):
+                            l = lines[j]
+                            if l.startswith(' ') or not l:
+                                break
+                            block.append(l)
+                    saved.append(block)
+    return saved
+
+
+def get_toc(root):
+    """return a list of files in the order defined by TOC"""
+    subpages = get_subpages(root)
+    res = [root]
+    for fn in subpages:
+        res.extend(get_toc(fn))
+    return res
+
+def get_subpages(input_fn):
+    """read toc in input_fn, returns what it contains"""
+    subpages = []
+    reader = notedown.MarkdownReader()
+    with open(input_fn, 'r') as f:
+        nb = reader.read(f)
+    for cell in nb.cells:
+        if (cell.cell_type == 'code' and
+            'attributes' in cell.metadata and
+            'toc' in cell.metadata.attributes['classes']):
+            for l in cell.source.split('\n'):
+                l = l.strip()
+                if not l.startswith(':'):
+                    fn = os.path.join(os.path.dirname(input_fn), l+'.md')
+                    if os.path.exists(fn):
+                        subpages.append(fn)
+    return subpages
 
 def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     # process: add empty lines before and after a mark, otherwise it confuses

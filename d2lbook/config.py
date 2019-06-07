@@ -17,6 +17,7 @@ class Config():
         self.deploy = config['deploy']
         self.project = config['project']
         self.html = config['html']
+        self.library = config['library']
 
         # a bunch of directories
         self.src_dir = self.build['source_dir']
