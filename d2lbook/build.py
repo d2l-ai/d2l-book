@@ -32,6 +32,161 @@ def build():
     for cmd in args.commands:
         getattr(builder, cmd)()
 
+class Builder(object):
+    def __init__(self, config):
+        self.config = config
+        mkdir(self.config.tgt_dir)
+        self.sphinx_opts = '-j 4'
+        if config.build['warning_is_error'].lower() == 'true':
+            self.sphinx_opts += ' -W'
+        self.done = dict((cmd, False) for cmd in commands)
+
+    def _find_md_files(self):
+        build = self.config.build
+        src_dir = self.config.src_dir
+        excluded_files = find_files(build['exclusions'], src_dir)
+        pure_markdowns = find_files(build['non-notebooks'], src_dir)
+        pure_markdowns = [fn for fn in pure_markdowns if fn not in excluded_files]
+        notebooks = find_files(build['notebooks'], src_dir)
+        notebooks = [fn for fn in notebooks if fn not in pure_markdowns and fn
+                     not in pure_markdowns and fn not in excluded_files]
+        depends = find_files(build['dependencies'], src_dir)
+        return notebooks, pure_markdowns, depends
+
+    def _get_updated_md_files(self):
+        notebooks, pure_markdowns, depends = self._find_md_files()
+        depends_mtimes = get_mtimes(depends)
+        latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
+        updated_notebooks = get_updated_files(
+            notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
+        updated_markdowns = get_updated_files(
+            pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
+        return updated_notebooks, updated_markdowns
+
+    def outputcheck(self):
+        notebooks, _, _ = self._find_md_files()
+        reader = notedown.MarkdownReader()
+        error = False
+        for fn in notebooks:
+            with open(fn, 'r') as f:
+                notebook= reader.read(f)
+            for c in notebook.cells:
+                if 'outputs' in c and len(c['outputs']):
+                    logging.error("Found execution outputs in %s", fn)
+                    error = True
+        if error:
+            exit(-1)
+
+    def eval(self):
+        """Evaluate the notebooks and save them in a different folder"""
+        if self.done['eval']:
+            return
+        self.done['eval'] = True
+        notebooks, pure_markdowns, depends = self._find_md_files()
+        depends_mtimes = get_mtimes(depends)
+        latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
+        updated_notebooks = get_updated_files(
+            notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
+        updated_markdowns = get_updated_files(
+            pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
+
+        logging.info('%d notedowns and %d markdowns are out dated',
+                     len(updated_notebooks), len(updated_markdowns))
+        self._copy_resources(self.config.src_dir, self.config.eval_dir)
+        for src, tgt in updated_notebooks:
+            logging.info('Evaluating %s, save as %s', src, tgt)
+            mkdir(os.path.dirname(tgt))
+            start = time.time()
+            run_cells = self.config.build['eval_notebook'].lower()
+            eval_notebook(src, tgt, run_cells=='true')
+            logging.info('Finished in %.1f sec', time.time() - start)
+
+        for src, tgt in updated_markdowns:
+            logging.info('Copy %s to %s', src, tgt)
+            mkdir(os.path.dirname(tgt))
+            shutil.copyfile(src, tgt)
+
+        src_pattern = self.config.build['non-notebooks'] + ' ' + self.config.build['notebooks']
+        removed_notebooks = get_removed_files(src_pattern, self.config.src_dir,
+                                              self.config.eval_dir, 'md', 'ipynb')
+        if removed_notebooks:
+            logging.info('Clean removed notebooks %s', ','.join(removed_notebooks))
+            for fn in removed_notebooks:
+                os.remove(fn)
+
+    def _copy_resources(self, src_dir, tgt_dir):
+        resources = self.config.build['resources']
+        logging.info('Copy resources "%s" from %s to %s',
+                     resources, src_dir, tgt_dir)
+        for res in resources.split():
+            src = os.path.join(src_dir, res)
+            updated = get_updated_files(find_files(src), src_dir, tgt_dir)
+            for src, tgt in updated:
+                if os.path.isdir(src):
+                    continue
+                mkdir(os.path.dirname(tgt))
+                shutil.copyfile(src, tgt)
+
+    def rst(self):
+        if self.done['rst']:
+            return
+        self.done['rst'] = True
+        self.eval()
+        notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
+        updated_notebooks = get_updated_files(
+            notebooks, self.config.eval_dir, self.config.rst_dir, 'ipynb', 'rst')
+        logging.info('%d rst files are outdated', len(updated_notebooks))
+        for src, tgt in updated_notebooks:
+            logging.info('Convert %s to %s', src, tgt)
+            mkdir(os.path.dirname(tgt))
+            ipynb2rst(src, tgt)
+        prepare_sphinx_env(self.config)
+        self._copy_resources(self.config.src_dir, self.config.rst_dir)
+
+    def html(self):
+        if self.done['html']:
+            return
+        self.done['html'] = True
+        self.rst()
+        run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
+                 '-b html -c', self.config.rst_dir, self.sphinx_opts])
+
+    def linkcheck(self):
+        if self.done['linkcheck']:
+            return
+        self.done['linkcheck'] = True
+        self.rst()
+        run_cmd(['sphinx-build', self.config.rst_dir, self.config.linkcheck_dir,
+                 '-b linkcheck -c', self.config.rst_dir, self.sphinx_opts])
+
+    def pdf(self):
+        if self.done['pdf']:
+            return
+        self.done['pdf'] = True
+        self.rst()
+        run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
+                 '-b latex -c', self.config.rst_dir, self.sphinx_opts])
+
+        run_cmd(['cd', self.config.pdf_dir, '&& make'])
+
+    def pkg(self):
+        if self.done['pkg']:
+            return
+        self.done['pkg'] = True
+        self.eval()
+        zip_fname = 'out.zip'
+        run_cmd(['cd', self.config.eval_dir, '&& zip -r',
+                 zip_fname, '*'])
+        shutil.move(os.path.join(self.config.eval_dir, zip_fname),
+                    self.config.pkg_fname)
+
+    def all(self):
+        self.eval()
+        self.rst()
+        self.html()
+        self.pdf()
+        self.pkg()
+
 def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
     # process: add empty lines before and after a mark, otherwise it confuses
     # the rst parser...
@@ -257,158 +412,3 @@ def ipynb2rst(input_fn, output_fn):
         full_fn = os.path.join(base_dir, fn)
         with open(full_fn, 'wb') as f:
             f.write(outputs[fn])
-
-class Builder(object):
-    def __init__(self, config):
-        self.config = config
-        mkdir(self.config.tgt_dir)
-        self.sphinx_opts = '-j 4'
-        if config.build['warning_is_error'].lower() == 'true':
-            self.sphinx_opts += ' -W'
-        self.done = dict((cmd, False) for cmd in commands)
-
-    def _find_md_files(self):
-        build = self.config.build
-        src_dir = self.config.src_dir
-        excluded_files = find_files(build['exclusions'], src_dir)
-        pure_markdowns = find_files(build['non-notebooks'], src_dir)
-        pure_markdowns = [fn for fn in pure_markdowns if fn not in excluded_files]
-        notebooks = find_files(build['notebooks'], src_dir)
-        notebooks = [fn for fn in notebooks if fn not in pure_markdowns and fn
-                     not in pure_markdowns and fn not in excluded_files]
-        depends = find_files(build['dependencies'], src_dir)
-        return notebooks, pure_markdowns, depends
-
-    def _get_updated_md_files(self):
-        notebooks, pure_markdowns, depends = self._find_md_files()
-        depends_mtimes = get_mtimes(depends)
-        latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
-        updated_notebooks = get_updated_files(
-            notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
-        updated_markdowns = get_updated_files(
-            pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
-        return updated_notebooks, updated_markdowns
-
-    def outputcheck(self):
-        notebooks, _, _ = self._find_md_files()
-        reader = notedown.MarkdownReader()
-        error = False
-        for fn in notebooks:
-            with open(fn, 'r') as f:
-                notebook= reader.read(f)
-            for c in notebook.cells:
-                if 'outputs' in c and len(c['outputs']):
-                    logging.error("Found execution outputs in %s", fn)
-                    error = True
-        if error:
-            exit(-1)
-
-    def eval(self):
-        """Evaluate the notebooks and save them in a different folder"""
-        if self.done['eval']:
-            return
-        self.done['eval'] = True
-        notebooks, pure_markdowns, depends = self._find_md_files()
-        depends_mtimes = get_mtimes(depends)
-        latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
-        updated_notebooks = get_updated_files(
-            notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
-        updated_markdowns = get_updated_files(
-            pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
-
-        logging.info('%d notedowns and %d markdowns are out dated',
-                     len(updated_notebooks), len(updated_markdowns))
-        self._copy_resources(self.config.src_dir, self.config.eval_dir)
-        for src, tgt in updated_notebooks:
-            logging.info('Evaluating %s, save as %s', src, tgt)
-            mkdir(os.path.dirname(tgt))
-            start = time.time()
-            run_cells = self.config.build['eval_notebook'].lower()
-            eval_notebook(src, tgt, run_cells=='true')
-            logging.info('Finished in %.1f sec', time.time() - start)
-
-        for src, tgt in updated_markdowns:
-            logging.info('Copy %s to %s', src, tgt)
-            mkdir(os.path.dirname(tgt))
-            shutil.copyfile(src, tgt)
-
-        src_pattern = self.config.build['non-notebooks'] + ' ' + self.config.build['notebooks']
-        removed_notebooks = get_removed_files(src_pattern, self.config.src_dir,
-                                              self.config.eval_dir, 'md', 'ipynb')
-        if removed_notebooks:
-            logging.info('Clean removed notebooks %s', ','.join(removed_notebooks))
-            for fn in removed_notebooks:
-                os.remove(fn)
-
-    def _copy_resources(self, src_dir, tgt_dir):
-        resources = self.config.build['resources']
-        logging.info('Copy resources "%s" from %s to %s',
-                     resources, src_dir, tgt_dir)
-        for res in resources.split():
-            src = os.path.join(src_dir, res)
-            updated = get_updated_files(find_files(src), src_dir, tgt_dir)
-            for src, tgt in updated:
-                if os.path.isdir(src):
-                    continue
-                mkdir(os.path.dirname(tgt))
-                shutil.copyfile(src, tgt)
-
-    def rst(self):
-        if self.done['rst']:
-            return
-        self.done['rst'] = True
-        self.eval()
-        notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
-        updated_notebooks = get_updated_files(
-            notebooks, self.config.eval_dir, self.config.rst_dir, 'ipynb', 'rst')
-        logging.info('%d rst files are outdated', len(updated_notebooks))
-        for src, tgt in updated_notebooks:
-            logging.info('Convert %s to %s', src, tgt)
-            mkdir(os.path.dirname(tgt))
-            ipynb2rst(src, tgt)
-        prepare_sphinx_env(self.config)
-        self._copy_resources(self.config.src_dir, self.config.rst_dir)
-
-    def html(self):
-        if self.done['html']:
-            return
-        self.done['html'] = True
-        self.rst()
-        run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
-                 '-b html -c', self.config.rst_dir, self.sphinx_opts])
-
-    def linkcheck(self):
-        if self.done['linkcheck']:
-            return
-        self.done['linkcheck'] = True
-        self.rst()
-        run_cmd(['sphinx-build', self.config.rst_dir, self.config.linkcheck_dir,
-                 '-b linkcheck -c', self.config.rst_dir, self.sphinx_opts])
-
-    def pdf(self):
-        if self.done['pdf']:
-            return
-        self.done['pdf'] = True
-        self.rst()
-        run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
-                 '-b latex -c', self.config.rst_dir, self.sphinx_opts])
-
-        run_cmd(['cd', self.config.pdf_dir, '&& make'])
-
-    def pkg(self):
-        if self.done['pkg']:
-            return
-        self.done['pkg'] = True
-        self.eval()
-        zip_fname = 'out.zip'
-        run_cmd(['cd', self.config.eval_dir, '&& zip -r',
-                 zip_fname, '*'])
-        shutil.move(os.path.join(self.config.eval_dir, zip_fname),
-                    self.config.pkg_fname)
-
-    def all(self):
-        self.eval()
-        self.rst()
-        self.html()
-        self.pdf()
-        self.pkg()
