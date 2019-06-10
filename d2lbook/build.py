@@ -194,6 +194,13 @@ class Builder(object):
         notebooks_enabled, _, _ = self._find_md_files()
         notebooks = [nb for nb in notebooks if nb in notebooks_enabled]
         with open(lib_fname, 'w') as f:
+            lib_name = os.path.dirname(lib_fname)
+            assert not '/' in lib_name, lib_name
+            f.write('# This file is generated automatically through:\n')
+            f.write('#    d2lbook build lib\n')
+            f.write('# Don\'t edit it directly\n\n')
+            f.write('import sys\n'+lib_name+' = sys.modules[__name__]\n\n')
+
             for nb in notebooks:
                 blocks = get_codes_to_save(nb, save_mark)
                 if blocks:
@@ -204,9 +211,6 @@ class Builder(object):
                             nb, '\n'.join(block))
                         f.write(codes)
 
-            lib_name = os.path.dirname(lib_fname)
-            assert not '/' in lib_name, lib_name
-            f.write('import sys\n'+lib_name+' = sys.modules[__name__]\n')
         logging.info('Saved into %s', lib_fname)
 
     def all(self):
