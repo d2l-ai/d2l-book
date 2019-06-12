@@ -232,16 +232,16 @@ def get_codes_to_save(input_fn, save_mark):
             for i, l in enumerate(lines):
                 if l.strip().startswith('#') and save_mark in l:
                     block = [lines[i+1]]
-                    if lines[i+1].startswith('def') or lines[i+1].startswith('class'):
-                        for j in range(i+2, len(lines)):
-                            l = lines[j]
-                            if not l.startswith(' '):
-                                break
-                            block.append(l)
-                    else: # import or from
+                    if lines[i+1].startswith('import') or lines[i+1].startswith('from'):
                         for j in range(i+2, len(lines)):
                             l = lines[j]
                             if l.startswith(' ') or not l:
+                                break
+                            block.append(l)
+                    else:
+                        for j in range(i+2, len(lines)):
+                            l = lines[j]
+                            if not l.startswith(' ') and len(l):
                                 break
                             block.append(l)
                     saved.append(block)
