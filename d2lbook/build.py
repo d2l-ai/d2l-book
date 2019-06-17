@@ -17,9 +17,9 @@ from d2lbook.config import Config
 __all__  = ['build']
 
 # our special mark in markdown, e.g. :label:`chapter_intro`
-mark_re_md = re.compile(':([-\/\\._\w\d]+):`([-\/\\\._\w\d]+)`')
+mark_re_md = re.compile(':([-\/\\._\w\d]+):`([\*-\/\\\._\w\d]+)`')
 # the according one in rst, changed ` to ``
-mark_re = re.compile(':([-\/\\._\w\d]+):``([-\/\\\._\w\d]+)``')
+mark_re = re.compile(':([-\/\\._\w\d]+):``([\*-\/\\\._\w\d]+)``')
 
 commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck',
             'outputcheck', 'lib', 'all']
