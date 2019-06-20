@@ -14,7 +14,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinxcontrib.rsvgconverter',
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
+    'numpydoc',
     # 'IPython.sphinxext.ipython_console_highlighting',
 ]
 
@@ -59,6 +59,7 @@ latex_elements = {
 'preamble': '\setcounter{tocdepth}{1}'
 }
 
+add_module_names = False
 
 def setup(app):
     app.add_javascript('d2l.js')

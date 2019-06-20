@@ -9,6 +9,7 @@ requirements = [
     'mu-notedown',
     'mxtheme>=0.3.8',
     'sphinxcontrib-svg2pdfconverter',
+    'numpydoc',
     'awscli',
 ]
 
