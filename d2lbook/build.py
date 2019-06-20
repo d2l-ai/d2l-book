@@ -128,6 +128,16 @@ class Builder(object):
                 mkdir(os.path.dirname(tgt))
                 shutil.copyfile(src, tgt)
 
+    def _copy_rst(self):
+        rst_files = find_files(self.config.build['rsts'], self.config.src_dir)
+        rst_files = [fn for fn in rst_files if self.config.rst_dir not in fn]
+        updated_rst = get_updated_files(rst_files, self.config.src_dir, self.config.rst_dir)
+        if len(updated_rst):
+            logging.info('Copy %d updated RST files to %s',
+                         len(updated_rst), self.config.rst_dir)
+        for src, tgt in updated_rst:
+            copy(src, tgt)
+
     def rst(self):
         if self.done['rst']:
             return
@@ -142,6 +152,7 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             ipynb2rst(src, tgt)
         prepare_sphinx_env(self.config)
+        self._copy_rst()
         self._copy_resources(self.config.src_dir, self.config.rst_dir)
 
     def html(self):

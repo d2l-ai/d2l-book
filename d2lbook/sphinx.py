@@ -18,6 +18,7 @@ class SphinxEnv(object):
         self._copy_static_files()
         self._update_header_links()
         self._write_js()
+        self._write_css()
         for key in self.config.project:
             self._update_pyconf(key, self.config.project[key])
         self._update_pyconf('index', self.config.build['index'])
@@ -63,3 +64,13 @@ class SphinxEnv(object):
         logging.info('write into %s', fname)
         with open(fname, 'w') as f:
             f.write(d2l_js)
+            for fname in utils.find_files(self.config.html['include_js'], self.config.src_dir):
+                with open (fname, 'r') as fin:
+                    f.write(fin.read())
+
+    def _write_css(self):
+        fname = os.path.join(self.config.rst_dir, '_static', 'd2l.css')
+        with open(fname, 'w') as f:
+            for fname in utils.find_files(self.config.html['include_css'], self.config.src_dir):
+                with open (fname, 'r') as fin:
+                    f.write(fin.read())

@@ -14,6 +14,7 @@ extensions = [
     'sphinxcontrib.bibtex',
     'sphinxcontrib.rsvgconverter',
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     # 'IPython.sphinxext.ipython_console_highlighting',
 ]
 
@@ -59,6 +60,9 @@ latex_elements = {
 
 def setup(app):
     app.add_javascript('d2l.js')
+    app.add_stylesheet('d2l.css')
+    import mxtheme
+    app.add_directive('card', mxtheme.CardDirective)
 """
 
 
