@@ -44,6 +44,8 @@ html_static_path = ['_static']
 
 html_favicon = 'FAVICON'
 
+html_logo = 'LOGO'
+
 latex_documents = [
     (master_doc, "NAME.tex", "TITLE",
      author, 'manual'),

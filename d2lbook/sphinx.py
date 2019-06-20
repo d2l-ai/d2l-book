@@ -31,10 +31,11 @@ class SphinxEnv(object):
         self.pyconf = self.pyconf.replace(key.upper(), value)
 
     def _copy_static_files(self):
-        static_keys = ['favicon']
+        static_keys = ['favicon', 'logo']
         for key in static_keys:
             fname = self.config.html[key]
             if not fname:
+                self._update_pyconf(key, '')
                 continue
             sphinx_fname = os.path.join(self.config.rst_dir, '_static',
                                         os.path.basename(fname))
