@@ -22,6 +22,10 @@ class SphinxEnv(object):
         for key in self.config.project:
             self._update_pyconf(key, self.config.project[key])
         self._update_pyconf('index', self.config.build['index'])
+        extensions = ['recommonmark', 'sphinxcontrib.bibtex',
+                      'sphinxcontrib.rsvgconverter', 'sphinx.ext.autodoc']
+        extensions.extend(self.config.build['sphinx_extensions'].split())
+        self._update_pyconf('extensions', ','.join('"'+ext+'"' for ext in extensions))
         fname = os.path.join(self.config.rst_dir, 'conf.py')
         logging.info('write into %s', fname)
         with open(fname, 'w') as f:

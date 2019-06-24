@@ -9,14 +9,7 @@ copyright = "COPYRIGHT"
 author = "AUTHOR"
 release = "RELEASE"
 
-extensions = [
-    'recommonmark',
-    'sphinxcontrib.bibtex',
-    'sphinxcontrib.rsvgconverter',
-    'sphinx.ext.autodoc',
-    'numpydoc',
-    # 'IPython.sphinxext.ipython_console_highlighting',
-]
+extensions = [EXTENSIONS]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
