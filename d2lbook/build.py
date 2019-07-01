@@ -52,7 +52,7 @@ class Builder(object):
         notebooks = [fn for fn in notebooks if fn not in pure_markdowns and fn
                      not in pure_markdowns and fn not in excluded_files]
         depends = find_files(build['dependencies'], src_dir)
-        return notebooks, pure_markdowns, depends
+        return sorted(notebooks), sorted(pure_markdowns), sorted(depends)
 
     def _get_updated_md_files(self):
         notebooks, pure_markdowns, depends = self._find_md_files()
@@ -117,8 +117,9 @@ class Builder(object):
 
     def _copy_resources(self, src_dir, tgt_dir):
         resources = self.config.build['resources']
-        logging.info('Copy resources "%s" from %s to %s',
-                     resources, src_dir, tgt_dir)
+        if resources:
+            logging.info('Copy resources "%s" from %s to %s',
+                         resources, src_dir, tgt_dir)
         for res in resources.split():
             src = os.path.join(src_dir, res)
             updated = get_updated_files(find_files(src), src_dir, tgt_dir)
