@@ -52,7 +52,7 @@ latex_elements = {
 'preamble': '\setcounter{tocdepth}{1}'
 }
 
-add_module_names = False
+SPHINX_CONFIGS
 
 def setup(app):
     app.add_javascript('d2l.js')

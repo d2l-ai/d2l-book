@@ -16,6 +16,7 @@ stage("Build and Publish") {
         sh '''set -ex
         conda activate d2l-book-build
         cd demo
+        d2lbook clear
         d2lbook deploy html pdf
       '''
       }

@@ -22,6 +22,7 @@ class SphinxEnv(object):
         for key in self.config.project:
             self._update_pyconf(key, self.config.project[key])
         self._update_pyconf('index', self.config.build['index'])
+        self._update_pyconf('sphinx_configs', self.config.build['sphinx_configs'])
         extensions = ['recommonmark', 'sphinxcontrib.bibtex',
                       'sphinxcontrib.rsvgconverter', 'sphinx.ext.autodoc']
         extensions.extend(self.config.build['sphinx_extensions'].split())
