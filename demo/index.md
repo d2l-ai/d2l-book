@@ -23,7 +23,7 @@ Check [Dive into Deep Learning](https://d2l.ai/) for an example built with
 Use `pip` to install the command-line interface.
 
 ```sh
-pip install d2lbook
+pip install git+https://github.com/d2l-ai/d2l-book
 ```
 
 In addition, you also need to install `pandoc`, e.g. `conda install pandoc`.
