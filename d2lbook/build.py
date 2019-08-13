@@ -470,6 +470,7 @@ def process_rst(body):
                     move(j, i+1)
 
     # move .. _label: before a image, a section, or a table
+    lines.insert(0, '')
     i = 0
     while i < len(lines):
         line = lines[i]
@@ -484,8 +485,9 @@ def process_rst(body):
                     break
                 if (len(set(line_j)) == 1
                     and line_j[0] in ['=','~','_', '-']):
-                    move(i, j-2)
-                    lines.insert(j-2, '')
+                    k = max(j-2, 0)
+                    move(i, k)
+                    lines.insert(k, '')
                     i += 1
                     break
         i += 1
