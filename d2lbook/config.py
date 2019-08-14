@@ -19,7 +19,7 @@ class Config():
         self.html = config['html']
         self.library = config['library']
 
-        # a bunch of directories
+        # A bunch of directories
         self.src_dir = self.build['source_dir']
         self.tgt_dir = self.build['output_dir']
         self.eval_dir = os.path.join(self.tgt_dir, 'eval')
@@ -28,6 +28,15 @@ class Config():
         self.pdf_dir = os.path.join(self.tgt_dir, 'pdf')
         self.linkcheck_dir = os.path.join(self.tgt_dir, 'linkcheck')
 
-        # some targets names
+        # Some targets names.
         self.pdf_fname = os.path.join(self.pdf_dir, self.project['name']+'.pdf')
         self.pkg_fname = os.path.join(self.tgt_dir, self.project['name']+'.zip')
+
+        # Sanity checks.
+        self.sanity_check()
+
+    def sanity_check(self):
+        notebook_patterns = self.build['notebooks'].split()
+        for p in notebook_patterns:
+            assert p.endswith('md'), '`notebooks` patterns must end with `md`' \
+                    ' in `config.init`. Examples: `notebooks = *.md */*.md`.'

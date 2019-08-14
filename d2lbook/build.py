@@ -99,27 +99,39 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             start = time.time()
             run_cells = self.config.build['eval_notebook'].lower()
-            eval_notebook(src, tgt, run_cells=='true')
+            process_eval_notebook(src, tgt, run_cells=='true')
             logging.info('Finished in %.1f sec', time.time() - start)
 
         for src, tgt in updated_markdowns:
-            logging.info('Copy %s to %s', src, tgt)
+            logging.info('Copying %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
+        self._rm_tgt_files('md', 'ipynb', self.config.eval_dir)
 
-        src_pattern = self.config.build['non-notebooks'] + ' ' + self.config.build['notebooks']
-        removed_notebooks = get_removed_files(src_pattern, self.config.src_dir,
-                                              self.config.eval_dir, 'md', 'ipynb')
-        if removed_notebooks:
-            logging.info('Clean removed notebooks %s', ','.join(removed_notebooks))
-            for fn in removed_notebooks:
+    # Remove target files (e.g., eval and rst) based on removed files under src
+    def _rm_tgt_files(self, src_ext, tgt_ext, tgt_dir):
+        notebooks_to_rm = get_files_to_rm(self.config.build['notebooks'],
+                                          self.config.src_dir,
+                                          tgt_dir, src_ext, tgt_ext)
+
+        non_notebooks_pattern = (self.config.build['non-notebooks'] + ' '
+                + self.config.build['resources'])
+        non_notebooks_to_rm = get_files_to_rm(non_notebooks_pattern,
+                                              self.config.src_dir, tgt_dir)
+
+        tgt_files_to_rm = notebooks_to_rm + non_notebooks_to_rm
+        if tgt_files_to_rm:
+            logging.info('Cleaning target files whose corresponding source '
+                'files are removed %s', ','.join(tgt_files_to_rm))
+            for fn in tgt_files_to_rm:
                 os.remove(fn)
+            rm_empty_dir(tgt_dir)
 
     def _copy_resources(self, src_dir, tgt_dir):
         resources = self.config.build['resources']
         if resources:
-            logging.info('Copy resources "%s" from %s to %s',
-                         resources, src_dir, tgt_dir)
+            logging.info('Copying resources "%s" from %s to %s',
+                         ' '.join(resources.split()), src_dir, tgt_dir)
         for res in resources.split():
             src = os.path.join(src_dir, res)
             updated = get_updated_files(find_files(src), src_dir, tgt_dir)
@@ -152,9 +164,11 @@ class Builder(object):
             logging.info('Convert %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
             ipynb2rst(src, tgt)
+        # Generate conf.py under rst folder
         prepare_sphinx_env(self.config)
         self._copy_rst()
         self._copy_resources(self.config.src_dir, self.config.rst_dir)
+        self._rm_tgt_files('md', 'rst', self.config.rst_dir)
 
     def html(self):
         if self.done['html']:
@@ -286,7 +300,8 @@ def get_subpages(input_fn):
                         subpages.append(fn)
     return subpages
 
-def eval_notebook(input_fn, output_fn, run_cells, timeout=20*60, lang='python'):
+def process_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
+                          lang='python'):
     # process: add empty lines before and after a mark, otherwise it confuses
     # the rst parser...
     with open(input_fn, 'r') as f:
@@ -363,47 +378,103 @@ class CharInMDCode(object):
 def process_rst(body):
     def indented(line):
         return line.startswith('   ')
+
     def blank(line):
         return len(line.strip()) == 0
 
-    def look_behind(i, cond):
+    def look_behind(i, cond, lines):
         indices = []
-        while i < n and cond(lines[i]):
+        while i < len(lines) and cond(lines[i]):
             indices.append(i)
             i = i + 1
         return indices
+
     lines = body.split('\n')
-    i, n, deletes = 0, len(lines), []
-    while i < n:
+    # deletes: indices of lines to be deleted
+    i, deletes = 0, []
+    while i < len(lines):
         line = lines[i]
+        # '.. code:: toc' -> '.. toctree::', then remove consecutive empty lines
+        # after the current line
         if line.startswith('.. code:: toc'):
             # convert into rst's toc block
             lines[i] = '.. toctree::'
-            blanks = look_behind(i+1, blank)
+            blanks = look_behind(i+1, blank, lines)
             deletes.extend(blanks)
             i += len(blanks)
+        # .. code:: eval_rst
+        #
+        #
+        #    .. only:: html
+        #
+        #       References
+        #       ==========
+        # ->
+        #
+        #
+        #
+        # .. only:: html
+        #
+        #    References
+        #    ==========
         elif line.startswith('.. code:: eval_rst'):
             # make it a rst block
             deletes.append(i)
-            for j in range(i+1, len(lines)):
+            j = i + 1
+            while j < len(lines):
                 line_j = lines[j]
                 if indented(line_j):
                     lines[j] = line_j[3:]
                 elif not blank(line_j):
                     break
+                j += 1
             i = j
         elif line.startswith('.. parsed-literal::'):
             # add a output class so we can add customized css
             lines[i] += '\n    :class: output'
             i += 1
+        # .. figure:: ../img/jupyter.png
+        #    :alt: Output after running Jupyter Notebook. The last row is the URL
+        #    for port 8888.
+        #
+        #    Output after running Jupyter Notebook. The last row is the URL for
+        #    port 8888.
+        #
+        # :width:``700px``
+        #
+        # :label:``fig_jupyter``
+        #->
+        # .. _fig_jupyter:
+        #
+        # .. figure:: ../img/jupyter.png
+        #    :width: 700px
+        #
+        #    Output after running Jupyter Notebook. The last row is the URL for
+        #    port 8888.
         elif indented(line) and ':alt:' in line:
             # Image caption, remove :alt: block, it cause trouble for long captions
-            caps = look_behind(i, lambda l: indented(l) and not blank(l))
+            caps = look_behind(i, lambda l: indented(l) and not blank(l), lines)
             deletes.extend(caps)
             i += len(caps)
+        # .. table:: Dataset versus computer memory and computational power
+        #    +-...
+        #    |
+        #    +-...
+        #
+        # :label:``tab_intro_decade``
+        # ->
+        # .. _tab_intro_decade:
+        #
+        # .. table:: Dataset versus computer memory and computational power
+        #
+        #    +-...
+        #    |
+        #    +-...
+        #
         elif line.startswith('.. table::'):
             # Add indent to table caption for long captions
-            caps = look_behind(i+1, lambda l: not indented(l) and not blank(l))
+            caps = look_behind(i+1, lambda l: not indented(l) and not blank(l),
+                               lines)
             for j in caps:
                 lines[j] = '   ' + lines[j]
             i += len(caps) + 1
@@ -414,7 +485,6 @@ def process_rst(body):
     lines = delete_lines(lines, deletes)
     deletes = []
 
-    in_code = CharInMDCode(lines)
     for i, line in enumerate(lines):
         pos, new_line = 0, ''
         while True:
@@ -423,31 +493,36 @@ def process_rst(body):
                 new_line += line[pos:]
                 break
             start, end = match.start(), match.end()
+            # e.g., origin=':label:``fig_jupyter``', key='label', value='fig_jupyter'
             origin, key, value = match[0], match[1], match[2]
             new_line += line[pos:start]
             pos = end
-            if in_code.in_code(i, start):
-                new_line += origin # no change if in code
+
+            # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
+            if key == 'label':
+                new_line += '.. _' + value + ':'
+            elif key in ['ref', 'numref', 'cite']:
+                new_line += ':'+key+':`'+value+'`'
+            elif key == 'eqref':
+                new_line += ':eq:`'+value+'`'
+            # .. math:: f
+            #
+            # :eqlabel:``gd-taylor``
+            # ->
+            # .. math:: f
+            #    :label: gd-taylor
+            elif key == 'eqlabel':
+                new_line += '   :label: '+value
+                if blank(lines[i-1]):
+                    deletes.append(i-1)
+            elif key in ['width', 'height']:
+                new_line += '   :'+key+': '+value
+            elif key == 'bibliography':
+                # a hard coded plain bibtex style...
+                new_line += ('.. bibliography:: ' + value +
+                             '\n   :style: plain\n   :all:')
             else:
-               # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
-                if key == 'label':
-                    new_line += '.. _' + value + ':'
-                elif key in ['ref', 'numref', 'cite']:
-                    new_line += ':'+key+':`'+value+'`'
-                elif key == 'eqref':
-                    new_line += ':eq:`'+value+'`'
-                elif key == 'eqlabel':
-                    new_line += '   :label: '+value
-                    if blank(lines[i-1]):
-                        deletes.append(i-1)
-                elif key in ['width', 'height']:
-                    new_line += '   :'+key+': '+value
-                elif key == 'bibliography':
-                    # a hard coded plain bibtex style...
-                    new_line += ('.. bibliography:: ' + value +
-                                 '\n   :style: plain\n   :all:')
-                else:
-                    logging.fatal('unknown key', key)
+                logging.fatal('unknown key', key)
 
         lines[i] = new_line
     lines = delete_lines(lines, deletes)
@@ -481,14 +556,14 @@ def process_rst(body):
                     or line_j.startswith('.. figure:')):
                     move(i, j-1)
                     lines.insert(j-1, '')
-                    i += 1
+                    i += 1  # Due to insertion of a blank line
                     break
                 if (len(set(line_j)) == 1
                     and line_j[0] in ['=','~','_', '-']):
                     k = max(j-2, 0)
                     move(i, k)
                     lines.insert(k, '')
-                    i += 1
+                    i += 1  # Due to insertion of a blank line
                     break
         i += 1
 
@@ -503,6 +578,7 @@ def ipynb2rst(input_fn, output_fn):
                  'output_'+rm_ext(os.path.basename(output_fn))+'_'+sig}
     (body, resources) = writer.from_notebook_node(notebook, resources)
 
+    # Process the raw rst file generated by nbconvert to output a new rst file
     body = process_rst(body)
 
     with open(output_fn, 'w') as f:
