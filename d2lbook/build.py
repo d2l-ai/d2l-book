@@ -50,7 +50,7 @@ class Builder(object):
         pure_markdowns = [fn for fn in pure_markdowns if fn not in excluded_files]
         notebooks = find_files(build['notebooks'], src_dir)
         notebooks = [fn for fn in notebooks if fn not in pure_markdowns and fn
-                     not in pure_markdowns and fn not in excluded_files]
+                     not in excluded_files]
         depends = find_files(build['dependencies'], src_dir)
         return sorted(notebooks), sorted(pure_markdowns), sorted(depends)
 
