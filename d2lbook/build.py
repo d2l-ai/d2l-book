@@ -16,9 +16,9 @@ from d2lbook.config import Config
 
 __all__  = ['build']
 
-# our special mark in markdown, e.g. :label:`chapter_intro`
+# Our special mark in markdown, e.g. :label:`chapter_intro`
 mark_re_md = re.compile(':([-\/\\._\w\d]+):`([\*-\/\\\._\w\d]+)`')
-# the according one in rst, changed ` to ``
+# Same as mark_re_md for rst, while ` is replaced with `` in mark_re
 mark_re = re.compile(':([-\/\\._\w\d]+):``([\*-\/\\\._\w\d]+)``')
 
 commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck',
@@ -228,14 +228,14 @@ class Builder(object):
             f.write('import sys\n'+lib_name+' = sys.modules[__name__]\n\n')
 
             for nb in notebooks:
-                blocks = get_codes_to_save(nb, save_mark)
+                blocks = get_code_to_save(nb, save_mark)
                 if blocks:
                     logging.info('Found %d blocks in %s', len(blocks), nb)
                     for block in blocks:
                         logging.info(' --- %s', block[0])
-                        codes = '# Defined in file: %s\n%s\n\n' %(
+                        code = '# Defined in file: %s\n%s\n\n\n' %(
                             nb, '\n'.join(block))
-                        f.write(codes)
+                        f.write(code)
 
         logging.info('Saved into %s', lib_fname)
 
@@ -246,8 +246,8 @@ class Builder(object):
         self.pdf()
         self.pkg()
 
-def get_codes_to_save(input_fn, save_mark):
-    """get the codes blocks (import, class, def) and will be saved"""
+def get_code_to_save(input_fn, save_mark):
+    """get the code blocks (import, class, def) that will be saved"""
     reader = notedown.MarkdownReader(match='strict')
     with open(input_fn, 'r') as f:
         nb = reader.read(f)
@@ -258,18 +258,23 @@ def get_codes_to_save(input_fn, save_mark):
             for i, l in enumerate(lines):
                 if l.strip().startswith('#') and save_mark in l:
                     block = [lines[i+1]]
+                    # For code block only containing import statements (e.g., in
+                    # preface.md)
                     if lines[i+1].startswith('import') or lines[i+1].startswith('from'):
                         for j in range(i+2, len(lines)):
                             l = lines[j]
                             if l.startswith(' ') or not l:
                                 break
                             block.append(l)
+                    # For code blocks containing def or class
                     else:
                         for j in range(i+2, len(lines)):
                             l = lines[j]
                             if not l.startswith(' ') and len(l):
                                 break
                             block.append(l)
+                    if len(block[-1]) == 0:
+                        del block[-1]
                     saved.append(block)
     return saved
 
@@ -295,7 +300,7 @@ def get_subpages(input_fn):
             for l in cell.source.split('\n'):
                 l = l.strip()
                 if not l.startswith(':'):
-                    fn = os.path.join(os.path.dirname(input_fn), l+'.md')
+                    fn = os.path.join(os.path.dirname(input_fn), l + '.md')
                     if os.path.exists(fn):
                         subpages.append(fn)
     return subpages
@@ -303,7 +308,7 @@ def get_subpages(input_fn):
 def process_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
                           lang='python'):
     # process: add empty lines before and after a mark, otherwise it confuses
-    # the rst parser...
+    # the rst parser
     with open(input_fn, 'r') as f:
         md = f.read()
     lines = md.split('\n')
@@ -316,7 +321,7 @@ def process_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
             and m.end() == len(line)):
             lines[i] = '\n'+line+'\n'
     reader = notedown.MarkdownReader(match='strict')
-    notebook= reader.reads('\n'.join(lines))
+    notebook = reader.reads('\n'.join(lines))
     # evaluate
     if run_cells:
         # change to the notebook directory to resolve the relpaths properly
@@ -333,7 +338,23 @@ def delete_lines(lines, deletes):
     return [line for i, line in enumerate(lines) if i not in deletes]
 
 class CharInMDCode(object):
-    # indicating if a char is in a code block in markdown
+    """
+    Indicates if a char (at line_i, pos of in_code) is in a code block of md.
+
+    Examples:
+
+    i) The following chars (including lines starting with ```) are all chars in
+       a code block of md.
+
+       ```bash
+       pip install d2lbook
+       ```
+
+    ii) Chars `d2lbook` (including ``) in the following sentence are all in a
+        code block of md:
+
+        Let us install `d2lbook` first.
+    """
     def __init__(self, lines):
         in_code = []
         code_block_mark = None
@@ -347,12 +368,13 @@ class CharInMDCode(object):
                     code_line = [False] * len(line)
                     for i, char in enumerate(line):
                         if char == '`':
+                            code_line[i] = True
                             char_in_code ^= True
-                        if char_in_code:
+                        elif char_in_code:
                             code_line[i] = True
                     in_code.append(code_line)
             else:
-                in_code.append([True]*len(line))
+                in_code.append([True] * len(line))
                 if line.strip().startswith(code_block_mark):
                     code_block_mark = None
         self._in_code = in_code
