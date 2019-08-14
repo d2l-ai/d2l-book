@@ -109,17 +109,19 @@ class Builder(object):
         self._rm_tgt_files('md', 'ipynb', self.config.eval_dir)
 
     # Remove target files (e.g., eval and rst) based on removed files under src
-    def _rm_tgt_files(self, src_ext, tgt_ext, tgt_dir):
-        notebooks_to_rm = get_files_to_rm(self.config.build['notebooks'],
-                                          self.config.src_dir,
-                                          tgt_dir, src_ext, tgt_ext)
+    def _rm_tgt_files(self, src_ext, tgt_ext, tgt_dir, must_incls=None):
+        notebooks_to_rm = get_files_to_rm(
+                self.config.build['notebooks'], self.config.src_dir, tgt_dir,
+                src_ext, tgt_ext)
 
         non_notebooks_pattern = (self.config.build['non-notebooks'] + ' '
                 + self.config.build['resources'])
         non_notebooks_to_rm = get_files_to_rm(non_notebooks_pattern,
-                                              self.config.src_dir, tgt_dir)
+                self.config.src_dir, tgt_dir)
 
-        tgt_files_to_rm = notebooks_to_rm + non_notebooks_to_rm
+
+        tgt_files_to_rm = [f for f in notebooks_to_rm + non_notebooks_to_rm
+                           if f not in set(must_incls)]
         if tgt_files_to_rm:
             logging.info('Cleaning target files whose corresponding source '
                 'files are removed %s', ','.join(tgt_files_to_rm))
@@ -143,13 +145,13 @@ class Builder(object):
 
     def _copy_rst(self):
         rst_files = find_files(self.config.build['rsts'], self.config.src_dir)
-        rst_files = [fn for fn in rst_files if self.config.rst_dir not in fn]
         updated_rst = get_updated_files(rst_files, self.config.src_dir, self.config.rst_dir)
         if len(updated_rst):
             logging.info('Copy %d updated RST files to %s',
                          len(updated_rst), self.config.rst_dir)
         for src, tgt in updated_rst:
             copy(src, tgt)
+        return rst_files
 
     def rst(self):
         if self.done['rst']:
@@ -168,7 +170,11 @@ class Builder(object):
         prepare_sphinx_env(self.config)
         self._copy_rst()
         self._copy_resources(self.config.src_dir, self.config.rst_dir)
-        self._rm_tgt_files('md', 'rst', self.config.rst_dir)
+
+        must_incl_rst_files = get_tgt_files_from_src_pattern(
+                self.config.build['rsts'], self.config.rst_dir, 'rst', 'rst')
+        self._rm_tgt_files('md', 'rst', self.config.rst_dir,
+                           must_incl_rst_files)
 
     def html(self):
         if self.done['html']:

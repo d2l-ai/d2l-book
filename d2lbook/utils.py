@@ -50,21 +50,26 @@ def get_updated_files(src_fnames, src_dir, tgt_dir,
             updated_fnames.append((src_fn, tgt_fn))
     return updated_fnames
 
-def get_files_to_rm(pattern, src_dir, tgt_dir, src_ext=None, tgt_ext=None):
-    """Return files under tgt_dir whose corresponding src file is removed under src_dir."""
-    patterns = pattern.split()
 
+def get_tgt_files_from_src_pattern(pattern, tgt_dir, src_ext, tgt_ext):
+    """Get files with tgt_ext in tgt_dir according to pattern with src_ext"""
+    patterns = pattern.split()
     for i, p in enumerate(patterns):
         f, ext = os.path.splitext(p)
         if src_ext and ext == '.' + src_ext and tgt_ext:
             patterns[i] = f + '.' + tgt_ext
-    tgt_files = find_files(' '.join(patterns), tgt_dir)
+    return find_files(' '.join(patterns), tgt_dir)
+
+
+def get_files_to_rm(pattern, src_dir, tgt_dir, src_ext=None, tgt_ext=None):
+    """Return files under tgt_dir whose corresponding src file is removed under src_dir."""
+    tgt_files = get_tgt_files_from_src_pattern(pattern, tgt_dir, src_ext, tgt_ext)
     to_removes = []
     for tgt_fn in tgt_files:
         # If tgt_ext is provided, only files with tgt_ext in tgt_dir are
         # considered being removed. Note that ipynb to rst may generate svg
         # files, which should not be removed though these svg files do not have
-        # corresponding files in src_dir.
+        # corresponding files in src_dir
         if tgt_ext:
             fext = os.path.splitext(tgt_fn)[1]
             if fext.startswith('.'):
