@@ -99,7 +99,7 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             start = time.time()
             run_cells = self.config.build['eval_notebook'].lower()
-            process_eval_notebook(src, tgt, run_cells=='true')
+            process_and_eval_notebook(src, tgt, run_cells=='true')
             logging.info('Finished in %.1f sec', time.time() - start)
 
         for src, tgt in updated_markdowns:
@@ -305,8 +305,8 @@ def get_subpages(input_fn):
                         subpages.append(fn)
     return subpages
 
-def process_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
-                          lang='python'):
+def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
+                              lang='python'):
     # process: add empty lines before and after a mark, otherwise it confuses
     # the rst parser
     with open(input_fn, 'r') as f:
