@@ -39,4 +39,10 @@ class Config():
         notebook_patterns = self.build['notebooks'].split()
         for p in notebook_patterns:
             assert p.endswith('md'), '`notebooks` patterns must end with `md`' \
-                    ' in `config.init`. Examples: `notebooks = *.md */*.md`.'
+                   ' in `config.init`. Examples: `notebooks = *.md */*.md`.'
+
+        rst_patterns = self.build['rsts'].split()
+        for p in rst_patterns:
+            assert p.endswith('rst'), '`rsts` patterns must end with `rst`' \
+                    ' in `config.init`. Examples: `rsts = index.rst' \
+                    ' api/**/*.rst`.'
