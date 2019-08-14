@@ -119,9 +119,10 @@ class Builder(object):
         non_notebooks_to_rm = get_files_to_rm(non_notebooks_pattern,
                 self.config.src_dir, tgt_dir)
 
-
+        if must_incls:
+            must_incls = set(must_incls)
         tgt_files_to_rm = [f for f in notebooks_to_rm + non_notebooks_to_rm
-                           if f not in set(must_incls)]
+                           if not must_incls or f not in must_incls]
         if tgt_files_to_rm:
             logging.info('Cleaning target files whose corresponding source '
                 'files are removed %s', ','.join(tgt_files_to_rm))
