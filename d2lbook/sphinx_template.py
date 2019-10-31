@@ -49,7 +49,8 @@ latex_show_pagerefs = True
 latex_show_urls = 'footnote'
 
 latex_elements = {
-'preamble': '\setcounter{tocdepth}{1}'
+'preamble': '\setcounter{tocdepth}{1}',
+'sphinxsetup': 'verbatimwithframe=false, verbatimsep=2mm, VerbatimColor={rgb}{.95,.95,.95}'
 }
 
 SPHINX_CONFIGS
