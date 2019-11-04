@@ -601,6 +601,13 @@ def process_rst(body):
 def ipynb2rst(input_fn, output_fn):
     with open(input_fn, 'r') as f:
         notebook = nbformat.read(f, as_version=4)
+    for cell in notebook.cells:
+        if cell.cell_type == 'code':
+            if '# hide outputs' in cell.source.lower():
+                cell.outputs = []
+            if '# hide codes' in cell.source.lower():
+                cell.source = ''
+
     writer = nbconvert.RSTExporter()
     sig = hashlib.sha1(input_fn.encode()).hexdigest()[:6]
     resources = {'unique_key':
