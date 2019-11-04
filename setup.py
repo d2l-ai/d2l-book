@@ -19,7 +19,7 @@ setup(
     install_requires=requirements,
     python_requires='>=3.5',
     author='D2L Developers',
-    author_email='d2l.devs@google.com',
+    author_email='d2l.devs@gmail.com',
     url='https://book.d2l.ai',
     description="Create an online book with Jupyter Notebooks and Sphinx",
     license='Apache-2.0',
