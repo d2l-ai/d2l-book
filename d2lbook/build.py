@@ -605,7 +605,7 @@ def ipynb2rst(input_fn, output_fn):
         if cell.cell_type == 'code':
             if '# hide outputs' in cell.source.lower():
                 cell.outputs = []
-            if '# hide codes' in cell.source.lower():
+            if '# hide code' in cell.source.lower():
                 cell.source = ''
 
     writer = nbconvert.RSTExporter()

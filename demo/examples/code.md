@@ -13,7 +13,7 @@
 ## Hide Source and Outputs
 
 We can hide the source of a code cell by adding a comment line `# Hide
-codes` in the cell. We can also hide the code cell outputs using `# Hide outputs`
+code` in the cell. We can also hide the code cell outputs using `# Hide outputs`
 
 For example, here is the normal code cell:
 
@@ -23,7 +23,7 @@ For example, here is the normal code cell:
 
 Let's hide the source codes
 ```{.python .input}
-# Hide codes
+# Hide code
 1+2+3
 ```
 
