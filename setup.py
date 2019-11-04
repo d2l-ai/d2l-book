@@ -5,7 +5,7 @@ requirements = [
     'jupyter',
     'sphinx==1.8.5',  # sphinx 2.0 has a bug in search
     'recommonmark',
-    'sphinxcontrib-bibtex',
+    'sphinxcontrib-bibtex==0.4.2',
     'mu-notedown',
     'mxtheme>=0.3.9',
     'sphinxcontrib-svg2pdfconverter',
