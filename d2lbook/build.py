@@ -200,7 +200,7 @@ class Builder(object):
         self.rst()
         run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
                  '-b latex -c', self.config.rst_dir, self.sphinx_opts])
-
+        process_latex(self.config.tex_fname)
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
 
     def pkg(self):
@@ -549,7 +549,7 @@ def process_rst(body):
             elif key == 'bibliography':
                 # a hard coded plain bibtex style...
                 new_line += ('.. bibliography:: ' + value +
-                             '\n   :style: plain\n   :all:')
+                             '\n   :style: apa\n   :all:')
             else:
                 logging.fatal('unknown key', key)
 
@@ -625,3 +625,13 @@ def ipynb2rst(input_fn, output_fn):
         full_fn = os.path.join(base_dir, fn)
         with open(full_fn, 'wb') as f:
             f.write(outputs[fn])
+
+def process_latex(fname):
+    with open(fname, 'r') as f:
+        lines = f.read().split('\n')
+    # convert \sphinxcite{A}\sphinxcite{B} to \sphinxcite{A,B}
+    for i, l in enumerate(lines):
+        if '}\sphinxcite{' in l:
+            lines[i] = l.replace('}\sphinxcite{', ',')
+    with open(fname, 'w') as f:
+        f.write('\n'.join(lines))

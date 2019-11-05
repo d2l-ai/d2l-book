@@ -76,7 +76,9 @@ class SphinxEnv(object):
 
     def _write_css(self):
         fname = os.path.join(self.config.rst_dir, '_static', 'd2l.css')
+        d2l_css = template.hide_bibkey
         with open(fname, 'w') as f:
+            f.write(d2l_css)
             for fname in utils.find_files(self.config.html['include_css'], self.config.src_dir):
                 with open (fname, 'r') as fin:
                     f.write(fin.read())

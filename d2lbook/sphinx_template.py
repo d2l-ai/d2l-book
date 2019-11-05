@@ -1,5 +1,5 @@
 
-sphinx_conf = """
+sphinx_conf = r"""
 import sys
 sys.path.insert(0, '..')
 sys.path.insert(0, '.')
@@ -49,7 +49,11 @@ latex_show_pagerefs = True
 latex_show_urls = 'footnote'
 
 latex_elements = {
-'preamble': '\setcounter{tocdepth}{1}',
+'preamble': r'''
+\setcounter{tocdepth}{1}
+\usepackage{natbib}
+\protected\def\sphinxcite{\citep}
+''',
 'sphinxsetup': 'verbatimwithframe=false, verbatimsep=2mm, VerbatimColor={rgb}{.95,.95,.95}'
 }
 
@@ -121,4 +125,17 @@ $(document).ready(function () {
     var replaced = $('body').html().replace(/Scan-the-QR-Code-to-Discuss/g, discuss_str);
     $('body').html(replaced);
 });
+"""
+
+# CSS style to hide the bibkey TODO(mli), move to mxtheme
+hide_bibkey = r"""
+dl.citation > .label {
+    max-width: 0em;
+    visibility:hidden;
+}
+
+dl.citation > dd {
+    margin-left: 30px;
+    text-indent: -30px;
+}
 """

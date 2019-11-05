@@ -180,22 +180,27 @@ In :eqref:`linear`, we define the linear model.
 ## Citations
 
 First put your bib file at somewhere. All references will be displayed on the
-place it inserted in HTML. But in PDF, all references will be moved to end of
-the document.
+place where it inserted in HTML. But in PDF, all references will be moved to end of
+the document. Then we can cite a paper through `:cite:`. Multipel papers can be
+separated by commans (note there should be no space)
 
 ```
 
 The breakthrough of deep learning origins from :cite:`krizhevsky2012imagenet` for...
 
+Two keys together :cite:`he2016deep,devlin2018bert`...
+
 :bibliography:`../refs.bib`
 ```
 
-Then we can cite a paper through `:cite:BIB_KEY:`. For example:
 
 The breakthrough of deep learning origins from :cite:`krizhevsky2012imagenet` for
 computer vision, there is a rich of following up works, such as
 :cite:`he2016deep`. NLP is catching up as well, the recent work
 :cite:`devlin2018bert` shows significant improvements.
+
+Two keys together :cite:`he2016deep,devlin2018bert`. Single author
+:cite:`mitchell80`, two authors :cite:`Newell81`
 
 ## References
 
