@@ -127,15 +127,23 @@ $(document).ready(function () {
 });
 """
 
-# CSS style to hide the bibkey TODO(mli), move to mxtheme
-hide_bibkey = r"""
-dl.citation > .label {
-    max-width: 0em;
-    visibility:hidden;
+# CSS style to hide the bibkey but allow highlight
+hide_bibkey_css = r"""
+dl.citation > dt.label {
+    width: 100%;
 }
 
 dl.citation > dd {
-    margin-left: 30px;
-    text-indent: -30px;
+    margin-left: 5%;
+    text-indent: -105%;
 }
+"""
+
+# JS to hide the bibkey with a nonbreaking space
+hide_bibkey_js = r"""
+$(document).ready(function () {
+    $('.label.bibtex').each(function(){
+        $(this).text("\xa0")
+    });
+});
 """
