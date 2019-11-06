@@ -54,7 +54,7 @@ latex_elements = {
 'preamble': r'''
 \setcounter{tocdepth}{1}
 \usepackage{natbib}
-\def\sphinxincludegraphics{{\centering\sphinxsafeincludegraphics}}
+# \def\sphinxincludegraphics{\centering\sphinxsafeincludegraphics}
 \protected\def\sphinxcite{\citep}
 ''',
 'sphinxsetup': 'verbatimwithframe=false, verbatimsep=2mm, VerbatimColor={rgb}{.95,.95,.95}'
