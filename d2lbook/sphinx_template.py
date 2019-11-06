@@ -136,19 +136,9 @@ dl.citation > dt.label {
     width: 100%;
 }
 
-dl.citation > dd {
-    margin-left: 5%;
-    text-indent: -105%;
+dl.citation span.brackets {
+    padding-right: .8em;
 }
-"""
-
-# JS to hide the bibkey with a nonbreaking space
-hide_bibkey_js = r"""
-$(document).ready(function () {
-    $('.label.bibtex').each(function(){
-        $(this).text("\xa0")
-    });
-});
 """
 
 copybutton_js = r"""

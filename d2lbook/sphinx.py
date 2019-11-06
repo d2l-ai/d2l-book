@@ -60,7 +60,7 @@ class SphinxEnv(object):
 
     def _write_js(self):
         d2l_js = (template.shorten_sec_num + template.replace_qr
-                  + template.hide_bibkey_js + template.copybutton_js)
+                  + template.copybutton_js)
         g_id = 'google_analytics_tracking_id'
         if g_id in self.config.deploy:
             d2l_js += template.google_tracker.replace(
