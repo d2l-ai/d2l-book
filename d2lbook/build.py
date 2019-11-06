@@ -596,6 +596,11 @@ def process_rst(body):
                     break
         i += 1
 
+    # change .. image:: to .. figure:: to they will be center aligned
+    for i, line in enumerate(lines):
+        if '.. image::' in line:
+            lines[i] = line.replace('.. image::', '.. figure::')
+
     return '\n'.join(lines)
 
 def ipynb2rst(input_fn, output_fn):
