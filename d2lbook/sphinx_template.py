@@ -44,7 +44,7 @@ latex_documents = [
      author, 'manual'),
 ]
 
-rsvg_converter_args = ['-z', '0.6']
+rsvg_converter_args = ['-z', '0.8']
 
 latex_engine = 'xelatex' # for utf-8 supports
 latex_show_pagerefs = True
