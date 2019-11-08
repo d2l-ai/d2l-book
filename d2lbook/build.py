@@ -99,15 +99,15 @@ class Builder(object):
         self._copy_resources(self.config.src_dir, self.config.eval_dir)
 
         for i, (src, tgt) in enumerate(updated_notebooks):
-            logging.info('[%d/%d] Evaluating %s, save as %s',
-                         i+1, num_updated_notebooks, src, tgt)
-            mkdir(os.path.dirname(tgt))
             tik = datetime.datetime.now()
+            logging.info('[%d/%d, %s] Evaluating %s, save as %s',
+                         i+1, num_updated_notebooks,
+                         get_time_diff(eval_tik, tik), src, tgt)
+            mkdir(os.path.dirname(tgt))
             run_cells = self.config.build['eval_notebook'].lower()
             process_and_eval_notebook(src, tgt, run_cells=='true')
             tok = datetime.datetime.now()
             logging.info('Finished in %s', get_time_diff(tik, tok))
-            logging.info('Total eval time %s', get_time_diff(eval_tik, tok))
 
         for src, tgt in updated_markdowns:
             logging.info('Copying %s to %s', src, tgt)
