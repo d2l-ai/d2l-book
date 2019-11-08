@@ -103,9 +103,16 @@ def rm_empty_dir(path):
 def mkdir(dirname):
     os.makedirs(dirname, exist_ok=True)
 
+
 def copy(src, tgt):
     mkdir(os.path.dirname(tgt))
     shutil.copy(src, tgt)
+
+
+def get_time_diff(tik, tok):
+    h, remainder = divmod((tok - tik).seconds, 3600)
+    m, s = divmod(remainder, 60)
+    return "%02d:%02d:%02d" % (h, m, s)
 
 
 def run_cmd(cmd):

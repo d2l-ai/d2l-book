@@ -7,6 +7,7 @@ import pkg_resources
 import logging
 import shutil
 import time
+import datetime
 import argparse
 import re
 import hashlib
@@ -80,6 +81,7 @@ class Builder(object):
 
     def eval(self):
         """Evaluate the notebooks and save them in a different folder"""
+        eval_tik = datetime.datetime.now()
         if self.done['eval']:
             return
         self.done['eval'] = True
@@ -90,23 +92,31 @@ class Builder(object):
             notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
             pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
-
+        num_updated_notebooks = len(updated_notebooks)
+        num_updated_markdowns = len(updated_markdowns)
         logging.info('%d notedowns and %d markdowns are out dated',
-                     len(updated_notebooks), len(updated_markdowns))
+                     num_updated_notebooks, num_updated_markdowns)
         self._copy_resources(self.config.src_dir, self.config.eval_dir)
-        for src, tgt in updated_notebooks:
-            logging.info('Evaluating %s, save as %s', src, tgt)
+
+        for i, (src, tgt) in enumerate(updated_notebooks):
+            logging.info('[%d/%d] Evaluating %s, save as %s',
+                         i+1, num_updated_notebooks, src, tgt)
             mkdir(os.path.dirname(tgt))
-            start = time.time()
+            tik = datetime.datetime.now()
             run_cells = self.config.build['eval_notebook'].lower()
             process_and_eval_notebook(src, tgt, run_cells=='true')
-            logging.info('Finished in %.1f sec', time.time() - start)
+            tok = datetime.datetime.now()
+            logging.info('Finished in %s', get_time_diff(tik, tok))
+            logging.info('Total eval time %s', get_time_diff(eval_tik, tok))
 
         for src, tgt in updated_markdowns:
             logging.info('Copying %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
         self._rm_tgt_files('md', 'ipynb', self.config.eval_dir)
+        eval_tok = datetime.datetime.now()
+        logging.info('==d2lbook build eval==finished in %s',
+                     get_time_diff(eval_tik, eval_tok))
 
     # Remove target files (e.g., eval and rst) based on removed files under src
     def _rm_tgt_files(self, src_ext, tgt_ext, tgt_dir, must_incls=None):
@@ -178,12 +188,16 @@ class Builder(object):
                            must_incl_rst_files)
 
     def html(self):
+        tik = datetime.datetime.now()
         if self.done['html']:
             return
         self.done['html'] = True
         self.rst()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
+        tok = datetime.datetime.now()
+        logging.info('==d2lbook build html==finished in %s',
+                     get_time_diff(tik, tok))
 
     def linkcheck(self):
         if self.done['linkcheck']:
@@ -194,6 +208,7 @@ class Builder(object):
                  '-b linkcheck -c', self.config.rst_dir, self.sphinx_opts])
 
     def pdf(self):
+        tik = datetime.datetime.now()
         if self.done['pdf']:
             return
         self.done['pdf'] = True
@@ -202,6 +217,9 @@ class Builder(object):
                  '-b latex -c', self.config.rst_dir, self.sphinx_opts])
         process_latex(self.config.tex_fname)
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
+        tok = datetime.datetime.now()
+        logging.info('==d2lbook build pdf==finished in %s',
+                     get_time_diff(tik, tok))
 
     def pkg(self):
         if self.done['pkg']:
