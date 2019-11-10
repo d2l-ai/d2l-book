@@ -63,7 +63,8 @@ def get_installation_cell(notebook, libs):
         return None
     install_str = ''
     for lib in set(find_libs):
-        install_str += '!pip install ' + lib_dict[lib] + '\n'
+        for l in lib_dict[lib].split(' '):
+            install_str += '!pip install ' + l + '\n'
     # return {"cell_type":"code", "metadata": {}, "outputs": [], "execution_count":
     # 0, "source":install_str}
     return nbformat.v4.new_code_cell(source=install_str)
