@@ -115,7 +115,7 @@ class Builder(object):
             shutil.copyfile(src, tgt)
         self._rm_tgt_files('md', 'ipynb', self.config.eval_dir)
         eval_tok = datetime.datetime.now()
-        logging.info('==d2lbook build eval==finished in %s',
+        logging.info('==d2lbook build eval== finished in %s',
                      get_time_diff(eval_tik, eval_tok))
 
     # Remove target files (e.g., eval and rst) based on removed files under src
@@ -196,7 +196,8 @@ class Builder(object):
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
         tok = datetime.datetime.now()
-        logging.info('==d2lbook build html==finished in %s',
+        add_colab_button(self.config.colab, self.config.html_dir)
+        logging.info('==d2lbook build html== finished in %s',
                      get_time_diff(tik, tok))
 
     def linkcheck(self):
@@ -218,7 +219,7 @@ class Builder(object):
         process_latex(self.config.tex_fname)
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
         tok = datetime.datetime.now()
-        logging.info('==d2lbook build pdf==finished in %s',
+        logging.info('==d2lbook build pdf== finished in %s',
                      get_time_diff(tik, tok))
 
     def pkg(self):
@@ -303,6 +304,26 @@ def get_code_to_save(input_fn, save_mark):
                     saved.append(block)
     return saved
 
+
+def add_colab_button(config, html_dir):
+    """Add an open colab button in HTML"""
+    if config['github_repo'] is None:
+        return
+    excluded_files = find_files(config['exclusions'], html_dir)
+    files = find_files('**/*.html', html_dir)
+    files = [fn for fn in files if fn not in excluded_files]
+    for fn in files:
+        with open(fn, 'r') as f:
+            html = f.read()
+        if 'id="colab"' in html:
+            continue
+        colab_link = 'https://colab.research.google.com/github/%s/%s'%(
+            config['github_repo'],
+            os.path.relpath(fn, html_dir).replace('.html', '.ipynb'))
+        colab_html = '<a href="%s"> <button style="float:right", id="colab" class="mdl-button mdl-js-button mdl-button--primary mdl-js-ripple-effect"> <i class=" fas fa-external-link-alt"></i> Colab </button></a><div class="mdl-tooltip" data-mdl-for="colab"> Open notbook in Colab</div>' % (colab_link)
+        html = html.replace('</h1>', colab_html+'</h1>')
+        with open(fn, 'w') as f:
+            f.write(html)
 
 def get_toc(root):
     """return a list of files in the order defined by TOC"""
