@@ -114,6 +114,7 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
         self._rm_tgt_files('md', 'ipynb', self.config.eval_dir)
+        generate_colab_notebooks(self.config.colab, self.config.eval_dir, self.config.colab_dir)
         eval_tok = datetime.datetime.now()
         logging.info('==d2lbook build eval== finished in %s',
                      get_time_diff(eval_tik, eval_tok))
@@ -305,9 +306,17 @@ def get_code_to_save(input_fn, save_mark):
     return saved
 
 
+def generate_colab_notebooks(config, eval_dir, colab_dir):
+    """Add a colab setup code cell and then save to colab_dir"""
+    if not config['github_repo']:
+        return
+    run_cmd(['rm -rf', colab_dir])
+    run_cmd(['cp -r', eval_dir, colab_dir])
+
+
 def add_colab_button(config, html_dir):
     """Add an open colab button in HTML"""
-    if config['github_repo'] is None:
+    if not config['github_repo']:
         return
     excluded_files = find_files(config['exclusions'], html_dir)
     files = find_files('**/*.html', html_dir)
@@ -317,7 +326,7 @@ def add_colab_button(config, html_dir):
             html = f.read()
         if 'id="colab"' in html:
             continue
-        colab_link = 'https://colab.research.google.com/github/%s/%s'%(
+        colab_link = 'https://colab.research.google.com/github/%s/blob/master/%s'%(
             config['github_repo'],
             os.path.relpath(fn, html_dir).replace('.html', '.ipynb'))
         colab_html = '<a href="%s"> <button style="float:right", id="colab" class="mdl-button mdl-js-button mdl-button--primary mdl-js-ripple-effect"> <i class=" fas fa-external-link-alt"></i> Colab </button></a><div class="mdl-tooltip" data-mdl-for="colab"> Open notbook in Colab</div>' % (colab_link)

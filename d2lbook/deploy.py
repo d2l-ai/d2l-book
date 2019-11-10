@@ -7,7 +7,7 @@ from d2lbook.config import Config
 
 __all__  = ['deploy']
 
-commands = ['html', 'pdf', 'pkg', 'all']
+commands = ['html', 'pdf', 'pkg', 'colab', 'all']
 
 def deploy():
     parser = argparse.ArgumentParser(description='Deploy documents')
@@ -29,6 +29,12 @@ class Deployer(object):
         self._check()
         bash_fname = os.path.join(os.path.dirname(__file__), 'upload_doc_s3.sh')
         run_cmd(['bash', bash_fname, self.config.html_dir, self.config.deploy['s3_bucket']])
+        self.colab()
+
+    def colab(self):
+        if self.config.colab['github_repo']:
+            bash_fname = os.path.join(os.path.dirname(__file__), 'upload_github.sh')
+            run_cmd(['bash', bash_fname, self.config.colab_dir, self.config.colab['github_repo']])
 
     def pdf(self):
         self._check()

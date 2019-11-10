@@ -5,8 +5,7 @@ import logging
 class Config():
     def __init__(self, config_fname='config.ini'):
         if not os.path.exists(config_fname):
-            logging.fatal('Failed to find the config', config_fname)
-            logging.fatal('You can use "d2lbook create ." to create a default config')
+            logging.fatal('Failed to find the config file: %s'%(config_fname))
             exit(-1)
         config = configparser.ConfigParser()
         default_config_name = os.path.join(
@@ -18,6 +17,7 @@ class Config():
         self.project = config['project']
         self.html = config['html']
         self.library = config['library']
+        self.colab = config['colab']
 
         # A bunch of directories
         self.src_dir = self.build['source_dir']
@@ -26,6 +26,7 @@ class Config():
         self.rst_dir = os.path.join(self.tgt_dir, 'rst')
         self.html_dir = os.path.join(self.tgt_dir, 'html')
         self.pdf_dir = os.path.join(self.tgt_dir, 'pdf')
+        self.colab_dir = os.path.join(self.tgt_dir, 'colab')
         self.linkcheck_dir = os.path.join(self.tgt_dir, 'linkcheck')
 
         # Some targets names.
