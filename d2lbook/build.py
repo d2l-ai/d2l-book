@@ -296,10 +296,7 @@ def get_code_to_save(input_fn, save_mark):
                     # preface.md)
                     if lines[i+1].startswith('import') or lines[i+1].startswith('from'):
                         for j in range(i+2, len(lines)):
-                            l = lines[j]
-                            if l.startswith(' ') or not l:
-                                break
-                            block.append(l)
+                            block.append(lines[j])
                     # For code blocks containing def or class
                     else:
                         for j in range(i+2, len(lines)):
