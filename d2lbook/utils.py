@@ -6,7 +6,7 @@ import logging
 def rm_ext(filename):
     return os.path.splitext(filename)[0]
 
-def find_files(pattern, root=None):
+def find_files(pattern, root=None, excluded_pattern=None):
     fnames = []
     patterns = pattern.split()
     for p in patterns:
@@ -17,7 +17,10 @@ def find_files(pattern, root=None):
         for fn in glob.glob(p, recursive=True):
             if os.path.isfile(fn):
                 fnames.append(fn)
-    return fnames
+    if not excluded_pattern:
+        return fnames
+    excluded_fnames = find_files(excluded_pattern, root)
+    return [fn for fn in fnames if fn not in excluded_fnames]
 
 def get_mtimes(fnames):
     if isinstance(fnames, str):
@@ -114,10 +117,20 @@ def get_time_diff(tik, tok):
     m, s = divmod(remainder, 60)
     return "%02d:%02d:%02d" % (h, m, s)
 
-
 def run_cmd(cmd):
     if isinstance(cmd, str):
         cmd = [cmd]
     ret = os.system(' '.join(cmd))
     if ret != 0:
         exit(-1)
+
+def split_config_str(config_str, num_items_per_line=None):
+    items = []
+    lines = config_str.split('\n')
+    for i, line in enumerate(lines):
+        items.append([tk.strip() for tk in line.split(',') if tk.strip()])
+        if num_items_per_line and len(items[-1]) != num_items_per_line:
+            logging.fatal("The items in %d-th line (%d) doesn't"
+                          " match the required (%d)"%(i, len(items[-1]), num_items_per_line))
+            logging.fatal("The raw string is:\n"+config_str)
+    return items

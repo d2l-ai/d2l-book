@@ -14,6 +14,7 @@ import hashlib
 from d2lbook.utils import *
 from d2lbook.sphinx import prepare_sphinx_env
 from d2lbook.config import Config
+from d2lbook import colab
 
 __all__  = ['build']
 
@@ -23,7 +24,7 @@ mark_re_md = re.compile(':([-\/\\._\w\d]+):`([\*-\/\\\._\w\d]+)`')
 mark_re = re.compile(':([-\/\\._\w\d]+):``([\*-\/\\\._\w\d]+)``')
 
 commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck',
-            'outputcheck', 'lib', 'all']
+            'outputcheck', 'lib', 'colab', 'all']
 
 def build():
     parser = argparse.ArgumentParser(description='Build the documents')
@@ -46,12 +47,10 @@ class Builder(object):
     def _find_md_files(self):
         build = self.config.build
         src_dir = self.config.src_dir
-        excluded_files = find_files(build['exclusions'], src_dir)
-        pure_markdowns = find_files(build['non-notebooks'], src_dir)
-        pure_markdowns = [fn for fn in pure_markdowns if fn not in excluded_files]
-        notebooks = find_files(build['notebooks'], src_dir)
-        notebooks = [fn for fn in notebooks if fn not in pure_markdowns and fn
-                     not in excluded_files]
+        notebooks = find_files(build['notebooks'], src_dir,
+                               build['exclusions']+' '+build['non-notebooks'])
+        pure_markdowns = find_files(build['non-notebooks'], src_dir,
+                                    build['exclusions'])
         depends = find_files(build['dependencies'], src_dir)
         return sorted(notebooks), sorted(pure_markdowns), sorted(depends)
 
@@ -114,7 +113,6 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
         self._rm_tgt_files('md', 'ipynb', self.config.eval_dir)
-        generate_colab_notebooks(self.config.colab, self.config.eval_dir, self.config.colab_dir)
         eval_tok = datetime.datetime.now()
         logging.info('==d2lbook build eval== finished in %s',
                      get_time_diff(eval_tik, eval_tok))
@@ -194,12 +192,21 @@ class Builder(object):
             return
         self.done['html'] = True
         self.rst()
+        self.colab()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
         tok = datetime.datetime.now()
-        add_colab_button(self.config.colab, self.config.html_dir)
+        colab.add_button(self.config.colab, self.config.html_dir)
         logging.info('==d2lbook build html== finished in %s',
                      get_time_diff(tik, tok))
+
+    def colab(self):
+        if self.done['colab']:
+            return
+        self.done['colab'] = True
+        self.eval()
+        colab.generate_notebooks(
+            self.config.colab, self.config.eval_dir, self.config.colab_dir)
 
     def linkcheck(self):
         if self.done['linkcheck']:
@@ -304,35 +311,6 @@ def get_code_to_save(input_fn, save_mark):
                         del block[-1]
                     saved.append(block)
     return saved
-
-
-def generate_colab_notebooks(config, eval_dir, colab_dir):
-    """Add a colab setup code cell and then save to colab_dir"""
-    if not config['github_repo']:
-        return
-    run_cmd(['rm -rf', colab_dir])
-    run_cmd(['cp -r', eval_dir, colab_dir])
-
-
-def add_colab_button(config, html_dir):
-    """Add an open colab button in HTML"""
-    if not config['github_repo']:
-        return
-    excluded_files = find_files(config['exclusions'], html_dir)
-    files = find_files('**/*.html', html_dir)
-    files = [fn for fn in files if fn not in excluded_files]
-    for fn in files:
-        with open(fn, 'r') as f:
-            html = f.read()
-        if 'id="colab"' in html:
-            continue
-        colab_link = 'https://colab.research.google.com/github/%s/blob/master/%s'%(
-            config['github_repo'],
-            os.path.relpath(fn, html_dir).replace('.html', '.ipynb'))
-        colab_html = '<a href="%s"> <button style="float:right", id="colab" class="mdl-button mdl-js-button mdl-button--primary mdl-js-ripple-effect"> <i class=" fas fa-external-link-alt"></i> Colab </button></a><div class="mdl-tooltip" data-mdl-for="colab"> Open notbook in Colab</div>' % (colab_link)
-        html = html.replace('</h1>', colab_html+'</h1>')
-        with open(fn, 'w') as f:
-            f.write(html)
 
 def get_toc(root):
     """return a list of files in the order defined by TOC"""

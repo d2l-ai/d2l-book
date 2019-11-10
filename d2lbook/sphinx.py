@@ -49,13 +49,10 @@ class SphinxEnv(object):
                 '_static', os.path.basename(fname)))
 
     def _update_header_links(self):
-        header_links = self.config.html['header_links']
-        items = header_links.replace('\n','').split(',')
-        assert len(items) % 3 == 0, header_links
+        items = utils.split_config_str(self.config.html['header_links'], 3)
         sphinx_links = ''
-        for i in range(0, len(items), 3):
-            sphinx_links += "('%s', '%s', True, '%s')," % (
-                items[i], items[i+1], items[i+2])
+        for tk in items:
+            sphinx_links += "('%s', '%s', True, '%s')," % (tk[0], tk[1], tk[2])
         self._update_pyconf('header_links', sphinx_links)
 
     def _write_js(self):
