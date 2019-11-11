@@ -95,10 +95,11 @@ replace_qr = """
 $(document).ready(function () {
     var discuss_str = 'Discuss'
     $('h2').each(function(){
-        if ($(this).text().indexOf("Scan the QR Code") != -1) {
+        if ($(this).text().indexOf("Discuss") != -1) {
             var url = $(this).find('a').attr('href');
             var tokens = url.split('/');
             var topic_id = tokens[tokens.length-1];
+            var domain = tokens[0]+'//'+tokens[2]+'/';
             $(this).html('<h2>'.concat(discuss_str).concat('</h2>'));
             $(this).parent().append('<div id="discourse-comments"></div>');
 
@@ -114,7 +115,7 @@ $(document).ready(function () {
                 }
             });
 
-            DiscourseEmbed = { discourseUrl: 'https://discuss.mxnet.io/', topicId: topic_id };
+            DiscourseEmbed = { discourseUrl: domain, topicId: topic_id };
             (function() {
                 var d = document.createElement('script'); d.type = 'text/javascript';
                 d.async = true;
