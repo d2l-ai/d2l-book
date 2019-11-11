@@ -31,6 +31,9 @@ def generate_notebooks(config, eval_dir, colab_dir):
         if use_gpu:
             notebook['metadata'].update({"accelerator": "GPU"})
             logging.info('Use GPU for '+fn)
+        # Update SVG image URLs
+        if config['replace_svg_url']:
+            update_svg_urls(notebook, config['replace_svg_url'], fn, colab_dir)
         # Add additional libraries
         if config['libs']:
             cell = get_installation_cell(notebook, config['libs'])
@@ -41,6 +44,27 @@ def generate_notebooks(config, eval_dir, colab_dir):
                         0, nbformat.v4.new_markdown_cell(source=config['libs_header']))
         with open(fn, 'w') as f:
             f.write(nbformat.writes(notebook))
+
+def update_svg_urls(notebook, pattern, filename, root_dir):
+    orgin_url, new_url = split_config_str(pattern, 2)[0]
+    svg_re = re.compile('!\[.*\]\(([\.-_\w\d]+\.svg)\)')
+    for cell in notebook.cells:
+        if cell.cell_type == 'markdown':
+            lines = cell.source.split('\n')
+            for i, l in enumerate(lines):
+                m = svg_re.search(l)
+                if not m:
+                    continue
+                path = os.path.relpath(os.path.realpath(os.path.join(
+                    root_dir, os.path.basename(filename), m[1])), root_dir)
+                if not path.startswith(orgin_url):
+                    logging.warning("%s in %s does not start with %s"
+                                    "specified by replace_svg_url"%(
+                                        path, filename, orgin_url))
+                else:
+                    url = new_url + path[len(orgin_url):]
+                    lines[i] = l.replace(m[1], url)
+            cell.source = '\n'.join(lines)
 
 def get_installation_cell(notebook, libs):
     """Return a cell for installing the additional libs"""
@@ -54,9 +78,9 @@ def get_installation_cell(notebook, libs):
             for l in lines:
                 if l.strip().startswith('#'): # it's a comment
                     continue
-                m = lib1_re.match(l)
+                m = lib1_re.search(l)
                 if not m:
-                    m = lib2_re.match(l)
+                    m = lib2_re.search(l)
                 if m and m[1] in lib_dict:
                     find_libs.append(m[1])
     if not find_libs:
@@ -65,8 +89,6 @@ def get_installation_cell(notebook, libs):
     for lib in set(find_libs):
         for l in lib_dict[lib].split(' '):
             install_str += '!pip install ' + l + '\n'
-    # return {"cell_type":"code", "metadata": {}, "outputs": [], "execution_count":
-    # 0, "source":install_str}
     return nbformat.v4.new_code_cell(source=install_str)
 
 
