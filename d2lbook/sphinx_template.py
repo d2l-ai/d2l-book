@@ -99,7 +99,7 @@ $(document).ready(function () {
             var tokens = url.split('/');
             var topic_id = tokens[tokens.length-1];
             var domain = tokens[0]+'//'+tokens[2]+'/';
-            $(this).html('<h2> Discussions </h2>'));
+            $(this).html('<h2> Discussions </h2>');
             $(this).parent().append('<div id="discourse-comments"></div>');
 
             $('a').each(function(){
