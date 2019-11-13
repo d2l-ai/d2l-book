@@ -54,11 +54,31 @@ latex_elements = {
 'pointsize': '11pt',
 'preamble': r'''
 \setcounter{tocdepth}{1}
+% Use natbib's citation style, e.g. (Li and Smola, 16)
 \usepackage{natbib}
 \protected\def\sphinxcite{\citep}
+
+% Use Source Pro fonts, which can be obtained by
+% wget -O source-serif-pro.zip https://www.fontsquirrel.com/fonts/download/source-serif-pro
+% wget -O source-sans-pro.zip https://www.fontsquirrel.com/fonts/download/source-sans-pro
+% wget -O source-code-pro.zip https://www.fontsquirrel.com/fonts/download/source-code-pro
 \setmainfont{Source Serif Pro}
 \setsansfont{Source Sans Pro}
 \setmonofont{Source Code Pro}
+
+% Remove top header
+\usepackage[draft]{minted}
+\fvset{breaklines=true, breakanywhere=true}
+\setlength{\headheight}{13.6pt}
+\makeatletter
+    \fancypagestyle{normal}{
+        \fancyhf{}
+        \fancyfoot[LE,RO]{{\py@HeaderFamily\thepage}}
+        \fancyfoot[LO]{{\py@HeaderFamily\nouppercase{\rightmark}}}
+        \fancyfoot[RE]{{\py@HeaderFamily\nouppercase{\leftmark}}}
+        \fancyhead[LE,RO]{{\py@HeaderFamily }}
+     }
+\makeatother
 ''',
 'sphinxsetup': 'verbatimwithframe=false, verbatimsep=2mm, VerbatimColor={rgb}{.95,.95,.95}'
 }
