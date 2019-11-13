@@ -51,10 +51,14 @@ latex_show_pagerefs = True
 latex_show_urls = 'footnote'
 
 latex_elements = {
+'pointsize': '11pt',
 'preamble': r'''
 \setcounter{tocdepth}{1}
 \usepackage{natbib}
 \protected\def\sphinxcite{\citep}
+\setmainfont{Source Serif Pro}
+\setsansfont{Source Sans Pro}
+\setmonofont{Source Code Pro}
 ''',
 'sphinxsetup': 'verbatimwithframe=false, verbatimsep=2mm, VerbatimColor={rgb}{.95,.95,.95}'
 }

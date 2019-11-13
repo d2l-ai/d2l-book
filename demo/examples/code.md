@@ -10,6 +10,10 @@
 !ls .
 ```
 
+```{.python .input}
+'A code line with 78 chars should not be wrappered =========================='
+```
+
 ## Hide Source and Outputs
 
 We can hide the source of a code cell by adding a comment line `# Hide
