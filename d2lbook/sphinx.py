@@ -24,7 +24,8 @@ class SphinxEnv(object):
         self._update_pyconf('index', self.config.build['index'])
         self._update_pyconf('sphinx_configs', self.config.build['sphinx_configs'])
         extensions = ['recommonmark', 'sphinxcontrib.bibtex',
-                      'sphinxcontrib.rsvgconverter', 'sphinx.ext.autodoc']
+                      'sphinxcontrib.rsvgconverter', 'sphinx.ext.autodoc',
+                      'jupyter_sphinx.execute']
         extensions.extend(self.config.build['sphinx_extensions'].split())
         self._update_pyconf('extensions', ','.join('"'+ext+'"' for ext in extensions))
         fname = os.path.join(self.config.rst_dir, 'conf.py')
