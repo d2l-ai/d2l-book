@@ -90,7 +90,7 @@ $(document).ready(function () {
 });
 """
 
-# Replace the QR code with an embeded discussion thread. TODO, make the URL replaciable
+# Replace the QR code with an embeded discussion thread.
 replace_qr = """
 $(document).ready(function () {
     $('h2').each(function(){
@@ -99,14 +99,7 @@ $(document).ready(function () {
             var tokens = url.split('/');
             var topic_id = tokens[tokens.length-1];
             var domain = tokens[0]+'//'+tokens[2]+'/';
-            $(this).html('<h2> Discussions </h2>');
             $(this).parent().append('<div id="discourse-comments"></div>');
-
-            $('a').each(function(){
-                if ($(this).text().indexOf("Scan the QR Code to Discuss") != -1) {
-                    $(this).text('Discussions');
-                }
-            });
 
             $('img').each(function(){
                 if ($(this).attr('src').indexOf("qr_") != -1) {
@@ -124,9 +117,6 @@ $(document).ready(function () {
             })();
         }
     });
-
-    var replaced = $('body').html().replace(/Scan-the-QR-Code-to-Discuss/g, 'Discussions');
-    $('body').html(replaced);
 });
 """
 
