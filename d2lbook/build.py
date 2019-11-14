@@ -346,7 +346,7 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
     for i, line in enumerate(lines):
         m = mark_re_md.match(line)
         if (m is not None
-            and m[1] not in ('ref', 'numref', 'eqref')
+            and m[1] not in ('class', 'func', 'ref', 'numref', 'eqref')
             and not in_code.in_code(i,0)
             and m.end() == len(line)):
             lines[i] = '\n'+line+'\n'
