@@ -357,7 +357,7 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
         # change to the notebook directory to resolve the relpaths properly
         cwd = os.getcwd()
         os.chdir(os.path.join(cwd, os.path.dirname(output_fn)))
-        notedown.run(notebook, timeout)
+        notedown.run(notebook, timeout, store_widget_state=True)
         os.chdir(cwd)
     # write
     notebook['metadata'].update({'language_info':{'name':lang}})
