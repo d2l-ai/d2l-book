@@ -346,7 +346,7 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
     for i, line in enumerate(lines):
         m = mark_re_md.match(line)
         if (m is not None
-            and m[1] not in ('class', 'func', 'ref', 'numref', 'eqref')
+            and m[1] not in ('class', 'func', 'meth', 'ref', 'numref', 'eqref')
             and not in_code.in_code(i,0)
             and m.end() == len(line)):
             lines[i] = '\n'+line+'\n'
@@ -553,7 +553,7 @@ def process_rst(body):
             # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
             if key == 'label':
                 new_line += '.. _' + value + ':'
-            elif key in ['class', 'func', 'ref', 'numref', 'cite']:
+            elif key in ['class', 'func', 'meth', 'ref', 'numref', 'cite']:
                 new_line += ':'+key+':`'+value+'`'
             elif key == 'eqref':
                 new_line += ':eq:`'+value+'`'
