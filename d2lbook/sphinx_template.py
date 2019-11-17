@@ -53,8 +53,18 @@ latex_show_urls = 'footnote'
 latex_elements = {
 'pointsize': '11pt',
 'preamble': r'''
+
+% Page size
 \setlength{\voffset}{-12mm}
 \addtolength{\textheight}{15mm}
+
+% Chapter title style
+\usepackage[T1]{fontenc}
+\usepackage{titlesec, blindtext, color}
+\definecolor{gray75}{gray}{0.75}
+\newcommand{\hsp}{\hspace{20pt}}
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter\hsp\textcolor{gray75}{|}\hsp}{0pt}{\Huge\bfseries}
+
 \setcounter{tocdepth}{1}
 % Use natbib's citation style, e.g. (Li and Smola, 16)
 \usepackage{natbib}
