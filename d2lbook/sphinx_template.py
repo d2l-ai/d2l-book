@@ -58,6 +58,12 @@ latex_elements = {
 \setlength{\voffset}{-12mm}
 \addtolength{\textheight}{15mm}
 
+% Chapter title style
+\usepackage{titlesec, blindtext, color}
+\definecolor{gray75}{gray}{0.75}
+\newcommand{\hsp}{\hspace{20pt}}
+\titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter\hsp\textcolor{gray75}{|}\hsp}{0pt}{\Huge\bfseries}
+
 \setcounter{tocdepth}{1}
 % Use natbib's citation style, e.g. (Li and Smola, 16)
 \usepackage{natbib}
