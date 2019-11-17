@@ -657,9 +657,41 @@ def ipynb2rst(input_fn, output_fn):
 def process_latex(fname):
     with open(fname, 'r') as f:
         lines = f.read().split('\n')
+
+    _combine_citations(lines)
+    _center_graphics(lines)
+
+    with open(fname, 'w') as f:
+        f.write('\n'.join(lines))
+
+def _combine_citations(lines):
     # convert \sphinxcite{A}\sphinxcite{B} to \sphinxcite{A,B}
     for i, l in enumerate(lines):
         if '}\sphinxcite{' in l:
             lines[i] = l.replace('}\sphinxcite{', ',')
-    with open(fname, 'w') as f:
-        f.write('\n'.join(lines))
+
+# E.g., tag = 'begin{figure}'
+def _tag_in_line(tag, line):
+    assert '\\' not in set(tag)
+    return any([elem.startswith(tag) for elem in line.split('\\')])
+
+def _center_graphics(lines):
+    tabulary_cnt = 0
+    figure_cnt = 0
+    for i, l in enumerate(lines):
+        if _tag_in_line('begin{tabulary}', l):
+            tabulary_cnt += 1
+        elif _tag_in_line('end{tabulary}', l):
+            tabulary_cnt -= 1
+        elif _tag_in_line('begin{figure}', l):
+            figure_cnt += 1
+        elif _tag_in_line('end{figure}', l):
+            figure_cnt -= 1
+        # 'tabulary' and 'figure' blocks do include '\centering', so only center
+        # '\sphinxincludegraphics{}' by enclosing it with '\begin{center}'
+        # '\end{center}'
+        if tabulary_cnt == 0 and figure_cnt == 0:
+            sigs = re.findall('\\\\sphinxincludegraphics\\{.*\\}', l)
+            if len(sigs) > 0:
+                lines[i] = l.replace(sigs[0], '\\begin{center}' + sigs[0] + '\\end{center}')
+
