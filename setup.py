@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 from d2lbook import __version__
 
 requirements = [
+    'Mind',
     'jupyter',
     'sphinx>=2.2.1',
     'recommonmark',
