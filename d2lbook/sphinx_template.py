@@ -53,6 +53,8 @@ latex_show_urls = 'footnote'
 latex_elements = {
 'pointsize': '11pt',
 'preamble': r'''
+\setlength{\voffset}{-12mm}
+\addtolength{\textheight}{15mm}
 \setcounter{tocdepth}{1}
 % Use natbib's citation style, e.g. (Li and Smola, 16)
 \usepackage{natbib}
