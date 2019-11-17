@@ -5,6 +5,9 @@ from sphinx.ext.autosummary import Autosummary
 from sphinx.ext.autosummary import get_documenter
 from docutils.parsers.rst import directives
 from sphinx.util.inspect import safe_getattr
+from Mind.Existence import logic_object
+from sphinx.ext.autodoc import ClassDocumenter
+
 import re
 
 
@@ -131,6 +134,14 @@ class AutoAutoSummary(Autosummary):
         finally:
             return super(AutoAutoSummary, self).run()
 
+class MyClassDocumenter(ClassDocumenter):
+    objtype = 'logic_object'
+    directivetype = 'class'
+
+    @classmethod
+    def can_document_member(cls, member, membername, isattr, parent):
+        return isinstance(member, logic_object)
+
 def setup(app):
     # app.add_javascript('https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js')
     app.add_javascript('d2l.js')
@@ -138,6 +149,7 @@ def setup(app):
     import mxtheme
     app.add_directive('card', mxtheme.CardDirective)
     app.add_directive('autoautosummary', AutoAutoSummary)
+    app.add_autodocumenter(MyClassDocumenter)
 """
 
 
