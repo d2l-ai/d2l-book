@@ -10,6 +10,7 @@ import time
 import datetime
 import argparse
 import re
+import subprocess
 import hashlib
 from d2lbook.utils import *
 from d2lbook.sphinx import prepare_sphinx_env
@@ -224,7 +225,11 @@ class Builder(object):
         self.rst()
         run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
                  '-b latex -c', self.config.rst_dir, self.sphinx_opts])
-        process_latex(self.config.tex_fname)
+
+        script = None
+        if 'post_latex' in self.config.build:
+            script = self.config.build['post_latex']
+        process_latex(self.config.tex_fname, script)
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
         tok = datetime.datetime.now()
         logging.info('==d2lbook build pdf== finished in %s',
@@ -654,7 +659,7 @@ def ipynb2rst(input_fn, output_fn):
         with open(full_fn, 'wb') as f:
             f.write(outputs[fn])
 
-def process_latex(fname):
+def process_latex(fname, script):
     with open(fname, 'r') as f:
         lines = f.read().split('\n')
 
@@ -663,6 +668,9 @@ def process_latex(fname):
 
     with open(fname, 'w') as f:
         f.write('\n'.join(lines))
+    # Execute custom process_latex script
+    if script:
+        subprocess.call([sys.executable, script, fname])
 
 def _combine_citations(lines):
     # convert \sphinxcite{A}\sphinxcite{B} to \sphinxcite{A,B}
