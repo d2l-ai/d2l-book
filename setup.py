@@ -2,7 +2,6 @@ from setuptools import setup, find_packages
 from d2lbook import __version__
 
 requirements = [
-    'pygame',
     'Mind',
     'jupyter',
     'sphinx>=2.2.1',
