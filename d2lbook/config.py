@@ -16,6 +16,7 @@ class Config():
         self.deploy = config['deploy']
         self.project = config['project']
         self.html = config['html']
+        self.pdf = config['pdf']
         self.library = config['library']
         self.colab = config['colab']
 
