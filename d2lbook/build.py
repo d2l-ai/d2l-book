@@ -10,6 +10,7 @@ import time
 import datetime
 import argparse
 import re
+import regex
 import subprocess
 import hashlib
 from d2lbook.utils import *
@@ -701,7 +702,14 @@ def _center_graphics(lines):
         # '\sphinxincludegraphics{}' by enclosing it with '\begin{center}'
         # '\end{center}'. Logo should not be centered and it is not in_doc.
         if tabulary_cnt == 0 and figure_cnt == 0 and in_doc:
-            sigs = re.findall('\\\\sphinxincludegraphics\\{.*\\}', l)
-            if len(sigs) > 0:
-                lines[i] = l.replace(sigs[0], '\\begin{center}' + sigs[0] + '\\end{center}')
+            sigs_greedy = re.findall('\\\\sphinxincludegraphics\\{.*\\}', l)
+            if len(sigs_greedy) > 0:
+                longest_balanced_braces = regex.findall('\{(?>[^{}]|(?R))*\}',
+                                                        sigs_greedy[0])
+                sig_with_balanced_braces = ('\\sphinxincludegraphics'
+                                            + longest_balanced_braces[0])
+                lines[i] = l.replace(sig_with_balanced_braces,
+                                     ('\\begin{center}'
+                                      + sig_with_balanced_braces
+                                      + '\\end{center}'))
 

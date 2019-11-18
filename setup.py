@@ -3,6 +3,7 @@ from d2lbook import __version__
 
 requirements = [
     'jupyter',
+    'regex'
     'sphinx>=2.2.1',
     'recommonmark',
     'sphinxcontrib-bibtex>=1.0.0',
