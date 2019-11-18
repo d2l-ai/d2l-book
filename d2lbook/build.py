@@ -669,7 +669,13 @@ def process_latex(fname, script):
         f.write('\n'.join(lines))
     # Execute custom process_latex script
     if script:
-        subprocess.call([sys.executable, script, fname])
+        cmd = "python " + script + " " + fname
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            logging.error('%s', stderr.decode())
+            exit(-1)
 
 def _combine_citations(lines):
     # convert \sphinxcite{A}\sphinxcite{B} to \sphinxcite{A,B}
