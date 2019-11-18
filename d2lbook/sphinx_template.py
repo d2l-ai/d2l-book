@@ -50,6 +50,8 @@ latex_engine = 'xelatex' # for utf-8 supports
 latex_show_pagerefs = True
 latex_show_urls = 'footnote'
 
+latex_logo = 'LOGO'
+
 latex_elements = {
 'pointsize': '11pt',
 'preamble': r'''

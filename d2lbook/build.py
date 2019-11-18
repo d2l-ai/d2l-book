@@ -226,9 +226,7 @@ class Builder(object):
         run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
                  '-b latex -c', self.config.rst_dir, self.sphinx_opts])
 
-        script = None
-        if 'post_latex' in self.config.build:
-            script = self.config.build['post_latex']
+        script = self.config.pdf['post_latex']
         process_latex(self.config.tex_fname, script)
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
         tok = datetime.datetime.now()
@@ -686,6 +684,7 @@ def _tag_in_line(tag, line):
 def _center_graphics(lines):
     tabulary_cnt = 0
     figure_cnt = 0
+    in_doc = False
     for i, l in enumerate(lines):
         if _tag_in_line('begin{tabulary}', l):
             tabulary_cnt += 1
@@ -695,10 +694,13 @@ def _center_graphics(lines):
             figure_cnt += 1
         elif _tag_in_line('end{figure}', l):
             figure_cnt -= 1
+        elif _tag_in_line('begin{document}', l):
+            in_doc = True
+
         # 'tabulary' and 'figure' blocks do include '\centering', so only center
         # '\sphinxincludegraphics{}' by enclosing it with '\begin{center}'
-        # '\end{center}'
-        if tabulary_cnt == 0 and figure_cnt == 0:
+        # '\end{center}'. Logo should not be centered and it is not in_doc.
+        if tabulary_cnt == 0 and figure_cnt == 0 and in_doc:
             sigs = re.findall('\\\\sphinxincludegraphics\\{.*\\}', l)
             if len(sigs) > 0:
                 lines[i] = l.replace(sigs[0], '\\begin{center}' + sigs[0] + '\\end{center}')
