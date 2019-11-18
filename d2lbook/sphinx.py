@@ -36,9 +36,13 @@ class SphinxEnv(object):
         self.pyconf = self.pyconf.replace(key.upper(), value)
 
     def _copy_static_files(self):
-        static_keys = ['favicon', 'logo']
-        for key in static_keys:
-            fname = self.config.html[key]
+        static_keys = [('html', 'favicon'), ('html', 'html_logo'), ('pdf', 'latex_logo')]
+        for attribute, key in static_keys:
+            if attribute == 'html':
+                fname = self.config.html[key]
+            elif attribute == 'pdf':
+                fname = self.config.pdf[key]
+
             if not fname:
                 self._update_pyconf(key, '')
                 continue

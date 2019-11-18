@@ -37,7 +37,7 @@ html_static_path = ['_static']
 
 html_favicon = 'FAVICON'
 
-html_logo = 'LOGO'
+html_logo = 'HTML_LOGO'
 
 latex_documents = [
     (master_doc, "NAME.tex", "TITLE",
@@ -50,7 +50,7 @@ latex_engine = 'xelatex' # for utf-8 supports
 latex_show_pagerefs = True
 latex_show_urls = 'footnote'
 
-latex_logo = 'LOGO'
+latex_logo = 'LATEX_LOGO'
 
 latex_elements = {
 'pointsize': '11pt',
