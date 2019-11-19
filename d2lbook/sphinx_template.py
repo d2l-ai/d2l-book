@@ -71,8 +71,8 @@ latex_elements = {
 'preamble': r'''
 
 % Page size
-\setlength{\voffset}{-12mm}
-\addtolength{\textheight}{15mm}
+\setlength{\voffset}{-10mm}
+\addtolength{\textheight}{10mm}
 
 % Chapter title style
 \usepackage{titlesec, blindtext, color}
