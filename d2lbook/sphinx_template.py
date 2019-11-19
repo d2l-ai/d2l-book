@@ -4,6 +4,17 @@ import sys
 sys.path.insert(0, '..')
 sys.path.insert(0, '.')
 
+# Use footnote size for code block.
+from sphinx.highlighting import PygmentsBridge
+from pygments.formatters.latex import LatexFormatter
+
+class CustomLatexFormatter(LatexFormatter):
+    def __init__(self, **options):
+        super(CustomLatexFormatter, self).__init__(**options)
+        self.verboptions = r"formatcom=\footnotesize"
+PygmentsBridge.latex_formatter = CustomLatexFormatter
+
+
 project = "TITLE"
 copyright = "COPYRIGHT"
 author = "AUTHOR"
@@ -70,7 +81,6 @@ latex_elements = {
 \titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter\hsp\textcolor{gray75}{|}\hsp}{0pt}{\Huge\bfseries}
 
 % So some large pictures won't get the full page
-%\renewcommand{\topfraction}{.75}
 \renewcommand{\floatpagefraction}{.8}
 
 \setcounter{tocdepth}{1}
