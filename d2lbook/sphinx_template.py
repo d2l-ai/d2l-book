@@ -53,6 +53,9 @@ latex_show_urls = 'footnote'
 latex_logo = 'LATEX_LOGO'
 
 latex_elements = {
+
+'figure_align': 'H',
+
 'pointsize': '11pt',
 'preamble': r'''
 
@@ -65,6 +68,10 @@ latex_elements = {
 \definecolor{gray75}{gray}{0.75}
 \newcommand{\hsp}{\hspace{20pt}}
 \titleformat{\chapter}[hang]{\Huge\bfseries}{\thechapter\hsp\textcolor{gray75}{|}\hsp}{0pt}{\Huge\bfseries}
+
+% So some large pictures won't get the full page
+%\renewcommand{\topfraction}{.75}
+\renewcommand{\floatpagefraction}{.8}
 
 \setcounter{tocdepth}{1}
 % Use natbib's citation style, e.g. (Li and Smola, 16)
