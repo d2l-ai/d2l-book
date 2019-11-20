@@ -94,6 +94,8 @@ latex_elements = {
 % wget -O source-code-pro.zip https://www.fontsquirrel.com/fonts/download/source-code-pro
 
 % Note that Source Code Pro cannot displpay \textvisiblespace
+\setmainfont{Source Serif Pro}
+\setsansfont{Source Sans Pro}
 \setmonofont{DejaVu Sans Mono}
 
 % Remove top header
