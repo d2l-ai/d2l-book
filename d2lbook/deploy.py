@@ -50,7 +50,7 @@ class Deployer(object):
         if not url.endswith('/'):
             url += '/'
         logging.info('cp %s to %s', self.config.pkg_fname, url)
-        run_cmd(['aws s3 cp', self.config.pkg_fname + '*', url, "--acl 'public-read' --quiet"])
+        run_cmd(['aws s3 cp', self.config.pkg_fname, url, "--acl 'public-read' --quiet"])
 
     def all(self):
         self.html()
