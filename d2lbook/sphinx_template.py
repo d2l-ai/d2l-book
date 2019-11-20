@@ -4,16 +4,6 @@ import sys
 sys.path.insert(0, '..')
 sys.path.insert(0, '.')
 
-# Use footnote size for code block.
-from sphinx.highlighting import PygmentsBridge
-from pygments.formatters.latex import LatexFormatter
-
-class CustomLatexFormatter(LatexFormatter):
-    def __init__(self, **options):
-        super(CustomLatexFormatter, self).__init__(**options)
-        self.verboptions = r"formatcom=\footnotesize"
-PygmentsBridge.latex_formatter = CustomLatexFormatter
-
 
 project = "TITLE"
 copyright = "COPYRIGHT"
@@ -71,8 +61,8 @@ latex_elements = {
 'preamble': r'''
 
 % Page size
-\setlength{\voffset}{-10mm}
-\addtolength{\textheight}{10mm}
+\setlength{\voffset}{-12mm}
+\addtolength{\textheight}{12mm}
 
 % Chapter title style
 \usepackage{titlesec, blindtext, color}
@@ -91,12 +81,12 @@ latex_elements = {
 % Use Source Pro fonts, which can be obtained by
 % wget -O source-serif-pro.zip https://www.fontsquirrel.com/fonts/download/source-serif-pro
 % wget -O source-sans-pro.zip https://www.fontsquirrel.com/fonts/download/source-sans-pro
-% wget -O source-code-pro.zip https://www.fontsquirrel.com/fonts/download/source-code-pro
-
-% Note that Source Code Pro cannot displpay \textvisiblespace
 \setmainfont{Source Serif Pro}
 \setsansfont{Source Sans Pro}
-\setmonofont{DejaVu Sans Mono}
+
+% Note that Source Code Pro cannot displpay \textvisiblespace
+% wget -O Inconsolata.zip https://www.fontsquirrel.com/fonts/download/Inconsolata
+\setmonofont{Inconsolata}
 
 % Remove top header
 \usepackage[draft]{minted}
