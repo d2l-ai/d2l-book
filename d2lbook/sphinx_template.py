@@ -92,9 +92,9 @@ latex_elements = {
 % wget -O source-serif-pro.zip https://www.fontsquirrel.com/fonts/download/source-serif-pro
 % wget -O source-sans-pro.zip https://www.fontsquirrel.com/fonts/download/source-sans-pro
 % wget -O source-code-pro.zip https://www.fontsquirrel.com/fonts/download/source-code-pro
-\setmainfont{Source Serif Pro}
-\setsansfont{Source Sans Pro}
-\setmonofont{Source Code Pro}
+
+% Note that Source Code Pro cannot displpay \textvisiblespace
+\setmonofont{DejaVu Sans Mono}
 
 % Remove top header
 \usepackage[draft]{minted}
