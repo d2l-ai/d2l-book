@@ -44,6 +44,12 @@ class Deployer(object):
         logging.info('cp %s to %s', self.config.pdf_fname, url)
         run_cmd(['aws s3 cp', self.config.pdf_fname, url, "--acl 'public-read' --quiet"])
 
+    def _deploy_other_files(self, tgt_url):
+        other_urls = self.config.deploy['other_file_s3urls'].split()
+        for other_url in other_urls:
+            logging.info('cp %s to %s', other_url, tgt_url)
+            run_cmd(['aws s3 cp', other_url, tgt_url, "--acl 'public-read' --quiet"])
+
     def pkg(self):
         self._check()
         url = self.config.deploy['s3_bucket']
@@ -51,6 +57,7 @@ class Deployer(object):
             url += '/'
         logging.info('cp %s to %s', self.config.pkg_fname, url)
         run_cmd(['aws s3 cp', self.config.pkg_fname, url, "--acl 'public-read' --quiet"])
+        self._deploy_other_files(url)
 
     def all(self):
         self.html()
