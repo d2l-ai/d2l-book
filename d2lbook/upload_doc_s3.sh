@@ -31,13 +31,11 @@ DIR=${DIR}_tmp
 #     --content-encoding 'gzip' \
 aws s3 sync --exclude '*.*' --include '*.css' \
      --content-type 'text/css' \
-
      --acl 'public-read' \
      $DIR $BUCKET
 #     --content-encoding 'gzip' \
 aws s3 sync --exclude '*.*' --include '*.js' \
      --content-type 'application/javascript' \
- 
      --acl 'public-read' \
      $DIR $BUCKET
 
