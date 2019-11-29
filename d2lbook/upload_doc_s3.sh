@@ -27,17 +27,17 @@ cp -r ${DIR} ${DIR}_tmp
 DIR=${DIR}_tmp
 
 
-find $DIR \( -iname '*.css' -o -iname '*.js' \) -exec gzip -9 -n {} \; -exec mv {}.gz {} \;
-
+# find $DIR \( -iname '*.css' -o -iname '*.js' \) -exec gzip -9 -n {} \; -exec mv {}.gz {} \;
+#     --content-encoding 'gzip' \
 aws s3 sync --exclude '*.*' --include '*.css' \
      --content-type 'text/css' \
-     --content-encoding 'gzip' \
+
      --acl 'public-read' \
      $DIR $BUCKET
-
+#     --content-encoding 'gzip' \
 aws s3 sync --exclude '*.*' --include '*.js' \
      --content-type 'application/javascript' \
-     --content-encoding 'gzip' \
+ 
      --acl 'public-read' \
      $DIR $BUCKET
 
