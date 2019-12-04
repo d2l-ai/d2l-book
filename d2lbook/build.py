@@ -172,7 +172,15 @@ class Builder(object):
             return
         self.done['rst'] = True
         self.eval()
-        notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
+        # Don't convert ipynb in the resource files.
+        excluded_pattern = []
+        resources = self.config.build['resources']
+        for res in resources.split():
+            if os.path.isdir(os.path.join(self.config.eval_dir, res)):
+                res = os.path.join(res, '**', '*.ipynb')
+            excluded_pattern.append(res)
+        notebooks = find_files(os.path.join('**', '*.ipynb'), self.config.eval_dir,
+                               ' '.join(excluded_pattern))
         updated_notebooks = get_updated_files(
             notebooks, self.config.eval_dir, self.config.rst_dir, 'ipynb', 'rst')
         logging.info('%d rst files are outdated', len(updated_notebooks))
@@ -720,4 +728,3 @@ def _center_graphics(lines):
                                      ('\\begin{center}'
                                       + sig_with_balanced_braces
                                       + '\\end{center}'))
-

@@ -12,7 +12,7 @@ release = "RELEASE"
 extensions = [EXTENSIONS]
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', EXCLUDE_PATTERNS]
 master_doc = 'INDEX'
 numfig = True
 numfig_secnum_depth = 2
@@ -43,6 +43,8 @@ latex_documents = [
     (master_doc, "NAME.tex", "TITLE",
      author, 'manual'),
 ]
+
+
 
 rsvg_converter_args = ['-z', '0.8']
 

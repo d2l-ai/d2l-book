@@ -23,10 +23,12 @@ class SphinxEnv(object):
             self._update_pyconf(key, self.config.project[key])
         self._update_pyconf('index', self.config.build['index'])
         self._update_pyconf('sphinx_configs', self.config.build['sphinx_configs'])
+        join_str = lambda items: ','.join('"'+i+'"' for i in items)
+        self._update_pyconf('exclude_patterns', join_str(self.config.build['resources'].split()))
         extensions = ['recommonmark', 'sphinxcontrib.bibtex',
                       'sphinxcontrib.rsvgconverter', 'sphinx.ext.autodoc']
         extensions.extend(self.config.build['sphinx_extensions'].split())
-        self._update_pyconf('extensions', ','.join('"'+ext+'"' for ext in extensions))
+        self._update_pyconf('extensions', join_str(extensions))
         fname = os.path.join(self.config.rst_dir, 'conf.py')
         logging.info('write into %s', fname)
         with open(fname, 'w') as f:
