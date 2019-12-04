@@ -97,6 +97,8 @@ class Builder(object):
         num_updated_markdowns = len(updated_markdowns)
         logging.info('%d notedowns and %d markdowns are out dated',
                      num_updated_notebooks, num_updated_markdowns)
+        for i, nb in enumerate(updated_notebooks):
+            logging.info('[%d] %s', i + 1, nb[0])
         self._copy_resources(self.config.src_dir, self.config.eval_dir)
 
         for i, (src, tgt) in enumerate(updated_notebooks):
