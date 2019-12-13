@@ -7,7 +7,7 @@ Let's start with a simple project from scratch.
 First make a folder for our project. 
 
 ```{.python .input}
-!rm -rf mybook; mkdir mybook
+!mkdir -p mybook
 ```
 
 Then create two pages. The `index.md` is the index page which should contain the table of contents (TOC). In this case, there is only another `get_started.md`. Note that the TOC is defined in a code block with name `toc`. If you are familiar with Sphinx, you can find it's similar to the TOC definition in Sphinx. Please refer to :numref:`sec_markdown` for more extensions `d2lbook` added to markdown. 
@@ -65,10 +65,10 @@ eval_notebook = False
 google_analytics_tracking_id = UA-96378503-1
 ```
 
-Let's build again.
+Let's clean and build again.
 
 ```{.python .input}
-!cd mybook && d2lbook build html 
+!cd mybook && rm -rf _build && d2lbook build html 
 ```
 
 You can check [default_config.ini]() for more configuration options and their default values. Also check these examples `config.ini`:
