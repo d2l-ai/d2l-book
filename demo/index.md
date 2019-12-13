@@ -34,9 +34,10 @@ Use `pip` to install the command-line interface.
 pip install git+https://github.com/d2l-ai/d2l-book
 ```
 
+
 (This is a [d2lbook pip package](https://pypi.org/project/d2lbook/), but we recommend you to install latest version at Github directly.)
 
-In addition, you also need to install [pandoc](https://pandoc.org/) to build the HTML version, e.g. `conda install pandoc`. Building the PDF version requires [LibRsvg](https://wiki.gnome.org/Projects/LibRsvg) to convert your SVG images (our recommend format), e.g. `conda install librsvg`,  and installing three fonts (click the links to download): [Inconsolata](https://www.fontsquirrel.com/fonts/download/Inconsolata), [Source Serif Pro]( https://www.fontsquirrel.com/fonts/download/source-serif-pro), and [Source Sans Pro](https://www.fontsquirrel.com/fonts/download/source-sans-pro). 
+In addition, you also need to install [pandoc](https://pandoc.org/) to build the HTML version, e.g. `conda install pandoc`. Building the PDF version requires [LibRsvg](https://wiki.gnome.org/Projects/LibRsvg) to convert your SVG images (our recommend format), e.g. `conda install librsvg`.
 
 ## Building this Website
 
@@ -51,6 +52,7 @@ cd d2l-book/demo
 d2lbook build all
 ```
 
+
 Once finished, you can check the results in the `_build` folder. For example, this page is in `_build/html/index.html`, the PDF version is at `_build/pdf/d2l-book.pdf`, all evaluated notebooks are under `_build/eval/`.
 
 You can build a particular format:
@@ -61,6 +63,7 @@ d2lbook build html  # build the HTML version
 d2lbook build pdf   # build the PDF version
 ```
 
+
 ## Table of Contents
 
 ```toc
@@ -70,3 +73,4 @@ d2lbook build pdf   # build the PDF version
 examples/index
 develop/index
 ```
+

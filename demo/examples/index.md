@@ -14,7 +14,8 @@ We will assume you are familiar with the usage of
 :maxdepth: 2
 
 create
+build
 markdown
 code
+colab
 ```
-

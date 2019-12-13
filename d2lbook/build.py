@@ -95,7 +95,7 @@ class Builder(object):
             pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
         num_updated_notebooks = len(updated_notebooks)
         num_updated_markdowns = len(updated_markdowns)
-        logging.info('%d notebooks are out dated', num_updated_notebooks)
+        logging.info('%d notebooks are outdated', num_updated_notebooks)
         for i, nb in enumerate(updated_notebooks):
             logging.info('[%d] %s', i + 1, nb[0])
         self._copy_resources(self.config.src_dir, self.config.eval_dir)

@@ -1,4 +1,5 @@
 # Creating Your Project
+:label:`sec_create`
 
 Let's start with a simple project from scratch.
 
