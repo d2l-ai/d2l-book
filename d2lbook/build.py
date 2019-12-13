@@ -95,8 +95,7 @@ class Builder(object):
             pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
         num_updated_notebooks = len(updated_notebooks)
         num_updated_markdowns = len(updated_markdowns)
-        logging.info('%d notedowns and %d markdowns are out dated',
-                     num_updated_notebooks, num_updated_markdowns)
+        logging.info('%d notebooks are out dated', num_updated_notebooks)
         for i, nb in enumerate(updated_notebooks):
             logging.info('[%d] %s', i + 1, nb[0])
         self._copy_resources(self.config.src_dir, self.config.eval_dir)
@@ -118,7 +117,7 @@ class Builder(object):
             shutil.copyfile(src, tgt)
         self._rm_tgt_files('md', 'ipynb', self.config.eval_dir)
         eval_tok = datetime.datetime.now()
-        logging.info('==d2lbook build eval== finished in %s',
+        logging.info('"d2lbook build eval" finished in %s',
                      get_time_diff(eval_tik, eval_tok))
 
     # Remove target files (e.g., eval and rst) based on removed files under src
@@ -201,7 +200,7 @@ class Builder(object):
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
         tok = datetime.datetime.now()
         colab.add_button(self.config.colab, self.config.html_dir)
-        logging.info('==d2lbook build html== finished in %s',
+        logging.info('"d2lbook build html" finished in %s',
                      get_time_diff(tik, tok))
 
     def colab(self):
@@ -233,7 +232,7 @@ class Builder(object):
         process_latex(self.config.tex_fname, script)
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
         tok = datetime.datetime.now()
-        logging.info('==d2lbook build pdf== finished in %s',
+        logging.info('"d2lbook build pdf" finished in %s',
                      get_time_diff(tik, tok))
 
     def pkg(self):
@@ -720,4 +719,3 @@ def _center_graphics(lines):
                                      ('\\begin{center}'
                                       + sig_with_balanced_braces
                                       + '\\end{center}'))
-

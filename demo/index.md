@@ -34,6 +34,8 @@ Use `pip` to install the command-line interface.
 pip install git+https://github.com/d2l-ai/d2l-book
 ```
 
+(This is a [d2lbook pip package](https://pypi.org/project/d2lbook/), but we recommend you to install latest version at Github directly.)
+
 In addition, you also need to install [pandoc](https://pandoc.org/) to build the HTML version, e.g. `conda install pandoc`. Building the PDF version requires [LibRsvg](https://wiki.gnome.org/Projects/LibRsvg) to convert your SVG images (our recommend format), e.g. `conda install librsvg`,  and installing three fonts (click the links to download): [Inconsolata](https://www.fontsquirrel.com/fonts/download/Inconsolata), [Source Serif Pro]( https://www.fontsquirrel.com/fonts/download/source-serif-pro), and [Source Sans Pro](https://www.fontsquirrel.com/fonts/download/source-sans-pro). 
 
 ## Building this Website

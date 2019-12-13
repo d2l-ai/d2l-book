@@ -1,4 +1,6 @@
 # Markdown Cells
+:label:`sec_markdown`
+
 
 The `d2lbook` provide additional features beyond the normal markdown supports in
 Jupyter.

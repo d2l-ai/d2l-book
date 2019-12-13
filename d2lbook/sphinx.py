@@ -27,8 +27,13 @@ class SphinxEnv(object):
                       'sphinxcontrib.rsvgconverter', 'sphinx.ext.autodoc']
         extensions.extend(self.config.build['sphinx_extensions'].split())
         self._update_pyconf('extensions', ','.join('"'+ext+'"' for ext in extensions))
+        for font in ['main_font', 'sans_font', 'mono_font']:
+            font_value = ''
+            if self.config.pdf[font]:
+                font_value = '\set%s{%s}' % (font.replace('_', ''), self.config.pdf[font])
+            self._update_pyconf(font, font_value)
+
         fname = os.path.join(self.config.rst_dir, 'conf.py')
-        logging.info('write into %s', fname)
         with open(fname, 'w') as f:
             f.write(self.pyconf)
 
@@ -42,7 +47,6 @@ class SphinxEnv(object):
                 fname = self.config.html[key]
             elif attribute == 'pdf':
                 fname = self.config.pdf[key]
-
             if not fname:
                 self._update_pyconf(key, '')
                 continue
@@ -56,7 +60,8 @@ class SphinxEnv(object):
         items = utils.split_config_str(self.config.html['header_links'], 3)
         sphinx_links = ''
         for tk in items:
-            sphinx_links += "('%s', '%s', True, '%s')," % (tk[0], tk[1], tk[2])
+            if tk:
+                sphinx_links += "('%s', '%s', True, '%s')," % (tk[0], tk[1], tk[2])
         self._update_pyconf('header_links', sphinx_links)
 
     def _write_js(self):
@@ -69,7 +74,6 @@ class SphinxEnv(object):
 
         os.makedirs(os.path.join(self.config.rst_dir, '_static'), exist_ok=True)
         fname = os.path.join(self.config.rst_dir, '_static', 'd2l.js')
-        logging.info('write into %s', fname)
         with open(fname, 'w') as f:
             f.write(d2l_js)
             for fname in utils.find_files(self.config.html['include_js'], self.config.src_dir):

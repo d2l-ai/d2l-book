@@ -120,12 +120,16 @@ def get_time_diff(tik, tok):
 def run_cmd(cmd):
     if isinstance(cmd, str):
         cmd = [cmd]
-    ret = os.system(' '.join(cmd))
+    cmd = ' '.join(cmd)
+    logging.info('Run "%s"', cmd)
+    ret = os.system(cmd)
     if ret != 0:
         exit(-1)
 
 def split_config_str(config_str, num_items_per_line=None):
     items = []
+    if not config_str:
+        return items
     lines = config_str.split('\n')
     for i, line in enumerate(lines):
         items.append([tk.strip() for tk in line.split(',') if tk.strip()])

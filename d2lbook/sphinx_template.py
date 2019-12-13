@@ -77,15 +77,9 @@ latex_elements = {
 \usepackage{natbib}
 \protected\def\sphinxcite{\citep}
 
-% Use Source Pro fonts, which can be obtained by
-% wget -O source-serif-pro.zip https://www.fontsquirrel.com/fonts/download/source-serif-pro
-% wget -O source-sans-pro.zip https://www.fontsquirrel.com/fonts/download/source-sans-pro
-\setmainfont{Source Serif Pro}
-\setsansfont{Source Sans Pro}
-
-% Note that Source Code Pro cannot displpay \textvisiblespace
-% wget -O Inconsolata.zip https://www.fontsquirrel.com/fonts/download/Inconsolata
-\setmonofont{Inconsolata}
+MAIN_FONT
+SANS_FONT
+MONO_FONT
 
 % Remove top header
 \usepackage[draft]{minted}

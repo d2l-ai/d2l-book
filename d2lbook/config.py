@@ -4,14 +4,12 @@ import logging
 
 class Config():
     def __init__(self, config_fname='config.ini'):
-        if not os.path.exists(config_fname):
-            logging.fatal('Failed to find the config file: %s'%(config_fname))
-            exit(-1)
         config = configparser.ConfigParser()
         default_config_name = os.path.join(
             os.path.dirname(__file__), 'config_default.ini')
         config.read(default_config_name)
-        config.read(config_fname)
+        if os.path.exists(config_fname):
+            logging.info('Load configure from %s', config_name)
         self.build = config['build']
         self.deploy = config['deploy']
         self.project = config['project']
@@ -34,6 +32,27 @@ class Config():
         self.pdf_fname = os.path.join(self.pdf_dir, self.project['name']+'.pdf')
         self.tex_fname = os.path.join(self.pdf_dir, self.project['name']+'.tex')
         self.pkg_fname = os.path.join(self.tgt_dir, self.project['name']+'.zip')
+
+        # The project must have an index page
+        index_fname, ext = os.path.splitext(self.build['index'])
+        if ext and ext != '.md':
+            logging.info('Ignore the file extesion, %s, specified by index in %s',
+                         ext, config_fname)
+        index_fname = os.path.join(self.src_dir, index_fname+'.md')
+        if not os.path.exists(index_fname):
+            logging.fatal('Failed to find the index file: %s', index_fname)
+            exit(-1)
+
+        if not self.project['title']:
+            # Infer the book title from the index page
+            with open(index_fname, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        if line.startswith('#'):
+                            line = line[1:]
+                        self.project['title'] = line.strip()
+                        break
 
         # Sanity checks.
         self.sanity_check()
