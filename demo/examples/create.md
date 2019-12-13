@@ -1,4 +1,4 @@
-# Create Your Project 
+# Creating Your Project 
 
 Let's start with a simple project from scratch. 
 
@@ -40,5 +40,7 @@ Now let's build the HTML version.
 The index HTML page is then available at `mybook/_build/html/index.html`.
 
 ## Configuration 
+
+You can customize how your book is built and published through `config.ini`. 
 
 

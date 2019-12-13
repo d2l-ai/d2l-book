@@ -10,7 +10,7 @@ class Config():
         config.read(default_config_name)
         if os.path.exists(config_fname):
             logging.info('Load configure from %s', config_fname)
-            config.read(config_name)
+            config.read(config_fname)
         self.build = config['build']
         self.deploy = config['deploy']
         self.project = config['project']
