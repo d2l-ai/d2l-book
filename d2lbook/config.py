@@ -9,7 +9,7 @@ class Config():
             os.path.dirname(__file__), 'config_default.ini')
         config.read(default_config_name)
         if os.path.exists(config_fname):
-            logging.info('Load configure from %s', config_name)
+            logging.info('Load configure from %s', config_fname)
         self.build = config['build']
         self.deploy = config['deploy']
         self.project = config['project']
