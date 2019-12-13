@@ -18,9 +18,10 @@ Then create two pages. The `index.md` is the index page which should contain the
 
 The starting page of my book with `d2lbook`.
 
-```toc
+````toc
 get_started
-```
+````
+
 ```
 
 ```{.python .input}
@@ -72,6 +73,7 @@ Let's clean and build again.
 ```
 
 You can check [default_config.ini](https://github.com/d2l-ai/d2l-book/blob/master/d2lbook/config_default.ini) for more configuration options and their default values. Also check these examples `config.ini`:
+
 - [This website](https://github.com/d2l-ai/d2l-book/blob/master/demo/config.ini)
 - [Dive into Deep Learning](https://github.com/d2l-ai/d2l-en/blob/master/config.ini)
 
