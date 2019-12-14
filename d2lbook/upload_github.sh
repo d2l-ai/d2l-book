@@ -1,6 +1,6 @@
 #!/bin/bash
 # Upload files into a github repo.
-set -ex
+set -e
 
 if [ $# -ne 2 ]; then
     echo "ERROR: needs two arguments. "
@@ -28,10 +28,14 @@ mv $tmp/.git ${REPO_DIR}/.git
 
 cp -r ${IN_DIR}/* ${REPO_DIR}/
 
+if [ -f ${REPO_DIR}/index.html ]; then
+    touch ${REPO_DIR}/.nojekyll
+fi
+
 cd ${REPO_DIR}
 git config --global push.default simple
 git config --global user.name "D2L Bot"
-git config --global user.email "muli@cs.cmu.edu"
+git config --global user.email ""
 git add -f --all .
-git commit -am "Upload by d2lbook"
+git diff-index --quiet HEAD || git commit -am "Uploaded by d2lbook"
 git push origin master

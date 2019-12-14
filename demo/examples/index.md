@@ -15,6 +15,7 @@ We will assume you are familiar with the usage of
 
 create
 build
+deploy
 markdown
 code
 colab
