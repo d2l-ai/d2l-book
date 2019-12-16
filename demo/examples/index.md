@@ -14,6 +14,7 @@ We will assume you are familiar with the usage of
 :maxdepth: 2
 
 create
+edit
 build
 deploy
 markdown
