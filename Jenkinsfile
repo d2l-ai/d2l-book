@@ -7,7 +7,7 @@ stage("Build and Publish") {
       conda create -n d2l-book-build pip -y
       conda activate d2l-book-build
       pip install .
-      cd demo
+      cd docs
       pip install matplotlib numpy
       d2lbook build html pdf
       '''
@@ -15,7 +15,7 @@ stage("Build and Publish") {
       if (env.BRANCH_NAME == 'master') {
         sh '''set -ex
         conda activate d2l-book-build
-        cd demo
+        cd docs
         d2lbook deploy html pdf
         d2lbook clear
       '''
