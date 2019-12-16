@@ -1,76 +1,66 @@
-# Building Hands-on Books
+# D2L-Book: A Toolkit for Hands-on Books
 
-The D2L book (`d2lbook`) package helps you build and publish **a book consists with Python codes**, or **a Python package document site with tutorials**. For example, Please check [Dive into Deep Learning](https://d2l.ai/) for a book example and [AutoGluon](https://autogluon.mxnet.io/) for a package document site example. 
+The D2L Book (`d2lbook`) package helps you build and publish **a book
+with Python codes**, or **Python package documents with tutorials**. You can
+check [Dive into Deep Learning](https://d2l.ai/) for a book
+example and [AutoGluon](https://autogluon.mxnet.io/) for a package document site
+example.
 
-We designed `d2lbook` for the following three requirements:
+The `d2lbook` is designed to meet the following two requirements:
 
-- Your book contains **a large amount of codes**, and your readers may run them on Jupyter. In particular,
-  - Some chapters may take a while to run, such as running for 10 minutes on a GPU. But you would like to re-evaluate every modified chapters before publication to guarantee correctness. 
-  - You may want to reuse codes in other chapters to reduce redundancy.  
-- Your Python package documents have **multiple tutorials** that can be run on Jupyter. In particular,
-  - As before, you want to evaluate every modified tutorial before publishing as part of your [CI](Continuous_integration) jobs (e.g Jenkins).
-  - You want to build API documents as well.  
-- You would like to publish **both a website for the book and a printable PDF version**. In particular, 
-  - You can reference sections, figure, tables, equations, function, and class.
-  - The HTML version should be modern, searchable, and mobile readable.
-  - The PDF version should be at the same quality as written by Latex.
+- Your book may contain **a large amount of Python codes** and you
+  expect your readers to run them. Or your package documents have **multiple
+  tutorials** to walk readers through your package usage through examples.
+  These codes should be runnable and maintainable.
 
-This tool combines [Jupyter Notebook](https://jupyter.org/), the widely used interactive environment in Python, and [Sphinx](http://www.sphinx-doc.org/en/master/), the de facto document building system for Python packages, to meet our requirements. 
-
-Please also note there are multiple similar tools we recommend you to check, for example:
-
-- [Jupyter book](https://jupyterbook.org/intro): very similar to `d2lbook` for publishing Jupyter notebooks. Two main design differences are 1) `d2lbook` encourage you to use markdown file format and remove all code outputs when saving notebooks. And all modified notebooks will be re-evaluated during building for code quality. 2) Jupyter book uses Jekyll to build the document, that is easy to use and customizable, but lacking the support for PDF and Python API documents. 
-- [gitbook](https://www.gitbook.com/): very convenient to push a book written with markdown but cannot evaluate your codes.
-- [sphinx-gallery](https://sphinx-gallery.github.io/stable/index.html), a Sphinx plugin to evaluate and publish your tutorials. But it requires you to know how to use sphinx and write your tutorials in `.py` format with `rst` style.  
+- You would like to publish **both a HTML website and a printable PDF
+  version**. You expect the website should be modern, searchable and mobile
+  friendly, and the PDF version should be at the same quality as written using LaTeX.
 
 
-## Getting Started
+To achieve the above goals, `d2lbook` combines
+[Jupyter Notebook](https://jupyter.org/), the widely used interactive
+environment in Python, and [Sphinx](http://www.sphinx-doc.org/en/master/), the
+de facto document building system for Python packages. In particular, its main
+features include:
 
-### Installation
+- Using markdown to write.
+- A minimal configuration file to customize the building so you can focus on the
+  contents.
+- Evaluating all codes to obtain their output before publishing to validate the
+  correctness. We only evaluate the updated codes to save cost.
+- Being able to reference sections, figure, tables, equations, function, and
+  class.
+- Pipelines to publish your website through Github or AWS.
 
-Use `pip` to install the command-line interface.
+If `d2lbook` does not fit your requirements, you may check the following tools:
 
-```sh
-pip install git+https://github.com/d2l-ai/d2l-book
+- [Jupyter book](https://jupyterbook.org/intro): very similar to `d2lbook` for
+  publishing Jupyter notebooks. Two main design differences are 1) `d2lbook`
+  encourage you to use markdown file format and remove all code outputs before
+  saving notebooks. 2) `d2lbook` uses Sphinx instead of Jekyll adopted by
+  Jupyter book to build the document.
+  Jekyll is easier to customize the theme, while Sphinx has better supports for PDF and analyzing Python codes.
+- [gitbook](https://www.gitbook.com/): very convenient to push a book written
+  with markdown if you don't need to run them as Jupyter notebooks.
+- [sphinx-gallery](https://sphinx-gallery.github.io/stable/index.html), a Sphinx
+  plugin to evaluate and publish your tutorials. It requires you to know how
+  to use Sphinx and write your tutorials in `.py` format with the `rst` style.
+
+
+```eval_rst
+.. only:: html
+
+   Table of Contents
+   -----------------
 ```
-
-
-(This is a [d2lbook pip package](https://pypi.org/project/d2lbook/), but we recommend you to install latest version at Github directly.)
-
-In addition, you also need to install [pandoc](https://pandoc.org/) to build the HTML version, e.g. `conda install pandoc`. Building the PDF version requires [LibRsvg](https://wiki.gnome.org/Projects/LibRsvg) to convert your SVG images (our recommend format), e.g. `conda install librsvg`.
-
-## Building this Website
-
-You may find building this website is a good starting point for your project. The source codes of this site is available under [demo/](https://github.com/d2l-ai/d2l-book/tree/master/demo). 
-
-The following command will download the source codes, evaluate all notebooks and generate outputs in
-`ipynb`, `html` and `pdf` format.
-
-```sh
-git clone https://github.com/d2l-ai/d2l-book
-cd d2l-book/demo
-d2lbook build all
-```
-
-
-Once finished, you can check the results in the `_build` folder. For example, this page is in `_build/html/index.html`, the PDF version is at `_build/pdf/d2l-book.pdf`, all evaluated notebooks are under `_build/eval/`.
-
-You can build a particular format:
-
-```sh
-d2lbook build eval  # evaluate noteboks and save in .ipynb formats
-d2lbook build html  # build the HTML version
-d2lbook build pdf   # build the PDF version
-```
-
-
-## Table of Contents
 
 ```toc
 :numbered:
 :maxdepth: 2
 
-examples/index
+install
+demo
+user/index
 develop/index
 ```
-
