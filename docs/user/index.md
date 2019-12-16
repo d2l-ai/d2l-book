@@ -3,8 +3,9 @@
 In this part, we will cover
 
 1. How to create a project
-2. How to build and deploy the documents
-3. Markdown and code examples
+1. How to build and deploy the documents
+1. Various configuration options
+1. Markdown and code examples
 
 ```toc
 :maxdepth: 2

@@ -24,7 +24,7 @@ environment in Python, and [Sphinx](http://www.sphinx-doc.org/en/master/), the
 de facto document building system for Python packages. In particular, its main
 features include:
 
-- Using markdown to write.
+- Using [markdown](https://daringfireball.net/projects/markdown/) for your contents.
 - A minimal configuration file to customize the building so you can focus on the
   contents.
 - Evaluating all codes to obtain their output before publishing to validate the
@@ -47,7 +47,6 @@ If `d2lbook` does not fit your requirements, you may check the following tools:
   plugin to evaluate and publish your tutorials. It requires you to know how
   to use Sphinx and write your tutorials in `.py` format with the `rst` style.
 
-
 ```eval_rst
 .. only:: html
 
@@ -55,12 +54,13 @@ If `d2lbook` does not fit your requirements, you may check the following tools:
    -----------------
 ```
 
+
 ```toc
 :numbered:
 :maxdepth: 2
 
 install
-demo
 user/index
 develop/index
 ```
+

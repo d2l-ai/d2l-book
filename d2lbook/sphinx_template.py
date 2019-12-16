@@ -270,6 +270,12 @@ const addCopyButtonToCodeCells = () => {
 runWhenDOMLoaded(addCopyButtonToCodeCells);
 """
 
+limit_output_length_css = r"""
+pre.output {
+  max-height: 400px;
+  overflow-y: scroll;
+}
+"""
 copybutton_css = r"""
 a.copybtn {
     position: absolute;
