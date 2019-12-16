@@ -76,10 +76,12 @@ Now let's walk through these three steps one-by-one. Before getting started, you
 First, create a S3 bucket. You can use the targeted domain name as your bucket name. For example, this site is deployed at book.d2l.ai, then we created a bucket with the name `book.d2l.ai`. In addition, we need to disable the blocking public access through ACLs when creating this bucket, see :numref:`fig_s3-acl` and enable static website hosting, see :numref:`fig_s3-web-hosting`. Then you will get a URL to access this bucket. In our example, it's http://book.d2l.ai.s3-website-us-west-2.amazonaws.com/.
 
 ![Disable blocking public access through ACLs](../img/s3-acl.png)
+
 :label:`fig_s3-acl`
 :width:`500px`
 
 ![Enable static web hosting](../img/s3-web-hosting.png)
+
 :label:`fig_s3-web-hosting`
 :width:`500px`
 
@@ -94,6 +96,7 @@ After a few minute, we will obtain the domain name such as `d1y0wi2ibwmzrt.cloud
 Third, you can either buying a domain at Route 53 or adding Route 53's DNS into your existing domain. After it, create a "Hosted Zone" and then a Type-A Record Set with the CoundFront domain name as the alias target, see :numref:`fig_record-set` for an example.
 
 ![Create a Record Set](../img/record-set.png)
+
 :label:`fig_record-set`
 :width:`350px`
 
