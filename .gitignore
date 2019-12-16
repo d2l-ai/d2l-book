@@ -1,8 +1,5 @@
-*.pdf
-*.svg
 /d2lbook.egg-info/
 /dist/
 *.pyc
 **/.ipynb_checkpoints/*
-/build/
-/demo/_build/
+/docs/_build/
