@@ -632,7 +632,8 @@ def process_rst(body):
     # sometimes the code results contains vt100 codes, widely used for
     # coloring, while it is not supported by latex.
     for i, l in enumerate(lines):
-        lines[i] = re.sub(r'\x1b\[[\d;]*m', '', l)
+        lines[i] = re.sub(r'\x1b\[[\d;]*K', '',
+                          re.sub(r'\x1b\[[\d;]*m', '', l))
 
     return '\n'.join(lines)
 
