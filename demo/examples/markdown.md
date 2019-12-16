@@ -21,6 +21,7 @@ guide/index
 ```
 `````
 
+
 ## Images
 
 
@@ -32,6 +33,7 @@ similarly use `:height:`for height.
 ![Estimating the length of a foot](../img/koebel.jpg)
 :width:`400px`
 ```
+
 
 ![Estimating the length of a foot](../img/koebel.jpg)
 :width:`400px`
@@ -60,6 +62,7 @@ that you need to leave an empty line between the caption and the table itself.
 | 2019 | 200 | Even better, add something to make this column wider |
 ```
 
+
 : The number is computed by $z_{ij} = \sum_{k}x_{ik}y_{kj}$.
 
 | Year | Number | Comment |
@@ -86,12 +89,14 @@ be referenced by its label. The label format is
 :label:`my_sec3`
 ```
 
+
 Then we can reference this section through `:ref:` followed by label name in an
 inline code block
 
 ```
 :ref:`my_sec3` demonstrates how to reference a section.
 ```
+
 
 :ref:`my_sec3` demonstrates how to reference a section.
 
@@ -105,6 +110,7 @@ contains a warning such as
 ```
 WARNING: undefined label: my_sec2
 ```
+
 
 You can turn it into error by setting `warning_is_error = True` in
 `config.ini`.
@@ -134,7 +140,6 @@ As can be seen from :numref:`img_catdog`,
 As can be seen from :numref:`img_catdog`, there is a cat and a dog.
 
 ### Referencing Tables
-
 
 ```
 :This a is very long table caption. It will breaks into several lines. And
@@ -172,6 +177,7 @@ $$\hat{\mathbf{y}}=\mathbf X \mathbf{w}+b$$
 
 In :eqref:`linear`, we define the linear model.
 ```
+
 
 $$\hat{\mathbf{y}}=\mathbf X \mathbf{w}+b$$
 :eqlabel:`linear`
