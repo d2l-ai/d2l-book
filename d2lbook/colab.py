@@ -48,8 +48,8 @@ def update_notebook_kernel(notebook, name, display_name=None):
     if not display_name:
         display_name = name
     notebook['metadata'].update({"kernelspec": {
-        "name": "python3",
-        "display_name": "Python 3"
+        "name": name,
+        "display_name": display_name
     }})
 
 
@@ -95,8 +95,7 @@ def get_installation_cell(notebook, libs):
         return None
     install_str = ''
     for lib in set(find_libs):
-        for l in lib_dict[lib].split(' '):
-            install_str += '!pip install ' + l + '\n'
+        install_str += '!pip install ' + lib_dict[lib] + '\n'
     return nbformat.v4.new_code_cell(source=install_str)
 
 
