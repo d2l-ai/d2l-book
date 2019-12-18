@@ -17,10 +17,7 @@ def generate_notebooks(config, eval_dir, colab_dir):
         with open(fn, 'r') as f:
             notebook = nbformat.read(f, as_version=4)
         # Use Python3 as the kernel
-        notebook['metadata'].update({"kernelspec": {
-            "name": "python3",
-            "display_name": "Python 3"
-        }})
+        update_notebook_kernel(notebook, "python3", "Python 3")
         # Check if GPU is needed
         use_gpu = False
         for cell in notebook.cells:
@@ -34,16 +31,27 @@ def generate_notebooks(config, eval_dir, colab_dir):
         # Update SVG image URLs
         if config['replace_svg_url']:
             update_svg_urls(notebook, config['replace_svg_url'], fn, colab_dir)
-        # Add additional libraries
-        if config['libs']:
-            cell = get_installation_cell(notebook, config['libs'])
-            if cell:
-                notebook.cells.insert(0, cell)
-                if config['libs_header']:
-                    notebook.cells.insert(
-                        0, nbformat.v4.new_markdown_cell(source=config['libs_header']))
+        insert_additional_installation(notebook, config)
         with open(fn, 'w') as f:
             f.write(nbformat.writes(notebook))
+
+def insert_additional_installation(notebook, config):
+    if config['libs']:
+        cell = get_installation_cell(notebook, config['libs'])
+        if cell:
+            notebook.cells.insert(0, cell)
+            if config['libs_header']:
+                notebook.cells.insert(
+                    0, nbformat.v4.new_markdown_cell(source=config['libs_header']))
+
+def update_notebook_kernel(notebook, name, display_name=None):
+    if not display_name:
+        display_name = name
+    notebook['metadata'].update({"kernelspec": {
+        "name": "python3",
+        "display_name": "Python 3"
+    }})
+
 
 def update_svg_urls(notebook, pattern, filename, root_dir):
     orgin_url, new_url = split_config_str(pattern, 2)[0]

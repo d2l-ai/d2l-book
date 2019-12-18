@@ -34,8 +34,6 @@ fi
 
 cd ${REPO_DIR}
 git config --global push.default simple
-git config --global user.name "D2L Bot"
-git config --global user.email ""
 git add -f --all .
 git diff-index --quiet HEAD || git commit -am "Uploaded by d2lbook"
 git push origin master

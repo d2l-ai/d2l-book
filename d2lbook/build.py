@@ -16,7 +16,7 @@ import hashlib
 from d2lbook.utils import *
 from d2lbook.sphinx import prepare_sphinx_env
 from d2lbook.config import Config
-from d2lbook import colab
+from d2lbook import colab, sagemaker
 
 __all__  = ['build']
 
@@ -26,7 +26,7 @@ mark_re_md = re.compile(':([-\/\\._\w\d]+):`([\*-\/\\\._\w\d]+)`')
 mark_re = re.compile(':([-\/\\._\w\d]+):``([\*-\/\\\._\w\d]+)``')
 
 commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck',
-            'outputcheck', 'lib', 'colab', 'all']
+            'outputcheck', 'lib', 'colab', 'sagemaker', 'all']
 
 def build():
     parser = argparse.ArgumentParser(description='Build the documents')
@@ -196,6 +196,7 @@ class Builder(object):
         self.done['html'] = True
         self.rst()
         self.colab()
+        self.sagemaker()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
         tok = datetime.datetime.now()
@@ -210,6 +211,14 @@ class Builder(object):
         self.eval()
         colab.generate_notebooks(
             self.config.colab, self.config.eval_dir, self.config.colab_dir)
+
+    def sagemaker(self):
+        if self.done['sagemaker']:
+            return
+        self.done['sagemaker'] = True
+        self.eval()
+        sagemaker.generate_notebooks(
+            self.config.sagemaker, self.config.eval_dir, self.config.sagemaker_dir)
 
     def linkcheck(self):
         if self.done['linkcheck']:

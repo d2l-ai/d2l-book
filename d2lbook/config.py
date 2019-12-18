@@ -18,6 +18,7 @@ class Config():
         self.pdf = config['pdf']
         self.library = config['library']
         self.colab = config['colab']
+        self.sagemaker = config['sagemaker']
 
         # A bunch of directories
         self.src_dir = self.build['source_dir']
@@ -27,6 +28,7 @@ class Config():
         self.html_dir = os.path.join(self.tgt_dir, 'html')
         self.pdf_dir = os.path.join(self.tgt_dir, 'pdf')
         self.colab_dir = os.path.join(self.tgt_dir, 'colab')
+        self.sagemaker_dir = os.path.join(self.tgt_dir, 'sagemaker')
         self.linkcheck_dir = os.path.join(self.tgt_dir, 'linkcheck')
 
         # Some targets names.

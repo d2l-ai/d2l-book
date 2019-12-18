@@ -8,7 +8,7 @@ from d2lbook.config import Config
 
 __all__  = ['deploy']
 
-commands = ['html', 'pdf', 'pkg', 'colab', 'all']
+commands = ['html', 'pdf', 'pkg', 'colab', 'sagemaker', 'all']
 
 def deploy():
     parser = argparse.ArgumentParser(description='Deploy documents')
@@ -34,6 +34,12 @@ class Deployer(object):
         if self.config.colab['github_repo']:
             bash_fname = os.path.join(os.path.dirname(__file__), 'upload_github.sh')
             run_cmd(['bash', bash_fname, self.config.colab_dir, self.config.colab['github_repo']])
+
+    def sagemaker(self):
+        if self.config.sagemaker['github_repo']:
+            bash_fname = os.path.join(os.path.dirname(__file__), 'upload_github.sh')
+            run_cmd(['bash', bash_fname, self.config.sagemaker_dir, self.config.sagemaker['github_repo']])
+
 
 class GithubDeployer(Deployer):
     def __init__(self, config):
@@ -63,7 +69,7 @@ class S3Deployer(Deployer):
         bash_fname = os.path.join(os.path.dirname(__file__), 'upload_doc_s3.sh')
         run_cmd(['bash', bash_fname, self.config.html_dir, self.config.deploy['s3_bucket']])
         self.colab()
-
+        self.sagemaker()
 
     def pdf(self):
         url = self.config.deploy['s3_bucket']
