@@ -112,7 +112,7 @@ def add_button(config, html_dir):
         colab_link = 'https://colab.research.google.com/github/%s/blob/master/%s'%(
             config['github_repo'],
             os.path.relpath(fn, html_dir).replace('.html', '.ipynb'))
-        colab_html = '<a href="%s"> <button style="float:right", id="colab" class="mdl-button mdl-js-button mdl-button--primary mdl-js-ripple-effect"> <i class=" fas fa-external-link-alt"></i> Colab </button></a><div class="mdl-tooltip" data-mdl-for="colab"> Open notbook in Colab</div>' % (colab_link)
+        colab_html = '<a href="%s"> <button style="float:right", id="colab" class="mdl-button mdl-js-button mdl-button--primary mdl-js-ripple-effect"> <i class=" fas fa-external-link-alt"></i> Colab </button></a><div class="mdl-tooltip" data-mdl-for="colab"> Open the notebook in Colab</div>' % (colab_link)
         html = html.replace('</h1>', colab_html+'</h1>')
         with open(fn, 'w') as f:
             f.write(html)
