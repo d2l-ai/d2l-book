@@ -358,7 +358,7 @@ def join_markdown_cells(cells):
         if c['type'] == 'markdown':
             src.append(c['source'])
         else:
-            src += ['```'+c['class'], c['source', '```']]
+            src += ['```'+c['class'], c['source'], '```']
     return '\n'.join(src)
 
 def update_ipynb_toc(root):
