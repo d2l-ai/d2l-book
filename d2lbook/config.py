@@ -24,6 +24,7 @@ class Config():
         self.src_dir = self.build['source_dir']
         self.tgt_dir = self.build['output_dir']
         self.eval_dir = os.path.join(self.tgt_dir, 'eval')
+        self.ipynb_dir = os.path.join(self.tgt_dir, 'ipynb')
         self.rst_dir = os.path.join(self.tgt_dir, 'rst')
         self.html_dir = os.path.join(self.tgt_dir, 'html')
         self.pdf_dir = os.path.join(self.tgt_dir, 'pdf')

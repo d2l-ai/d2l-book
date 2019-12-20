@@ -117,11 +117,12 @@ def get_time_diff(tik, tok):
     m, s = divmod(remainder, 60)
     return "%02d:%02d:%02d" % (h, m, s)
 
-def run_cmd(cmd):
+def run_cmd(cmd, verbose=False):
     if isinstance(cmd, str):
         cmd = [cmd]
     cmd = ' '.join(cmd)
-    logging.info('Run "%s"', cmd)
+    if verbose:
+        logging.info('Run "%s"', cmd)
     ret = os.system(cmd)
     if ret != 0:
         exit(-1)

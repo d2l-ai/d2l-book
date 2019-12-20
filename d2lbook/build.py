@@ -25,7 +25,7 @@ mark_re_md = re.compile(':([-\/\\._\w\d]+):`([\*-\/\\\._\w\d]+)`')
 # Same as mark_re_md for rst, while ` is replaced with `` in mark_re
 mark_re = re.compile(':([-\/\\._\w\d]+):``([\*-\/\\\._\w\d]+)``')
 
-commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck',
+commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'ipynb',
             'outputcheck', 'lib', 'colab', 'sagemaker', 'all']
 
 def build():
@@ -45,6 +45,20 @@ class Builder(object):
         if config.build['warning_is_error'].lower() == 'true':
             self.sphinx_opts += ' -W'
         self.done = dict((cmd, False) for cmd in commands)
+
+    def _once(func):
+        # An decorator that run a method only once
+        def warp(self):
+            name = func.__name__
+            if self.done[name]:
+                return
+            full_name = 'd2lbook build ' + name
+            tik = datetime.datetime.now()
+            func(self)
+            logging.info('=== Finished "%s" in %s', full_name,
+                         get_time_diff(tik, datetime.datetime.now()))
+            self.done[name] = True
+        return warp
 
     def _find_md_files(self):
         build = self.config.build
@@ -80,12 +94,10 @@ class Builder(object):
         if error:
             exit(-1)
 
+    @_once
     def eval(self):
         """Evaluate the notebooks and save them in a different folder"""
         eval_tik = datetime.datetime.now()
-        if self.done['eval']:
-            return
-        self.done['eval'] = True
         notebooks, pure_markdowns, depends = self._find_md_files()
         depends_mtimes = get_mtimes(depends)
         latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
@@ -109,16 +121,12 @@ class Builder(object):
             run_cells = self.config.build['eval_notebook'].lower()
             process_and_eval_notebook(src, tgt, run_cells=='true')
             tok = datetime.datetime.now()
-            logging.info('Finished in %s', get_time_diff(tik, tok))
 
         for src, tgt in updated_markdowns:
             logging.info('Copying %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
             shutil.copyfile(src, tgt)
         self._rm_tgt_files('md', 'ipynb', self.config.eval_dir)
-        eval_tok = datetime.datetime.now()
-        logging.info('"d2lbook build eval" finished in %s',
-                     get_time_diff(eval_tik, eval_tok))
 
     # Remove target files (e.g., eval and rst) based on removed files under src
     def _rm_tgt_files(self, src_ext, tgt_ext, tgt_dir, must_incls=None):
@@ -166,10 +174,8 @@ class Builder(object):
             copy(src, tgt)
         return rst_files
 
+    @_once
     def rst(self):
-        if self.done['rst']:
-            return
-        self.done['rst'] = True
         self.eval()
         notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
         updated_notebooks = get_updated_files(
@@ -189,50 +195,42 @@ class Builder(object):
         self._rm_tgt_files('md', 'rst', self.config.rst_dir,
                            must_incl_rst_files)
 
+    @_once
     def html(self):
-        tik = datetime.datetime.now()
-        if self.done['html']:
-            return
-        self.done['html'] = True
         self.rst()
         self.colab()
         self.sagemaker()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
-        tok = datetime.datetime.now()
         colab.add_button(self.config.colab, self.config.html_dir)
-        logging.info('"d2lbook build html" finished in %s',
-                     get_time_diff(tik, tok))
 
+    @_once
+    def ipynb(self):
+        self.eval()
+        run_cmd(['rm -rf', self.config.ipynb_dir, '; cp -r ',
+                 self.config.eval_dir, self.config.ipynb_dir])
+        update_ipynb_toc(self.config.ipynb_dir)
+
+    @_once
     def colab(self):
-        if self.done['colab']:
-            return
-        self.done['colab'] = True
-        self.eval()
+        self.ipynb()
         colab.generate_notebooks(
-            self.config.colab, self.config.eval_dir, self.config.colab_dir)
+            self.config.colab, self.config.ipynb_dir, self.config.colab_dir)
 
+    @_once
     def sagemaker(self):
-        if self.done['sagemaker']:
-            return
-        self.done['sagemaker'] = True
-        self.eval()
+        self.ipynb()
         sagemaker.generate_notebooks(
-            self.config.sagemaker, self.config.eval_dir, self.config.sagemaker_dir)
+            self.config.sagemaker, self.config.ipynb_dir, self.config.sagemaker_dir)
 
+    @_once
     def linkcheck(self):
-        if self.done['linkcheck']:
-            return
-        self.done['linkcheck'] = True
         self.rst()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.linkcheck_dir,
                  '-b linkcheck -c', self.config.rst_dir, self.sphinx_opts])
 
+    @_once
     def pdf(self):
-        tik = datetime.datetime.now()
-        if self.done['pdf']:
-            return
-        self.done['pdf'] = True
         self.rst()
         run_cmd(['sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
                  '-b latex -c', self.config.rst_dir, self.sphinx_opts])
@@ -240,21 +238,17 @@ class Builder(object):
         script = self.config.pdf['post_latex']
         process_latex(self.config.tex_fname, script)
         run_cmd(['cd', self.config.pdf_dir, '&& make'])
-        tok = datetime.datetime.now()
-        logging.info('"d2lbook build pdf" finished in %s',
-                     get_time_diff(tik, tok))
 
+    @_once
     def pkg(self):
-        if self.done['pkg']:
-            return
-        self.done['pkg'] = True
-        self.eval()
+        self.ipynb()
         zip_fname = 'out.zip'
-        run_cmd(['cd', self.config.eval_dir, '&& zip -r',
+        run_cmd(['cd', self.config.ipynb_dir, '&& zip -r',
                  zip_fname, '*'])
-        shutil.move(os.path.join(self.config.eval_dir, zip_fname),
+        shutil.move(os.path.join(self.config.ipynb_dir, zip_fname),
                     self.config.pkg_fname)
 
+    @_once
     def lib(self):
         save_mark = self.config.library['save_mark']
         if not save_mark:
@@ -322,6 +316,71 @@ def get_code_to_save(input_fn, save_mark):
                         del block[-1]
                     saved.append(block)
     return saved
+
+def split_markdown(source):
+    """Split markdown into a list of text and code blocks"""
+    cells = []
+    in_code = False
+    cur_code_mark = None
+    cur_code_class = None
+    cur_src = []
+    code_mark = re.compile('(```+) *(.*)')
+    def _add_cell():
+        if cur_src:
+            if in_code:
+                cells.append({'type':'code', 'class':cur_code_class,
+                            'source':'\n'.join(cur_src)})
+            else:
+                cells.append({'type':'markdown', 'source':'\n'.join(cur_src)})
+    for l in source.split('\n'):
+        ret = code_mark.match(l)
+        if ret:
+            if not in_code:
+                _add_cell()
+                cur_code_mark, cur_code_class = ret.groups()
+                cur_src = []
+                in_code = True
+            else:
+                if ret.groups()[0] == cur_code_mark:
+                    _add_cell()
+                    cur_src = []
+                    in_code = False
+                else:
+                    cur_src.append(l)
+        else:
+            cur_src.append(l)
+    _add_cell()
+    return cells
+
+def join_markdown_cells(cells):
+    src = []
+    for c in cells:
+        if c['type'] == 'markdown':
+            src.append(c['source'])
+        else:
+            src += ['```'+c['class'], c['source', '```']]
+    return '\n'.join(src)
+
+def update_ipynb_toc(root):
+    """Change the toc code block into a list of clickable links"""
+    notebooks = find_files('**/*.ipynb', root)
+    for fn in notebooks:
+        with open(fn, 'r') as f:
+            notebook = nbformat.read(f, as_version=4)
+        for cell in notebook.cells:
+            if (cell.cell_type == 'markdown' and '```toc' in cell.source):
+                md_cells = split_markdown(cell.source)
+                for c in md_cells:
+                    if c['type'] == 'code' and c['class'] == 'toc':
+                        toc = []
+                        for l in c['source'].split('\n'):
+                            if l and not l.startswith(':'):
+                                toc.append(' - [%s](%s.ipynb)'%(l,l))
+                        c['source'] = '\n'.join(toc)
+                        c['type'] = 'markdown'
+                cell.source = join_markdown_cells(md_cells)
+        with open(fn, 'w') as f:
+            f.write(nbformat.writes(notebook))
 
 def get_toc(root):
     """return a list of files in the order defined by TOC"""
