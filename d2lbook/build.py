@@ -645,7 +645,8 @@ def process_rst(body):
             elif key == 'bibliography':
                 # a hard coded plain bibtex style...
                 new_line += ('.. bibliography:: ' + value +
-                             '\n   :style: apa\n   :all:')
+                             '\n   :style: apa')
+                             # '\n   :style: apa\n   :all:') MM 20200104 removed ':all:' so only the cited references get printed
             else:
                 logging.fatal('unknown key', key)
 

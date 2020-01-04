@@ -26,7 +26,11 @@ class Config():
         self.eval_dir = os.path.join(self.tgt_dir, 'eval')
         self.ipynb_dir = os.path.join(self.tgt_dir, 'ipynb')
         self.rst_dir = os.path.join(self.tgt_dir, 'rst')
-        self.html_dir = os.path.join(self.tgt_dir, 'html')
+        try:
+            self.html_dir = self.build['html_dir']
+        except KeyError:
+            self.html_dir = os.path.join(self.tgt_dir, 'html')
+        # MM20200104 changed to allow separate html_dir to be specified in config.ini, e.g. put 'html_dir = docs' in the [build] section
         self.pdf_dir = os.path.join(self.tgt_dir, 'pdf')
         self.colab_dir = os.path.join(self.tgt_dir, 'colab')
         self.sagemaker_dir = os.path.join(self.tgt_dir, 'sagemaker')

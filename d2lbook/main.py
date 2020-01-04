@@ -10,9 +10,10 @@ logging.getLogger().setLevel(logging.INFO)
 
 
 def main():
+    # MM 20200104 added identifier to doc string
     commands = {'build': build, 'deploy':deploy, 'clear':clear}
     parser = argparse.ArgumentParser(description='''
-D2L Book: Publish a book based on Jupyter notebooks.
+D2L Book (MM version): Publish a book based on Jupyter notebooks. 
 
 Run d2lbook command -h to get the help message for each command.
 ''')
