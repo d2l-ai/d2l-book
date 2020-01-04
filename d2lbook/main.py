@@ -12,7 +12,7 @@ logging.getLogger().setLevel(logging.INFO)
 def main():
     commands = {'build': build, 'deploy':deploy, 'clear':clear}
     parser = argparse.ArgumentParser(description='''
-D2L Book: Publish a book based on Jupyter notebooks. 
+D2L Book: Publish a book based on Jupyter notebooks.
 
 Run d2lbook command -h to get the help message for each command.
 ''')
