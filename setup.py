@@ -8,7 +8,6 @@ requirements = [
     'recommonmark',
     'sphinxcontrib-bibtex>=1.0.0',
     'pybtex-apa-style',
-    'mu-notedown',
     'mxtheme>=0.3.11',
     'sphinxcontrib-svg2pdfconverter',
     'numpydoc',
