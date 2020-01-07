@@ -1,6 +1,6 @@
 # Editing Source Files
 
-No matter is a pure text file or a Jupyter notebook, we recommend you to save it as a markdown file. If it is a notebook, you can clear output before saving to make code review and version control easier. 
+No matter whether it is a pure text file or a Jupyter notebook, we recommend that you save it as a markdown file. If it is a notebook, you can clear output before saving to make code review and version control easier. 
 
 You can use your favorite markdown editors, e.g. [Typora](https://www.typora.io/), to edit markdown files directly. We enhanced markdown to support additional feature such as image/table captions and references, please refer to :numref:`sec_markdown` for more details. For a notebook, a Jupyter source code block is placed in a markdown code block with a `{.python .input}` tag, for example,
 
