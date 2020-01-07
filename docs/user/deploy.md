@@ -1,6 +1,6 @@
 # Deploying
 
-You can copy the built result to any your favorite place that can server contents online. Otherwise `d2lbook` provides two ways to deploy your build results: deploying through [Github](http://github.com/) or through [AWS](https://aws.amazon.com/).
+You can copy the built result to any of your favorite places that can serve content online. Otherwise `d2lbook` provides two ways to deploy your build results: deploying through [Github](http://github.com/) or through [AWS](https://aws.amazon.com/).
 
 ## Deploying Through Github
 
@@ -63,7 +63,7 @@ Lastly, let's clean our workspace.
 
 ## Deploying Through AWS
 
-Another supported option is deploying through AWS. This option provide more flexibility but require you to know the basic usage of AWS.
+Another supported option is deploying through AWS. This option provides more flexibility but requires you to know the basic usage of AWS.
 
 We recommend the following procedure for the deployment:
 
@@ -71,9 +71,9 @@ We recommend the following procedure for the deployment:
 2. Serving with a [CDN](https://en.wikipedia.org/wiki/Content_delivery_network) by using [CloudFront](https://aws.amazon.com/cloudfront/) to reduce the latency.
 3. Buying and adding a customized domain at [Route 53](https://aws.amazon.com/route53/)
 
-Now let's walk through these three steps one-by-one. Before getting started, you need to have a valid AWS account and typing in your [AWS access key](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html) by running `aws configure`.
+Now let's walk through these three steps one-by-one. Before getting started, you need to have a valid AWS account and type in your [AWS access key](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html) by running `aws configure`.
 
-First, create a S3 bucket. You can use the targeted domain name as your bucket name. For example, this site is deployed at book.d2l.ai, then we created a bucket with the name `book.d2l.ai`. In addition, we need to disable the blocking public access through ACLs when creating this bucket, see :numref:`fig_s3-acl` and enable static website hosting, see :numref:`fig_s3-web-hosting`. Then you will get a URL to access this bucket. In our example, it's http://book.d2l.ai.s3-website-us-west-2.amazonaws.com/.
+First, create a S3 bucket. You can use the targeted domain name as your bucket name. For example, this site is deployed at book.d2l.ai, then we created a bucket with the name `book.d2l.ai`. In addition, we need to disable blocking public access through ACLs when creating this bucket, see :numref:`fig_s3-acl` and enable static website hosting, see :numref:`fig_s3-web-hosting`. Then you will get a URL to access this bucket. In our example, it's http://book.d2l.ai.s3-website-us-west-2.amazonaws.com/.
 
 ![Disable blocking public access through ACLs](../img/s3-acl.png)
 
@@ -93,14 +93,14 @@ Second, create a new CloudFront distribution, by specifying the following option
 
 After a few minute, we will obtain the domain name such as `d1y0wi2ibwmzrt.cloudfront.net`.
 
-Third, you can either buying a domain at Route 53 or adding Route 53's DNS into your existing domain. After it, create a "Hosted Zone" and then a Type-A Record Set with the CoundFront domain name as the alias target, see :numref:`fig_record-set` for an example.
+Third, you can either buy a domain at Route 53 or add Route 53's DNS into your existing domain. After that, create a "Hosted Zone" and then a Type-A Record Set with the CoundFront domain name as the alias target, see :numref:`fig_record-set` for an example.
 
 ![Create a Record Set](../img/record-set.png)
 
 :label:`fig_record-set`
 :width:`350px`
 
-Once you are done, then specify your S3 bucket name in the following `config.ini` entry.
+Once you are done, specify your S3 bucket name in the following `config.ini` entry.
 
 ```bash
 [deploy]
