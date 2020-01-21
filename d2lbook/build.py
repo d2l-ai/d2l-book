@@ -121,6 +121,7 @@ class Builder(object):
             run_cells = self.config.build['eval_notebook'].lower()
             process_and_eval_notebook(src, tgt, run_cells=='true')
             tok = datetime.datetime.now()
+            logging.info('Finished in %s', get_time_diff(tik, tok))
 
         for src, tgt in updated_markdowns:
             logging.info('Copying %s to %s', src, tgt)
