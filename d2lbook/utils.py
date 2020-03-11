@@ -42,12 +42,13 @@ def get_tgt_fname(src_dir, src_fname, tgt_dir, src_ext, tgt_ext):
         ext = tgt_ext
     return os.path.join(tgt_dir, fname+'.'+ext)
 
-def get_updated_files(src_fnames, src_dir, tgt_dir,
+def get_updated_files(src_fnames, src_dir, tgt_dir, force_eval_entire_book,
                       src_ext=None, tgt_ext=None, deps_mtime=0):
     updated_fnames = []
     for src_fn in src_fnames:
         tgt_fn = get_tgt_fname(src_dir, src_fn, tgt_dir, src_ext, tgt_ext)
-        if (not os.path.exists(tgt_fn) # new
+        if (force_eval_entire_book # force the entire book to be evaluated
+            or not os.path.exists(tgt_fn) # new
             or get_mtimes(src_fn) > get_mtimes(tgt_fn) # target is old
             or get_mtimes(tgt_fn) < deps_mtime): # deps is updated
             updated_fnames.append((src_fn, tgt_fn))
