@@ -106,9 +106,9 @@ class Builder(object):
         depends_mtimes = get_mtimes(depends)
         latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
         updated_notebooks = get_updated_files(
-            notebooks, self.config.src_dir, self.config.eval_dir, 'md',
+            notebooks, self.config.src_dir, self.config.eval_dir,
             self.config.build['force_eval_entire_book'].lower()=='true',
-            'ipynb', latest_depend)
+            'md', 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
             pure_markdowns, self.config.src_dir, self.config.eval_dir,
             self.config.build['force_eval_entire_book'].lower()=='true',
