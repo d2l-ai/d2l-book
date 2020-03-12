@@ -75,13 +75,9 @@ class Builder(object):
         depends_mtimes = get_mtimes(depends)
         latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
         updated_notebooks = get_updated_files(
-            notebooks, self.config.src_dir, self.config.eval_dir,
-            self.config.build['force_eval_entire_book'].lower()=='true',
-            'md', 'ipynb', latest_depend)
+            notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
-            pure_markdowns, self.config.src_dir, self.config.eval_dir,
-            self.config.build['force_eval_entire_book'].lower()=='true',
-            'md', 'md', latest_depend)
+            pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
         return updated_notebooks, updated_markdowns
 
     def outputcheck(self):
@@ -106,13 +102,9 @@ class Builder(object):
         depends_mtimes = get_mtimes(depends)
         latest_depend = max(depends_mtimes) if len(depends_mtimes) else 0
         updated_notebooks = get_updated_files(
-            notebooks, self.config.src_dir, self.config.eval_dir, 'md',
-            self.config.build['force_eval_entire_book'].lower()=='true',
-            'ipynb', latest_depend)
+            notebooks, self.config.src_dir, self.config.eval_dir, 'md', 'ipynb', latest_depend)
         updated_markdowns = get_updated_files(
-            pure_markdowns, self.config.src_dir, self.config.eval_dir,
-            self.config.build['force_eval_entire_book'].lower()=='true',
-            'md', 'md', latest_depend)
+            pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
         num_updated_notebooks = len(updated_notebooks)
         num_updated_markdowns = len(updated_markdowns)
         logging.info('%d notebooks are outdated', num_updated_notebooks)
@@ -126,10 +118,8 @@ class Builder(object):
                          i+1, num_updated_notebooks,
                          get_time_diff(eval_tik, tik), src, tgt)
             mkdir(os.path.dirname(tgt))
-            force_eval = self.config.build['force_eval_entire_book'].lower()
-            eval_notebook = self.config.build['eval_notebook'].lower()
-            run_cells = force_eval == 'true' or eval_notebook == 'true'
-            process_and_eval_notebook(src, tgt, run_cells)
+            run_cells = self.config.build['eval_notebook'].lower()
+            process_and_eval_notebook(src, tgt, run_cells=='true')
             tok = datetime.datetime.now()
             logging.info('Finished in %s', get_time_diff(tik, tok))
 
@@ -176,8 +166,7 @@ class Builder(object):
                          ' '.join(resources.split()), src_dir, tgt_dir)
         for res in resources.split():
             src = os.path.join(src_dir, res)
-            updated = get_updated_files(find_files(src), src_dir, tgt_dir,
-                    self.config.build['force_eval_entire_book'].lower()=='true')
+            updated = get_updated_files(find_files(src), src_dir, tgt_dir)
             for src, tgt in updated:
                 if os.path.isdir(src):
                     continue
@@ -186,9 +175,7 @@ class Builder(object):
 
     def _copy_rst(self):
         rst_files = find_files(self.config.build['rsts'], self.config.src_dir)
-        updated_rst = get_updated_files(rst_files, self.config.src_dir,
-                self.config.build['force_eval_entire_book'].lower()=='true',
-                self.config.rst_dir)
+        updated_rst = get_updated_files(rst_files, self.config.src_dir, self.config.rst_dir)
         if len(updated_rst):
             logging.info('Copy %d updated RST files to %s',
                          len(updated_rst), self.config.rst_dir)
@@ -201,9 +188,7 @@ class Builder(object):
         self.eval()
         notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
         updated_notebooks = get_updated_files(
-            notebooks, self.config.eval_dir, self.config.rst_dir,
-            self.config.build['force_eval_entire_book'].lower()=='true',
-            'ipynb', 'rst')
+            notebooks, self.config.eval_dir, self.config.rst_dir, 'ipynb', 'rst')
         logging.info('%d rst files are outdated', len(updated_notebooks))
         for src, tgt in updated_notebooks:
             logging.info('Convert %s to %s', src, tgt)
