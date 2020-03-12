@@ -155,11 +155,19 @@ class Builder(object):
         tgt_files_to_rm = [f for f in notebooks_to_rm + non_notebooks_to_rm
                            if not must_incls or f not in must_incls]
         if tgt_files_to_rm:
+            tgt_files_to_rm_concise = hide_individual_data_files(tgt_files_to_rm)
             logging.info('Cleaning target files whose corresponding source '
-                'files are removed %s', ','.join(tgt_files_to_rm))
+                'files are removed (individual data files are hidden, '
+                'e.g., _build/eval/data/VOC/A/B/C -> _build/eval/data/VOC')
+            for fn in tgt_files_to_rm_concise:
+                logging.info('Cleaning target files: %s' % fn)
             for fn in tgt_files_to_rm:
                 os.remove(fn)
-            rm_empty_dir(tgt_dir)
+            rmed_empty_dirs = []  # To display more concisely
+            rm_empty_dir(tgt_dir, rmed_empty_dirs)
+            rmed_empty_dirs_concise = hide_individual_data_files(rmed_empty_dirs)
+            for fn in rmed_empty_dirs_concise:
+                logging.info('Cleaned empty directories: %s' % fn)
 
     def _copy_resources(self, src_dir, tgt_dir):
         resources = self.config.build['resources']

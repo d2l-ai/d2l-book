@@ -87,7 +87,7 @@ def get_files_to_rm(pattern, src_dir, tgt_dir, src_ext=None, tgt_ext=None):
     return to_removes
 
 
-def rm_empty_dir(path):
+def rm_empty_dir(path, rmed_empty_dirs):
     """Recursively remove empty directories under and including path."""
     if not os.path.isdir(path):
         return
@@ -97,12 +97,30 @@ def rm_empty_dir(path):
         for fn in fnames:
             fpath = os.path.join(path, fn)
             if os.path.isdir(fpath):
-                rm_empty_dir(fpath)
+                rm_empty_dir(fpath, rmed_empty_dirs)
 
     if len(os.listdir(path)) == 0:
-        logging.info('Cleaning empty directory: %s', str(path))
+        rmed_empty_dirs.append(str(path))
         os.rmdir(path)
 
+def hide_individual_data_files(fns):
+    """To display concisely: _build/eval/data/A/B/C/D -> _build/eval/data/A."""
+    concise_fns = set()
+    for fn in fns:
+        concise_fn = []
+        fn_components = fn.split('/')
+        i = 0
+        seen_data = False
+        while i < len(fn_components) and not seen_data:
+            component = fn_components[i]
+            concise_fn.append(component)
+            if component == 'data':
+                seen_data = True
+            i += 1
+        if i < len(fn_components) - 1:
+            concise_fn.append(fn_components[i + 1])
+        concise_fns.add('/'.join(concise_fn))
+    return concise_fns
 
 def mkdir(dirname):
     os.makedirs(dirname, exist_ok=True)
