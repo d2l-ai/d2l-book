@@ -117,7 +117,13 @@ def hide_individual_data_files(fns):
                 seen_data = True
             i += 1
         if i < len(fn_components) - 1:
-            concise_fn.append(fn_components[i + 1])
+            next_component = fn_components[i + 1]
+            if next_component.isdigit():
+                concise_fn.append('<some digit>')
+            else:
+                concise_fn.append(next_component)
+            if i < len(fn_components) - 2:
+                concise_fn.append('')  # For indicating dir instead of file
         concise_fns.add('/'.join(concise_fn))
     return concise_fns
 
