@@ -282,6 +282,11 @@ pre.output {
   overflow-y: scroll;
 }
 """
+
+tabbar_css = r"""
+div.mdl-tabs__tab-bar { justify-content: left; }
+"""
+
 copybutton_css = r"""
 a.copybtn {
     position: absolute;

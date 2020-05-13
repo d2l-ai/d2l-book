@@ -24,18 +24,35 @@ __all__  = ['build']
 mark_re_md = re.compile(':([-\/\\._\w\d]+):`([\*-\/\\\._\w\d]+)`')
 # Same as mark_re_md for rst, while ` is replaced with `` in mark_re
 mark_re = re.compile(':([-\/\\._\w\d]+):``([\*-\/\\\._\w\d]+)``')
+# Search the code tab
+tab_re = re.compile('# *@tab +([\w]+)')
 
 commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'ipynb',
-            'outputcheck', 'lib', 'colab', 'sagemaker', 'all']
+            'outputcheck', 'lib', 'colab', 'sagemaker', 'all', 'merge']
 
 def build():
     parser = argparse.ArgumentParser(description='Build the documents')
     parser.add_argument('commands', nargs='+', choices=commands)
+    parser.add_argument('--tab', default=None, help='The tab to build, if multi-tab is enabled.')
     args = parser.parse_args(sys.argv[2:])
-    config = Config()
+    config = Config(tab=args.tab)
     builder = Builder(config)
     for cmd in args.commands:
         getattr(builder, cmd)()
+
+def _once(func):
+    # An decorator that run a method only once
+    def warp(self):
+        name = func.__name__
+        if self.done[name]:
+            return
+        full_name = 'd2lbook build ' + name
+        tik = datetime.datetime.now()
+        func(self)
+        logging.info('=== Finished "%s" in %s', full_name,
+                        get_time_diff(tik, datetime.datetime.now()))
+        self.done[name] = True
+    return warp
 
 class Builder(object):
     def __init__(self, config):
@@ -45,20 +62,6 @@ class Builder(object):
         if config.build['warning_is_error'].lower() == 'true':
             self.sphinx_opts += ' -W'
         self.done = dict((cmd, False) for cmd in commands)
-
-    def _once(func):
-        # An decorator that run a method only once
-        def warp(self):
-            name = func.__name__
-            if self.done[name]:
-                return
-            full_name = 'd2lbook build ' + name
-            tik = datetime.datetime.now()
-            func(self)
-            logging.info('=== Finished "%s" in %s', full_name,
-                         get_time_diff(tik, datetime.datetime.now()))
-            self.done[name] = True
-        return warp
 
     def _find_md_files(self):
         build = self.config.build
@@ -119,7 +122,8 @@ class Builder(object):
                          get_time_diff(eval_tik, tik), src, tgt)
             mkdir(os.path.dirname(tgt))
             run_cells = self.config.build['eval_notebook'].lower()
-            process_and_eval_notebook(src, tgt, run_cells=='true')
+            tab = 'default' if self.config.tabs and not self.config.tab else self.config.tab
+            process_and_eval_notebook(src, tgt, run_cells=='true', tab=tab)
             tok = datetime.datetime.now()
             logging.info('Finished in %s', get_time_diff(tik, tok))
 
@@ -184,8 +188,30 @@ class Builder(object):
         return rst_files
 
     @_once
+    def merge(self):
+        assert self.config.tab == 'all'
+        assert self.config.eval_dir.endswith('_all')        
+        assert len(self.config.tabs) > 1, self.config.tabs
+        default_eval_dir = self.config.eval_dir[:-4]
+        notebooks = find_files(os.path.join(default_eval_dir, '**', '*.ipynb'))
+        updated_notebooks = get_updated_files(
+            notebooks, default_eval_dir, self.config.eval_dir, 'ipynb', 'ipynb')
+        tab_dirs = [default_eval_dir+'_'+tab for tab in self.config.tabs[1:]]
+        for default, merged in updated_notebooks:
+            src_notebooks = [default]
+            for tab_dir in tab_dirs:
+                fname = os.path.join(tab_dir, 
+                    os.path.relpath(default, default_eval_dir))
+                if os.path.exists(fname):
+                    src_notebooks.append(fname)
+            merge_notebooks(src_notebooks, merged, self.config.tabs[0])
+        self._copy_resources(default_eval_dir, self.config.eval_dir)
+    @_once
     def rst(self):
-        self.eval()
+        if self.config.tab == 'all':
+            self.merge()
+        else:
+            self.eval()
         notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
         updated_notebooks = get_updated_files(
             notebooks, self.config.eval_dir, self.config.rst_dir, 'ipynb', 'rst')
@@ -193,7 +219,7 @@ class Builder(object):
         for src, tgt in updated_notebooks:
             logging.info('Convert %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
-            ipynb2rst(src, tgt)
+            ipynb2rst(src, tgt, self.config.tab=='all')
         # Generate conf.py under rst folder
         prepare_sphinx_env(self.config)
         self._copy_rst()
@@ -296,6 +322,80 @@ class Builder(object):
         self.html()
         self.pdf()
         self.pkg()
+
+def _get_cell_tab(cell):
+    if cell.cell_type != 'code':
+        return None
+    match = tab_re.search(cell.source)
+    if match:
+        return match[1]
+    return 'default'
+    
+
+def merge_notebooks(src_notebooks, dst_notebook, default_tab):
+    print(src_notebooks)
+    src_nbs = []
+    for fname in src_notebooks:
+        with open(fname, 'r') as f:
+            src_nbs.append(nbformat.read(f, as_version=4))
+    dst_nb = src_nbs[0]
+    # merge tab code blocks into dst_nb
+    has_tab = False
+    cells = dst_nb.cells
+    for nb in src_nbs[1:]:
+        for cell in nb.cells:
+            if _get_cell_tab(cell):
+                has_tab = True
+                assert 'origin_pos' in cell.metadata
+                cells.insert(cell.metadata['origin_pos'], cell)
+    # add html tabs
+    if has_tab:
+        cell_tabs = [_get_cell_tab(cell) for cell in cells]
+        cell_tabs = [default_tab if tab == 'default' else tab for tab in cell_tabs]
+        print(cell_tabs)
+        new_cells = []
+        in_tab = False
+        for i, (tab, cell) in enumerate(zip(cell_tabs, cells)):
+            if tab:
+                if not in_tab:
+                    code = r'''```eval_rst
+.. raw:: html
+
+    <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect"><div class="mdl-tabs__tab-bar">'''
+                    for j, t in enumerate(cell_tabs[i:]):
+                        if t:
+                            active = 'is-active' if t == default_tab else ''
+                            code += f'<a href="#{t}-{i+j}" class="mdl-tabs__tab {active}">{t}</a>'
+                        else:
+                            break
+                    code += '</div>'
+                    code += r'''
+```'''
+                    in_tab = True
+                    new_cells.append(nbformat.v4.new_markdown_cell(code))
+                
+                active = 'is-active' if tab == default_tab else ''
+                print(tab, active)
+                code = r'''```eval_rst
+.. raw:: html
+
+    <div class="mdl-tabs__panel '''
+                code += f'{active}" id="{tab}-{i}">\n```'
+
+                new_cells.append(nbformat.v4.new_markdown_cell(code))
+                new_cells.append(cell)
+                code = '</div>'
+                if i == len(cell_tabs)-1 or not cell_tabs[i+1]:
+                    code += '</div>'
+                new_cells.append(nbformat.v4.new_markdown_cell(code))
+            else:                
+                in_tab = False
+                new_cells.append(cell)
+        cells = new_cells
+    dst_nb.cells = cells
+    mkdir(os.path.dirname(dst_notebook))            
+    with open(dst_notebook, 'w') as f:
+        nbformat.write(dst_nb, f)
 
 def get_code_to_save(input_fn, save_mark):
     """get the code blocks (import, class, def) that will be saved"""
@@ -418,7 +518,7 @@ def get_subpages(input_fn):
     return subpages
 
 def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
-                              lang='python'):
+                              lang='python', tab=None):
     # process: add empty lines before and after a mark, otherwise it confuses
     # the rst parser
     with open(input_fn, 'r') as f:
@@ -434,6 +534,26 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
             lines[i] = '\n'+line+'\n'
     reader = notedown.MarkdownReader(match='strict')
     notebook = reader.reads('\n'.join(lines))
+
+    # keep the code blocks in the tab. If there is code block but no one match
+    # the tab, it means this tab isn't implemented yet. then skip to save.  
+    if tab: 
+        origin_cells = notebook.cells
+        notebook.cells = []
+        has_code_block = False
+        matched_tab = False
+        for i, cell in enumerate(origin_cells):
+            cell.metadata['origin_pos'] = i
+            has_code_block = True            
+            if _get_cell_tab(cell) == tab:
+                    notebook.cells.append(cell)
+                    matched_tab = True
+            elif not _get_cell_tab(cell):
+                notebook.cells.append(cell)
+        if has_code_block and not matched_tab:
+            logging.info(f"Skip to eval tab {tab} for {input_fn}")
+            return
+
     # evaluate
     if run_cells:
         # change to the notebook directory to resolve the relpaths properly
@@ -715,7 +835,7 @@ def process_rst(body):
 
     return '\n'.join(lines)
 
-def ipynb2rst(input_fn, output_fn):
+def ipynb2rst(input_fn, output_fn, show_tabs):
     with open(input_fn, 'r') as f:
         notebook = nbformat.read(f, as_version=4)
     for cell in notebook.cells:
