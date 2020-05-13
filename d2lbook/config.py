@@ -3,7 +3,7 @@ import os
 import logging
 
 class Config():
-    def __init__(self, tab, config_fname='config.ini'):
+    def __init__(self, tab=None, config_fname='config.ini'):
         config = configparser.ConfigParser()
         default_config_name = os.path.join(
             os.path.dirname(__file__), 'config_default.ini')

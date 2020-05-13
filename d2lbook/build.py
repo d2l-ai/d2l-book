@@ -324,6 +324,8 @@ class Builder(object):
         self.pkg()
 
 def _get_cell_tab(cell):
+    if 'tab' in cell.metadata:
+        return cell.metadata['tab']
     if cell.cell_type != 'code':
         return None
     match = tab_re.search(cell.source)
@@ -544,11 +546,20 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
         matched_tab = False
         for i, cell in enumerate(origin_cells):
             cell.metadata['origin_pos'] = i
-            has_code_block = True            
-            if _get_cell_tab(cell) == tab:
+            cell_tab = _get_cell_tab(cell)
+            if cell_tab:
+                has_code_block = True
+                if  cell_tab == tab:
+                    cell.metadata['tab'] = cell_tab
+                    lines = cell.source.split('\n')
+                    for j, line in enumerate(lines):
+                        if tab_re.search(line):
+                            del lines[j]
+                            break
+                    cell.source = '\n'.join(lines)
                     notebook.cells.append(cell)
                     matched_tab = True
-            elif not _get_cell_tab(cell):
+            else:
                 notebook.cells.append(cell)
         if has_code_block and not matched_tab:
             logging.info(f"Skip to eval tab {tab} for {input_fn}")
