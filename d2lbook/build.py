@@ -207,6 +207,7 @@ class Builder(object):
                     src_notebooks.append(fname)
             merge_notebooks(src_notebooks, merged, self.config.tabs[0])
         self._copy_resources(default_eval_dir, self.config.eval_dir)
+        
     @_once
     def rst(self):
         if self.config.tab == 'all':
@@ -336,26 +337,23 @@ def _get_cell_tab(cell):
     
 
 def merge_notebooks(src_notebooks, dst_notebook, default_tab):
-    print(src_notebooks)
     src_nbs = []
     for fname in src_notebooks:
         with open(fname, 'r') as f:
             src_nbs.append(nbformat.read(f, as_version=4))
-    dst_nb = src_nbs[0]
     # merge tab code blocks into dst_nb
-    has_tab = False
-    cells = dst_nb.cells
-    for nb in src_nbs[1:]:
+    n = max([max([cell.metadata['origin_pos'] for cell in nb.cells]) 
+        for nb in src_nbs])
+    cells = [None] * (n+1)
+    for nb in src_nbs:
         for cell in nb.cells:
-            if _get_cell_tab(cell):
-                has_tab = True
-                assert 'origin_pos' in cell.metadata
-                cells.insert(cell.metadata['origin_pos'], cell)
+            cells[cell.metadata['origin_pos']] = cell
+    dst_nb = src_nbs[0]
+    dst_nb.cells = cells
     # add html tabs
-    if has_tab:
-        cell_tabs = [_get_cell_tab(cell) for cell in cells]
+    cell_tabs = [_get_cell_tab(cell) for cell in cells]
+    if len(set(cell_tabs)) > 2: # otherwise just a single tab
         cell_tabs = [default_tab if tab == 'default' else tab for tab in cell_tabs]
-        print(cell_tabs)
         new_cells = []
         in_tab = False
         for i, (tab, cell) in enumerate(zip(cell_tabs, cells)):
@@ -378,7 +376,6 @@ def merge_notebooks(src_notebooks, dst_notebook, default_tab):
                     new_cells.append(nbformat.v4.new_markdown_cell(code))
                 
                 active = 'is-active' if tab == default_tab else ''
-                print(tab, active)
                 code = r'''```eval_rst
 .. raw:: html
 
