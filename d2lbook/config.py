@@ -12,13 +12,12 @@ class Config():
             logging.info('Load configure from %s', config_fname)
             config.read(config_fname)
         tabs = config['build']['tabs']
-        self.tabs = [tab.strip() for tab in tabs.split(',')] if tabs else []
+        self.tabs = [tab.strip() for tab in tabs.lower().split(',')] if tabs else []
         self.tab = tab.lower() if tab else None
         if self.tab:
             assert self.tabs, 'No tabs is specified'
             if self.tab != 'all':
-                assert self.tab in [tab.lower() for tab in self.tabs], \
-                    self.tab + ' is not found in tabs, which are ' + tabs   
+                assert self.tab in tabs, self.tab + ' is not found in tabs, which are ' + tabs
         self.build = config['build']
         self.deploy = config['deploy']
         self.project = config['project']

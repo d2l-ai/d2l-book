@@ -191,7 +191,7 @@ class Builder(object):
     @_once
     def merge(self):
         assert self.config.tab == 'all'
-        assert self.config.eval_dir.endswith('_all')        
+        assert self.config.eval_dir.endswith('_all')
         assert len(self.config.tabs) > 1, self.config.tabs
         default_eval_dir = self.config.eval_dir[:-4]
         notebooks = find_files(os.path.join(default_eval_dir, '**', '*.ipynb'))
@@ -201,13 +201,13 @@ class Builder(object):
         for default, merged in updated_notebooks:
             src_notebooks = [default]
             for tab_dir in tab_dirs:
-                fname = os.path.join(tab_dir, 
+                fname = os.path.join(tab_dir,
                     os.path.relpath(default, default_eval_dir))
                 if os.path.exists(fname):
                     src_notebooks.append(fname)
             merge_notebooks(src_notebooks, merged, self.config.tabs[0])
         self._copy_resources(default_eval_dir, self.config.eval_dir)
-        
+
     @_once
     def rst(self):
         if self.config.tab == 'all':
@@ -334,7 +334,7 @@ def _get_cell_tab(cell):
     if match:
         return match[1]
     return 'default'
-    
+
 
 def merge_notebooks(src_notebooks, dst_notebook, default_tab):
     src_nbs = []
@@ -342,14 +342,12 @@ def merge_notebooks(src_notebooks, dst_notebook, default_tab):
         with open(fname, 'r') as f:
             src_nbs.append(nbformat.read(f, as_version=4))
     # merge tab code blocks into dst_nb
-    n = max([max([cell.metadata['origin_pos'] for cell in nb.cells]) 
+    n = max([max([cell.metadata['origin_pos'] for cell in nb.cells])
         for nb in src_nbs])
     cells = [None] * (n+1)
     for nb in src_nbs:
         for cell in nb.cells:
             cells[cell.metadata['origin_pos']] = cell
-    dst_nb = src_nbs[0]
-    dst_nb.cells = cells
     # add html tabs
     cell_tabs = [_get_cell_tab(cell) for cell in cells]
     if len(set(cell_tabs)) > 2: # otherwise just a single tab
@@ -374,7 +372,7 @@ def merge_notebooks(src_notebooks, dst_notebook, default_tab):
 ```'''
                     in_tab = True
                     new_cells.append(nbformat.v4.new_markdown_cell(code))
-                
+
                 active = 'is-active' if tab == default_tab else ''
                 code = r'''```eval_rst
 .. raw:: html
@@ -388,12 +386,13 @@ def merge_notebooks(src_notebooks, dst_notebook, default_tab):
                 if i == len(cell_tabs)-1 or not cell_tabs[i+1]:
                     code += '</div>'
                 new_cells.append(nbformat.v4.new_markdown_cell(code))
-            else:                
+            else:
                 in_tab = False
                 new_cells.append(cell)
         cells = new_cells
+    dst_nb = src_nbs[0]
     dst_nb.cells = cells
-    mkdir(os.path.dirname(dst_notebook))            
+    mkdir(os.path.dirname(dst_notebook))
     with open(dst_notebook, 'w') as f:
         nbformat.write(dst_nb, f)
 
@@ -492,8 +491,8 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
     notebook = reader.reads('\n'.join(lines))
 
     # keep the code blocks in the tab. If there is code block but no one match
-    # the tab, it means this tab isn't implemented yet. then skip to save.  
-    if tab: 
+    # the tab, it means this tab isn't implemented yet. then skip to save.
+    if tab:
         origin_cells = notebook.cells
         notebook.cells = []
         has_code_block = False
