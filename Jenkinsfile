@@ -13,7 +13,7 @@ stage("Build and Publish") {
       d2lbook build eval --tab numpy
       d2lbook build eval --tab cpython
       d2lbook build pdf
-      d2lbook merge --tab all
+      d2lbook build merge --tab all
       d2lbook build html --tab all
       '''
 
