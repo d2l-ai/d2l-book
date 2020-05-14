@@ -325,6 +325,16 @@ pre.output {
 
 tabbar_css = r"""
 div.mdl-tabs__tab-bar { justify-content: left; }
+
+.mdl-tabs .mdl-tabs__tab {
+    font-size: 13px;
+    height: 32px;
+    line-height: 32px;
+}
+
+.mdl-tabs .mdl-tabs__tab-bar {
+    height: 32px;
+}
 """
 
 copybutton_css = r"""
