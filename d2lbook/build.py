@@ -287,36 +287,21 @@ class Builder(object):
 
     @_once
     def lib(self):
-        save_mark = self.config.library['save_mark']
-        if not save_mark:
-            logging.info('No save mark is specified, ignoring...')
-            return
-        lib_fname = self.config.library['save_filename']
-        logging.info('Matching with the partten: "%s"', save_mark)
-
         root = os.path.join(self.config.src_dir, self.config.build['index'] + '.md')
         notebooks = get_toc(root)
         notebooks_enabled, _, _ = self._find_md_files()
         notebooks = [nb for nb in notebooks if nb in notebooks_enabled]
-        with open(lib_fname, 'w') as f:
-            lib_name = os.path.dirname(lib_fname)
-            assert not '/' in lib_name, lib_name
-            f.write('# This file is generated automatically through:\n')
-            f.write('#    d2lbook build lib\n')
-            f.write('# Don\'t edit it directly\n\n')
-            f.write('import sys\n'+lib_name+' = sys.modules[__name__]\n\n')
 
-            for nb in notebooks:
-                blocks = get_code_to_save(nb, save_mark)
-                if blocks:
-                    logging.info('Found %d blocks in %s', len(blocks), nb)
-                    for block in blocks:
-                        logging.info(' --- %s', block[0])
-                        code = '# Defined in file: %s\n%s\n\n\n' %(
-                            nb, '\n'.join(block))
-                        f.write(code)
+        save_patterns = self.config.library['save_patterns']
+        if save_patterns:
+            items = split_config_str(save_patterns, num_items_per_line=2)
+            for lib_fname, save_mark in items:
+               _save_lib(notebooks, lib_fname, save_mark)
 
-        logging.info('Saved into %s', lib_fname)
+        save_mark = self.config.library['save_mark']
+        lib_fname = self.config.library['save_filename']
+        if save_mark and lib_fname:
+            _save_lib(notebooks, lib_fname, save_mark)
 
     def all(self):
         self.eval()
@@ -324,6 +309,27 @@ class Builder(object):
         self.html()
         self.pdf()
         self.pkg()
+
+def _save_lib(notebooks, lib_fname, save_mark):
+    logging.info('Matching with the partten: "%s"', save_mark)
+    with open(lib_fname, 'w') as f:
+        lib_name = os.path.dirname(lib_fname)
+        lib_name = lib_name.split('/')[-1]
+        f.write('# This file is generated automatically through:\n')
+        f.write('#    d2lbook build lib\n')
+        f.write('# Don\'t edit it directly\n\n')
+        f.write('import sys\n'+lib_name+' = sys.modules[__name__]\n\n')
+
+        for nb in notebooks:
+            blocks = get_code_to_save(nb, save_mark)
+            if blocks:
+                logging.info('Found %d blocks in %s', len(blocks), nb)
+                for block in blocks:
+                    logging.info(' --- %s', block[0])
+                    code = '# Defined in file: %s\n%s\n\n\n' %(
+                        nb, '\n'.join(block))
+                    f.write(code)
+        logging.info('Saved into %s', lib_fname)
 
 def _get_cell_tab(cell):
     if 'tab' in cell.metadata:
