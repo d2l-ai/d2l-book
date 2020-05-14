@@ -66,7 +66,7 @@ class SphinxEnv(object):
 
     def _write_js(self):
         d2l_js = (template.shorten_sec_num + template.replace_qr
-                  + template.copybutton_js)
+                  + template.copybutton_js + template.tabbar_js)
         g_id = 'google_analytics_tracking_id'
         if g_id in self.config.deploy:
             d2l_js += template.google_tracker.replace(
@@ -82,7 +82,8 @@ class SphinxEnv(object):
 
     def _write_css(self):
         fname = os.path.join(self.config.rst_dir, '_static', 'd2l.css')
-        d2l_css = template.hide_bibkey_css + template.copybutton_css + template.limit_output_length_css
+        d2l_css = template.hide_bibkey_css + template.copybutton_css + \
+            template.limit_output_length_css + template.tabbar_css
         with open(fname, 'w') as f:
             f.write(d2l_css)
             for fname in utils.find_files(self.config.html['include_css'], self.config.src_dir):

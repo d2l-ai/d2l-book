@@ -16,5 +16,6 @@ build
 deploy
 markdown
 code
+code_tabs
 colab
 ```

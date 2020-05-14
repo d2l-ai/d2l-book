@@ -9,7 +9,12 @@ stage("Build and Publish") {
       pip install .
       cd docs
       pip install matplotlib numpy
-      d2lbook build html pdf
+      d2lbook build eval 
+      d2lbook build eval --tab numpy
+      d2lbook build eval --tab cpython
+      d2lbook build pdf
+      d2lbook merge --tab all
+      d2lbook build html --tab all
       '''
 
       if (env.BRANCH_NAME == 'master') {

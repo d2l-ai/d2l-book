@@ -3,7 +3,7 @@ import os
 import logging
 
 class Config():
-    def __init__(self, config_fname='config.ini'):
+    def __init__(self, tab=None, config_fname='config.ini'):
         config = configparser.ConfigParser()
         default_config_name = os.path.join(
             os.path.dirname(__file__), 'config_default.ini')
@@ -11,6 +11,14 @@ class Config():
         if os.path.exists(config_fname):
             logging.info('Load configure from %s', config_fname)
             config.read(config_fname)
+        tabs = config['build']['tabs']
+        self.tabs = [tab.strip() for tab in tabs.split(',')] if tabs else []
+        self.tab = tab.lower() if tab else None
+        if self.tab:
+            assert self.tabs, 'No tabs is specified'
+            if self.tab != 'all':
+                assert self.tab in [tab.lower() for tab in self.tabs], \
+                    self.tab + ' is not found in tabs, which are ' + tabs   
         self.build = config['build']
         self.deploy = config['deploy']
         self.project = config['project']
@@ -21,20 +29,21 @@ class Config():
         self.sagemaker = config['sagemaker']
 
         # A bunch of directories
+        tab_ext = '_'+tab if tab else ''
         self.src_dir = self.build['source_dir']
         self.tgt_dir = self.build['output_dir']
-        self.eval_dir = os.path.join(self.tgt_dir, 'eval')
-        self.ipynb_dir = os.path.join(self.tgt_dir, 'ipynb')
-        self.rst_dir = os.path.join(self.tgt_dir, 'rst')
+        self.eval_dir = os.path.join(self.tgt_dir, 'eval'+tab_ext)
+        self.ipynb_dir = os.path.join(self.tgt_dir, 'ipynb'+tab_ext)
+        self.rst_dir = os.path.join(self.tgt_dir, 'rst'+tab_ext)
         try:
             self.html_dir = self.build['html_dir']
         except KeyError:
             self.html_dir = os.path.join(self.tgt_dir, 'html')
         # MM20200104 changed to allow separate html_dir to be specified in config.ini, e.g. put 'html_dir = docs' in the [build] section
-        self.pdf_dir = os.path.join(self.tgt_dir, 'pdf')
+        self.pdf_dir = os.path.join(self.tgt_dir, 'pdf'+tab_ext)
         self.colab_dir = os.path.join(self.tgt_dir, 'colab')
         self.sagemaker_dir = os.path.join(self.tgt_dir, 'sagemaker')
-        self.linkcheck_dir = os.path.join(self.tgt_dir, 'linkcheck')
+        self.linkcheck_dir = os.path.join(self.tgt_dir, 'linkcheck'+tab_ext)
 
         # Some targets names.
         self.pdf_fname = os.path.join(self.pdf_dir, self.project['name']+'.pdf')
