@@ -6,7 +6,7 @@ requirements = [
     'regex',
     'sphinx>=2.2.1',
     'recommonmark',
-    'nbformat',
+    'nbformat<=4.4.0',
     'nbconvert<=5.5.0',
     'sphinxcontrib-bibtex>=1.0.0',
     'pybtex-apa-style',
