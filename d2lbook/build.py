@@ -382,9 +382,19 @@ def merge_notebooks(src_notebooks, dst_notebook, default_tab):
 
                 new_cells.append(nbformat.v4.new_markdown_cell(code))
                 new_cells.append(cell)
-                code = '</div>'
+                code = r'''```eval_rst
+.. raw:: html
+
+    </div>
+```'''
                 if i == len(cell_tabs)-1 or not cell_tabs[i+1]:
-                    code += '</div>'
+                    code += r'''
+
+```eval_rst
+.. raw:: html
+
+    </div>
+```'''
                 new_cells.append(nbformat.v4.new_markdown_cell(code))
             else:
                 in_tab = False
@@ -642,7 +652,7 @@ def process_rst(body):
             while j < len(lines):
                 line_j = lines[j]
                 if indented(line_j):
-                    lines[j] = line_j[3:]
+                    lines[j] = line_j[4:]
                 elif not blank(line_j):
                     break
                 j += 1
