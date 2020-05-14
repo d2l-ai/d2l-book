@@ -652,7 +652,9 @@ def process_rst(body):
             while j < len(lines):
                 line_j = lines[j]
                 if indented(line_j):
-                    lines[j] = line_j[4:]
+                    lines[j] = line_j[3:]
+                    if '.. raw:: html' in lines[j]:
+                        lines[j] = lines[j].strip()
                 elif not blank(line_j):
                     break
                 j += 1
