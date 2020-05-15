@@ -343,6 +343,7 @@ def _get_cell_tab(cell):
 
 
 def merge_notebooks(src_notebooks, dst_notebook, default_tab):
+    logging.info(f'merge {src_notebooks} into {dst_notebook}')
     src_nbs = []
     for fname in src_notebooks:
         with open(fname, 'r') as f:
