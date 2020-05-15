@@ -101,6 +101,8 @@ class Builder(object):
     @_once
     def eval(self):
         """Evaluate the notebooks and save them in a different folder"""
+        # TODO(mli) if tabs is enabled, and a .md doesn't have the default tab,
+        # then the current implementation will not run the eval.
         eval_tik = datetime.datetime.now()
         notebooks, pure_markdowns, depends = self._find_md_files()
         depends_mtimes = get_mtimes(depends)
@@ -533,6 +535,9 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
                 notebook.cells.append(cell)
         if has_code_block and not matched_tab:
             logging.info(f"Skip to eval tab {tab} for {input_fn}")
+            # delete the .ipynb if exists
+            if os.path.exists(output_fn):
+                os.remove(output_fn)
             return
 
     # evaluate
