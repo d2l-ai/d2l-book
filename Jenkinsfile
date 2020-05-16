@@ -7,9 +7,10 @@ stage("Build and Publish") {
       conda create -n d2l-book-build pip -y
       conda activate d2l-book-build
       pip install .
+      python -m unittest d2lbook/*_test.py
       cd docs
       pip install matplotlib numpy
-      d2lbook build eval 
+      d2lbook build eval
       d2lbook build eval --tab numpy
       d2lbook build eval --tab cpython
       d2lbook build pdf
