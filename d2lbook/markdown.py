@@ -54,15 +54,12 @@ def split_markdown(source):
 
 def join_markdown_cells(cells):
     src = []
-    print(cells)
     for c in cells:
         if c['type'] == 'markdown':
             if 'class' in c:
-                print('xxx')
                 src.append(f':tab_begin:`{c["class"]}`')
             src.append(c['source'])
             if 'class' in c:
-                print('yy')
                 src.append(':tab_end:')
         else:
             src += ['```'+c['class'], c['source'], '```']
