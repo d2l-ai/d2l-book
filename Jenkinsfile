@@ -9,7 +9,8 @@ stage("Build and Publish") {
       pip install .
       python -m unittest d2lbook/*_test.py
       cd docs
-      pip install matplotlib numpy
+      pip install matplotlib numpy mypy
+      mypy --ignore-missing-imports d2lbook/*_test.py
       d2lbook build eval
       d2lbook build eval --tab numpy
       d2lbook build eval --tab cpython

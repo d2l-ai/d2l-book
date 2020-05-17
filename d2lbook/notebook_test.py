@@ -1,0 +1,110 @@
+from d2lbook import notebook
+from d2lbook import build
+import unittest
+import nbconvert
+
+
+_markdown_src = r'''
+# Test
+
+first para
+
+:tab_begin:`python2`
+python is good
+:tab_end:
+
+another para
+
+This is :eqref:`sec_1`
+
+:tab_begin:`python2`
+```python2
+1+2+3
+```
+:tab_end:
+
+:tab_begin:`python3`
+python3 is better
+
+- here
+- haha
+
+:tab_end:
+
+```{.input .python}
+1+2+3
+```
+
+```{.input .python}
+#@tab python2
+1+2+3
+```
+
+```bash
+````
+$ ls
+````
+```
+'''
+
+class TestNotebook(unittest.TestCase):
+
+    def test_split_markdown_cell(self):
+        nb = notebook.read_markdown(_markdown_src)
+        new_nb = notebook.split_markdown_cell(nb)
+        cells = new_nb.cells
+        self.assertEqual(len(cells), 9)
+        self.assertEqual(cells[0].cell_type, 'markdown')
+        self.assertEqual(cells[1].cell_type, 'markdown')
+        self.assertEqual(cells[1].metadata['tab'], 'python2')
+        self.assertEqual(cells[2].cell_type, 'markdown')
+        self.assertEqual('tab' in cells[2].metadata, False)
+        self.assertEqual(cells[3].metadata['tab'], 'python2')
+        self.assertEqual(cells[5].metadata['tab'], 'python3')
+        self.assertEqual(cells[6].cell_type, 'code')
+        self.assertEqual(cells[7].cell_type, 'code')
+
+    def test_get_tab_notebook(self):
+        nb = notebook.split_markdown_cell(notebook.read_markdown(_markdown_src))
+        new_nb = notebook.get_tab_notebook(nb, tab='python2', default_tab='python3')
+        cells = new_nb.cells
+        self.assertEqual(cells[0].cell_type, 'markdown')
+        self.assertEqual(cells[1].cell_type, 'markdown')
+        self.assertEqual(cells[1].metadata['tab'], 'python2')
+        self.assertEqual(cells[2].cell_type, 'markdown')
+        self.assertEqual('tab' in cells[2].metadata, False)
+        self.assertEqual(cells[3].metadata['tab'], 'python2')
+        self.assertEqual(cells[5].cell_type, 'code')
+        self.assertEqual(cells[5].metadata['tab'], 'python2')
+        self.assertEqual(len(cells), 7)
+
+        new_nb = notebook.get_tab_notebook(nb, tab='python3', default_tab='python3')
+        cells = new_nb.cells
+        self.assertEqual(cells[4].metadata['tab'], 'python3')
+        self.assertEqual(len(cells), 6)
+
+    def test_merge_tab_notebooks(self):
+        nb = notebook.split_markdown_cell(notebook.read_markdown(_markdown_src))
+        nb2 = notebook.get_tab_notebook(nb, tab='python2', default_tab='python3')
+        nb3 = notebook.get_tab_notebook(nb, tab='python3', default_tab='python3')
+        new_nb = notebook.merge_tab_notebooks([nb2, nb3])
+        self.assertEqual(len(nb.cells), len(new_nb.cells))
+        for cell, new_cell in zip(nb.cells, new_nb.cells):
+            if new_cell.source != cell.source:
+                self.assertTrue(new_cell.source in cell.source)
+
+    def test_add_html_tab(self):
+        nb = notebook.split_markdown_cell(notebook.read_markdown(_markdown_src))
+        nb2 = notebook.get_tab_notebook(nb, tab='python2', default_tab='python3')
+        nb3 = notebook.get_tab_notebook(nb, tab='python3', default_tab='python3')
+        nb4 = notebook.merge_tab_notebooks([nb2, nb3])
+        new_nb = notebook.add_html_tab(nb4, default_tab='python3')
+
+        writer = nbconvert.RSTExporter()
+        body, _ = writer.from_notebook_node(new_nb)
+        print(build.process_rst(body))
+
+
+
+if __name__ == '__main__':
+    unittest.main()

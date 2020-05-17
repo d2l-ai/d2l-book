@@ -1,19 +1,23 @@
 """utilities to handle markdown
 """
-import re
+from d2lbook import common
+from typing import List, Dict
 
-def split_markdown(source):
-    """Split markdown into a list of text and code blocks"""
-    cells = []
+def split_markdown(source: str) -> List[Dict[str, str]]:
+    """Split markdown into a list of text and code cells.
+
+    A cell has three fields:
+    1. type: either code or markdown
+    2. class: code class or tab class
+    3. source: single string for the source
+    """
+    cells: List[Dict] = []
     in_code = False
     in_tab = False
     cur_code_mark = None
     cur_tag = None
     cur_src = []
-    code_mark = re.compile('(```+) *(.*)')
-    tab_begin_mark = re.compile(':tab_begin:`([ \*-\/\\\._\w\d]+)`')
-    tab_end_mark = re.compile(':tab_end:')
-    def _add_cell():
+    def _add_cell(cur_src: List[str], cells: List[Dict]):
         if cur_src:
             src = '\n'.join(cur_src)
             if in_code:
@@ -24,40 +28,42 @@ def split_markdown(source):
                     cells[-1]['class'] = cur_tag
 
     for l in source.split('\n'):
-        code = code_mark.match(l)
-        tab_begin = tab_begin_mark.match(l)
-        tab_end = tab_end_mark.match(l)
-        if any([code, tab_begin, tab_end]):
+        code = common.md_code_fence.match(l)
+        tab = common.md_mark_pattern.match(l)
+        if code:
             # code can be nested
-            if in_code and ((code and code.groups()[0] != cur_code_mark) or tab_begin or tab_end):
+            if in_tab or (in_code and code.groups()[0] != cur_code_mark):
                 cur_src.append(l)
-                continue
-            # tab cannot be nested
-            if in_tab and code:
-                cur_src.append(l)
-                continue
-            _add_cell()
-            cur_src = []
-            if code:
+            else:
+                _add_cell(cur_src, cells)
+                cur_src = []
                 cur_code_mark, cur_tag = code.groups()
                 in_code ^= True
-            elif tab_begin:
-                cur_tag, = tab_begin.groups()
-                in_tab = True
+        elif tab:
+            begin = tab.groups()[0] == 'tab_begin'
+            end = tab.groups()[0] == 'tab_end'
+            if in_code or (not begin and not end):
+                cur_src.append(l)
             else:
-                cur_tag = None
-                in_tab = False
+                _add_cell(cur_src, cells)
+                cur_src = []
+                if begin:
+                    cur_tag = tab.groups()[1]
+                else:
+                    cur_tag = None
+                in_tab = begin
         else:
             cur_src.append(l)
-    _add_cell()
+    _add_cell(cur_src, cells)
     return cells
 
-def join_markdown_cells(cells):
+def join_markdown_cells(cells: List[Dict]) -> str:
+    """Join a list of cells into a markdown string"""
     src = []
     for c in cells:
         if c['type'] == 'markdown':
             if 'class' in c:
-                src.append(f':tab_begin:`{c["class"]}`')
+                src.append(f':tab_begin:{c["class"]}')
             src.append(c['source'])
             if 'class' in c:
                 src.append(':tab_end:')
