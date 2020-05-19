@@ -102,7 +102,8 @@ class TestNotebook(unittest.TestCase):
 
         writer = nbconvert.RSTExporter()
         body, _ = writer.from_notebook_node(new_nb)
-        print(build.process_rst(body))
+        # TODO(mli) add some asserts
+        # print(build.process_rst(body))
 
 
 

@@ -2,31 +2,23 @@ import os
 import sys
 import notedown
 import nbformat
-import nbconvert
-import pkg_resources
 import logging
 import shutil
-import time
 import datetime
 import argparse
 import re
 import regex
 import subprocess
 import hashlib
-from d2lbook.utils import *
+from d2lbook.utils import *  # TODO(mli), don't report *
 from d2lbook.sphinx import prepare_sphinx_env
 from d2lbook.config import Config
 from d2lbook import colab, sagemaker
-from d2lbook.markdown import *
+from d2lbook import markdown
+from d2lbook import notebook
+from d2lbook import rst as rst_lib
 
 __all__  = ['build']
-
-# Our special mark in markdown, e.g. :label:`chapter_intro`
-mark_re_md = re.compile(':([-\/\\._\w\d]+):`([\*-\/\\\._\w\d]+)`')
-# Same as mark_re_md for rst, while ` is replaced with `` in mark_re
-mark_re = re.compile(':([-\/\\._\w\d]+):``([\*-\/\\\._\w\d]+)``')
-# Search the code tab
-tab_re = re.compile('# *@tab +([\w]+)')
 
 commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'ipynb',
             'outputcheck', 'lib', 'colab', 'sagemaker', 'all', 'merge']
@@ -124,9 +116,9 @@ class Builder(object):
                          i+1, num_updated_notebooks,
                          get_time_diff(eval_tik, tik), src, tgt)
             mkdir(os.path.dirname(tgt))
-            run_cells = self.config.build['eval_notebook'].lower()
-            tab = 'default' if self.config.tabs and not self.config.tab else self.config.tab
-            process_and_eval_notebook(src, tgt, run_cells=='true', tab=tab)
+            run_cells = self.config.build['eval_notebook'].lower()=='true'
+            process_and_eval_notebook(src, tgt, run_cells, tab=self.config.tab,
+                                      default_tab=self.config.default_tab)
             tok = datetime.datetime.now()
             logging.info('Finished in %s', get_time_diff(tik, tok))
 
@@ -197,6 +189,7 @@ class Builder(object):
         assert len(self.config.tabs) > 1, self.config.tabs
         default_eval_dir = self.config.eval_dir[:-4]
         notebooks = find_files(os.path.join(default_eval_dir, '**', '*.ipynb'))
+        # TODO(mli) if no default tab, then will not trigger merge
         updated_notebooks = get_updated_files(
             notebooks, default_eval_dir, self.config.eval_dir, 'ipynb', 'ipynb')
         tab_dirs = [default_eval_dir+'_'+tab for tab in self.config.tabs[1:]]
@@ -207,7 +200,14 @@ class Builder(object):
                     os.path.relpath(default, default_eval_dir))
                 if os.path.exists(fname):
                     src_notebooks.append(fname)
-            merge_notebooks(src_notebooks, merged, self.config.tabs[0])
+            logging.info(f'merge {src_notebooks} into {merged}')
+            src_nbs = [nbformat.read(open(fn, 'r'), as_version=4)
+                       for fn in src_notebooks]
+            dst_nb = notebook.merge_tab_notebooks(src_nbs)
+            dst_nb = notebook.add_html_tab(dst_nb, self.config.default_tab)
+            mkdir(os.path.dirname(merged))
+            with open(merged, 'w') as f:
+                nbformat.write(dst_nb, f)
         self._copy_resources(default_eval_dir, self.config.eval_dir)
 
     @_once
@@ -223,7 +223,7 @@ class Builder(object):
         for src, tgt in updated_notebooks:
             logging.info('Convert %s to %s', src, tgt)
             mkdir(os.path.dirname(tgt))
-            ipynb2rst(src, tgt, self.config.tab=='all')
+            ipynb2rst(src, tgt)
         # Generate conf.py under rst folder
         prepare_sphinx_env(self.config)
         self._copy_rst()
@@ -333,88 +333,6 @@ def _save_lib(notebooks, lib_fname, save_mark):
                     f.write(code)
         logging.info('Saved into %s', lib_fname)
 
-def _get_cell_tab(cell):
-    if 'tab' in cell.metadata:
-        return cell.metadata['tab']
-    if cell.cell_type != 'code':
-        return None
-    match = tab_re.search(cell.source)
-    if match:
-        return match[1]
-    return 'default'
-
-
-def merge_notebooks(src_notebooks, dst_notebook, default_tab):
-    logging.info(f'merge {src_notebooks} into {dst_notebook}')
-    src_nbs = []
-    for fname in src_notebooks:
-        with open(fname, 'r') as f:
-            src_nbs.append(nbformat.read(f, as_version=4))
-    # merge tab code blocks into dst_nb
-    n = max([max([cell.metadata['origin_pos'] for cell in nb.cells])
-        for nb in src_nbs])
-    cells = [None] * (n+1)
-    for nb in src_nbs:
-        for cell in nb.cells:
-            cells[cell.metadata['origin_pos']] = cell
-    # add html tabs
-    cell_tabs = [_get_cell_tab(cell) for cell in cells]
-    if len(set(cell_tabs)) > 2: # otherwise just a single tab
-        cell_tabs = [default_tab if tab == 'default' else tab for tab in cell_tabs]
-        new_cells = []
-        in_tab = False
-        for i, (tab, cell) in enumerate(zip(cell_tabs, cells)):
-            if tab:
-                if not in_tab:
-                    code = r'''```eval_rst
-.. raw:: html
-
-    <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect"><div class="mdl-tabs__tab-bar">'''
-                    for j, t in enumerate(cell_tabs[i:]):
-                        if t:
-                            active = 'is-active' if t == default_tab else ''
-                            code += f'<a href="#{t}-{i+j}" class="mdl-tabs__tab {active}">{t}</a>'
-                        else:
-                            break
-                    code += '</div>'
-                    code += r'''
-```'''
-                    in_tab = True
-                    new_cells.append(nbformat.v4.new_markdown_cell(code))
-
-                active = 'is-active' if tab == default_tab else ''
-                code = r'''```eval_rst
-.. raw:: html
-
-    <div class="mdl-tabs__panel '''
-                code += f'{active}" id="{tab}-{i}">\n```'
-
-                new_cells.append(nbformat.v4.new_markdown_cell(code))
-                new_cells.append(cell)
-                code = r'''```eval_rst
-.. raw:: html
-
-    </div>
-```'''
-                if i == len(cell_tabs)-1 or not cell_tabs[i+1]:
-                    code += r'''
-
-```eval_rst
-.. raw:: html
-
-    </div>
-```'''
-                new_cells.append(nbformat.v4.new_markdown_cell(code))
-            else:
-                in_tab = False
-                new_cells.append(cell)
-        cells = new_cells
-    dst_nb = src_nbs[0]
-    dst_nb.cells = cells
-    mkdir(os.path.dirname(dst_notebook))
-    with open(dst_notebook, 'w') as f:
-        nbformat.write(dst_nb, f)
-
 def get_code_to_save(input_fn, save_mark):
     """get the code blocks (import, class, def) that will be saved"""
     reader = notedown.MarkdownReader(match='strict')
@@ -452,7 +370,7 @@ def update_ipynb_toc(root):
             notebook = nbformat.read(f, as_version=4)
         for cell in notebook.cells:
             if (cell.cell_type == 'markdown' and '```toc' in cell.source):
-                md_cells = split_markdown(cell.source)
+                md_cells = markdown.split_markdown(cell.source)
                 for c in md_cells:
                     if c['type'] == 'code' and c['class'] == 'toc':
                         toc = []
@@ -461,7 +379,7 @@ def update_ipynb_toc(root):
                                 toc.append(' - [%s](%s.ipynb)'%(l,l))
                         c['source'] = '\n'.join(toc)
                         c['type'] = 'markdown'
-                cell.source = join_markdown_cells(md_cells)
+                cell.source = markdown.join_markdown_cells(md_cells)
         with open(fn, 'w') as f:
             f.write(nbformat.writes(notebook))
 
@@ -492,356 +410,38 @@ def get_subpages(input_fn):
     return subpages
 
 def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
-                              lang='python', tab=None):
-    # process: add empty lines before and after a mark, otherwise it confuses
-    # the rst parser
+                              lang='python', tab=None, default_tab=None):
     with open(input_fn, 'r') as f:
         md = f.read()
-    lines = md.split('\n')
-    in_code = CharInMDCode(lines)
-    for i, line in enumerate(lines):
-        m = mark_re_md.match(line)
-        if (m is not None
-            and m[1] not in ('ref', 'numref', 'eqref')
-            and not in_code.in_code(i,0)
-            and m.end() == len(line)):
-            lines[i] = '\n'+line+'\n'
-    reader = notedown.MarkdownReader(match='strict')
-    notebook = reader.reads('\n'.join(lines))
-
-    # keep the code blocks in the tab. If there is code block but no one match
-    # the tab, it means this tab isn't implemented yet. then skip to save.
-    if tab:
-        origin_cells = notebook.cells
-        notebook.cells = []
-        has_code_block = False
-        matched_tab = False
-        for i, cell in enumerate(origin_cells):
-            cell.metadata['origin_pos'] = i
-            cell_tab = _get_cell_tab(cell)
-            if cell_tab:
-                has_code_block = True
-                if  cell_tab == tab:
-                    cell.metadata['tab'] = cell_tab
-                    lines = cell.source.split('\n')
-                    for j, line in enumerate(lines):
-                        if tab_re.search(line):
-                            del lines[j]
-                            break
-                    cell.source = '\n'.join(lines)
-                    notebook.cells.append(cell)
-                    matched_tab = True
-            else:
-                notebook.cells.append(cell)
-        if has_code_block and not matched_tab:
-            logging.info(f"Skip to eval tab {tab} for {input_fn}")
-            # delete the .ipynb if exists
-            if os.path.exists(output_fn):
-                os.remove(output_fn)
-            return
-
+    # get the tab
+    nb = notebook.split_markdown_cell(notebook.read_markdown(md))
+    nb = notebook.get_tab_notebook(nb, tab, default_tab)
+    if not nb:
+        logging.info(f"Skip to eval tab {tab} for {input_fn}")
+        # delete the .ipynb if exists
+        if os.path.exists(output_fn):
+            os.remove(output_fn)
+        return
     # evaluate
     if run_cells:
         # change to the notebook directory to resolve the relpaths properly
         cwd = os.getcwd()
         os.chdir(os.path.join(cwd, os.path.dirname(output_fn)))
-        notedown.run(notebook, timeout)
+        notedown.run(nb, timeout)
         os.chdir(cwd)
     # write
-    notebook['metadata'].update({'language_info':{'name':lang}})
+    nb['metadata'].update({'language_info':{'name':lang}})
     with open(output_fn, 'w') as f:
-        f.write(nbformat.writes(notebook))
+        f.write(nbformat.writes(nb))
 
-def delete_lines(lines, deletes):
-    return [line for i, line in enumerate(lines) if i not in deletes]
 
-class CharInMDCode(object):
-    """
-    Indicates if a char (at line_i, pos of in_code) is in a code block of md.
-
-    Examples:
-
-    i) The following chars (including lines starting with ```) are all chars in
-       a code block of md.
-
-       ```bash
-       pip install d2lbook
-       ```
-
-    ii) Chars `d2lbook` (including ``) in the following sentence are all in a
-        code block of md:
-
-        Let us install `d2lbook` first.
-    """
-    def __init__(self, lines):
-        in_code = []
-        code_block_mark = None
-        for line in lines:
-            if not code_block_mark:
-                if self._get_code_block_mark(line):
-                    code_block_mark = self._get_code_block_mark(line)
-                    in_code.append([True]*len(line))
-                else:
-                    char_in_code = False
-                    code_line = [False] * len(line)
-                    for i, char in enumerate(line):
-                        if char == '`':
-                            code_line[i] = True
-                            char_in_code ^= True
-                        elif char_in_code:
-                            code_line[i] = True
-                    in_code.append(code_line)
-            else:
-                in_code.append([True] * len(line))
-                if line.strip().startswith(code_block_mark):
-                    code_block_mark = None
-        self._in_code = in_code
-
-    def _match_back_quote(self, line):
-        mark = ''
-        for char in line:
-            if char == '`':
-                mark += '`'
-            else:
-                break
-        return mark
-
-    def _get_code_block_mark(self, line):
-        ls = line.strip()
-        if ls.startswith('```'):
-            return self._match_back_quote(ls)
-        return None
-
-    def in_code(self, line_i, pos):
-        return self._in_code[line_i][pos]
-
-def process_rst(body):
-    def indented(line):
-        return line.startswith('   ')
-
-    def blank(line):
-        return len(line.strip()) == 0
-
-    def look_behind(i, cond, lines):
-        indices = []
-        while i < len(lines) and cond(lines[i]):
-            indices.append(i)
-            i = i + 1
-        return indices
-
-    lines = body.split('\n')
-    # deletes: indices of lines to be deleted
-    i, deletes = 0, []
-    while i < len(lines):
-        line = lines[i]
-        # '.. code:: toc' -> '.. toctree::', then remove consecutive empty lines
-        # after the current line
-        if line.startswith('.. code:: toc'):
-            # convert into rst's toc block
-            lines[i] = '.. toctree::'
-            blanks = look_behind(i+1, blank, lines)
-            deletes.extend(blanks)
-            i += len(blanks)
-        # .. code:: eval_rst
-        #
-        #
-        #    .. only:: html
-        #
-        #       References
-        #       ==========
-        # ->
-        #
-        #
-        #
-        # .. only:: html
-        #
-        #    References
-        #    ==========
-        elif line.startswith('.. code:: eval_rst'):
-            # make it a rst block
-            deletes.append(i)
-            j = i + 1
-            while j < len(lines):
-                line_j = lines[j]
-                if indented(line_j):
-                    lines[j] = line_j[3:]
-                    if '.. raw:: html' in lines[j]:
-                        lines[j] = lines[j].strip()
-                elif not blank(line_j):
-                    break
-                j += 1
-            i = j
-        elif line.startswith('.. parsed-literal::'):
-            # add a output class so we can add customized css
-            lines[i] += '\n    :class: output'
-            i += 1
-        # .. figure:: ../img/jupyter.png
-        #    :alt: Output after running Jupyter Notebook. The last row is the URL
-        #    for port 8888.
-        #
-        #    Output after running Jupyter Notebook. The last row is the URL for
-        #    port 8888.
-        #
-        # :width:``700px``
-        #
-        # :label:``fig_jupyter``
-        #->
-        # .. _fig_jupyter:
-        #
-        # .. figure:: ../img/jupyter.png
-        #    :width: 700px
-        #
-        #    Output after running Jupyter Notebook. The last row is the URL for
-        #    port 8888.
-        elif indented(line) and ':alt:' in line:
-            # Image caption, remove :alt: block, it cause trouble for long captions
-            caps = look_behind(i, lambda l: indented(l) and not blank(l), lines)
-            deletes.extend(caps)
-            i += len(caps)
-        # .. table:: Dataset versus computer memory and computational power
-        #    +-...
-        #    |
-        #    +-...
-        #
-        # :label:``tab_intro_decade``
-        # ->
-        # .. _tab_intro_decade:
-        #
-        # .. table:: Dataset versus computer memory and computational power
-        #
-        #    +-...
-        #    |
-        #    +-...
-        #
-        elif line.startswith('.. table::'):
-            # Add indent to table caption for long captions
-            caps = look_behind(i+1, lambda l: not indented(l) and not blank(l),
-                               lines)
-            for j in caps:
-                lines[j] = '   ' + lines[j]
-            i += len(caps) + 1
-        else:
-            i += 1
-
-    # change :label:my_label: into rst format
-    lines = delete_lines(lines, deletes)
-    deletes = []
-
-    for i, line in enumerate(lines):
-        pos, new_line = 0, ''
-        while True:
-            match = mark_re.search(line, pos)
-            if match is None:
-                new_line += line[pos:]
-                break
-            start, end = match.start(), match.end()
-            # e.g., origin=':label:``fig_jupyter``', key='label', value='fig_jupyter'
-            origin, key, value = match[0], match[1], match[2]
-            new_line += line[pos:start]
-            pos = end
-
-            # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
-            if key == 'label':
-                new_line += '.. _' + value + ':'
-            elif key in ['ref', 'numref', 'cite']:
-                new_line += ':'+key+':`'+value+'`'
-            elif key == 'eqref':
-                new_line += ':eq:`'+value+'`'
-            # .. math:: f
-            #
-            # :eqlabel:``gd-taylor``
-            # ->
-            # .. math:: f
-            #    :label: gd-taylor
-            elif key == 'eqlabel':
-                new_line += '   :label: '+value
-                if blank(lines[i-1]):
-                    deletes.append(i-1)
-            elif key in ['width', 'height']:
-                new_line += '   :'+key+': '+value
-            elif key == 'bibliography':
-                # a hard coded plain bibtex style...
-                new_line += ('.. bibliography:: ' + value +
-                             '\n   :style: apa')
-                             # '\n   :style: apa\n   :all:') MM 20200104 removed ':all:' so only the cited references get printed
-            else:
-                logging.fatal('unknown key', key)
-
-        lines[i] = new_line
-    lines = delete_lines(lines, deletes)
-
-    def move(i, j): # move line i to line j
-        lines.insert(j, lines[i])
-        if i > j:
-            del lines[i+1]
-        else:
-            del lines[i]
-
-    # move :width: or :width: just below .. figure::
-    for i, line in enumerate(lines):
-        if line.startswith('.. figure::'):
-            for j in range(i+1, len(lines)):
-                line_j = lines[j]
-                if not indented(line_j) and not blank(line_j):
-                    break
-                if line_j.startswith('   :width:') or line_j.startswith('   :height:'):
-                    move(j, i+1)
-
-    # move .. _label: before a image, a section, or a table
-    lines.insert(0, '')
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        if line.startswith('.. _'):
-            for j in range(i-1, -1, -1):
-                line_j = lines[j]
-                if (line_j.startswith('.. table:')
-                    or line_j.startswith('.. figure:')):
-                    move(i, j-1)
-                    lines.insert(j-1, '')
-                    i += 1  # Due to insertion of a blank line
-                    break
-                if (len(set(line_j)) == 1
-                    and line_j[0] in ['=','~','_', '-']):
-                    k = max(j-2, 0)
-                    move(i, k)
-                    lines.insert(k, '')
-                    i += 1  # Due to insertion of a blank line
-                    break
-        i += 1
-
-    # change .. image:: to .. figure:: to they will be center aligned
-    for i, line in enumerate(lines):
-        if '.. image::' in line:
-            lines[i] = line.replace('.. image::', '.. figure::')
-
-    # sometimes the code results contains vt100 codes, widely used for
-    # coloring, while it is not supported by latex.
-    for i, l in enumerate(lines):
-        lines[i] = re.sub(r'\x1b\[[\d;]*K', '',
-                          re.sub(r'\x1b\[[\d;]*m', '', l))
-
-    return '\n'.join(lines)
-
-def ipynb2rst(input_fn, output_fn, show_tabs):
+def ipynb2rst(input_fn, output_fn):
     with open(input_fn, 'r') as f:
-        notebook = nbformat.read(f, as_version=4)
-    for cell in notebook.cells:
-        if cell.cell_type == 'code':
-            if '# hide outputs' in cell.source.lower():
-                cell.outputs = []
-            if '# hide code' in cell.source.lower():
-                cell.source = ''
-
-    writer = nbconvert.RSTExporter()
+        nb = nbformat.read(f, as_version=4)
     sig = hashlib.sha1(input_fn.encode()).hexdigest()[:6]
     resources = {'unique_key':
                  'output_'+rm_ext(os.path.basename(output_fn))+'_'+sig}
-    (body, resources) = writer.from_notebook_node(notebook, resources)
-
-    # Process the raw rst file generated by nbconvert to output a new rst file
-    body = process_rst(body)
-
+    body, resources = rst_lib.convert_notebook(nb, resources)
     with open(output_fn, 'w') as f:
         f.write(body)
     outputs = resources['outputs']

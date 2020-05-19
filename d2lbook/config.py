@@ -13,7 +13,8 @@ class Config():
             config.read(config_fname)
         tabs = config['build']['tabs']
         self.tabs = [tab.strip() for tab in tabs.lower().split(',')] if tabs else []
-        self.tab = tab.lower() if tab else None
+        self.default_tab = self.tabs[0] if self.tabs else None
+        self.tab = tab.lower() if tab else self.default_tab
         if self.tab:
             assert self.tabs, 'No tabs is specified'
             if self.tab != 'all':
