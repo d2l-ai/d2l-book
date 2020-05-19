@@ -183,9 +183,9 @@ function select_tab(i) {
     var j;
     for (j = 0; j < n; j++) {
       if (j != i) {
-        $(this).find(".mdl-tabs__panel:eq("+j.toString()+")").removeClass('is-active');  
+        $(this).find(".mdl-tabs__panel:eq("+j.toString()+")").removeClass('is-active');
       }
-    }          
+    }
     $(this).find(".mdl-tabs__panel:eq("+i.toString()+")").addClass('is-active');
   });
   $(".mdl-tabs__tab-bar").each(function(index){
@@ -195,7 +195,7 @@ function select_tab(i) {
         $(this).find(".mdl-tabs__tab:eq("+j.toString()+")").removeClass('is-active');
       }
     }
-    $(this).find(".mdl-tabs__tab:eq("+i.toString()+")").addClass('is-active');          
+    $(this).find(".mdl-tabs__tab:eq("+i.toString()+")").addClass('is-active');
   });
 }
 
@@ -203,7 +203,7 @@ $(document).ready(function () {
   $(".mdl-tabs__tab-bar").each(function(index){
     $(this).find(".mdl-tabs__tab:eq(0)").click(function() {
       select_tab(0)
-    });        
+    });
     $(this).find(".mdl-tabs__tab:eq(1)").click(function() {
       select_tab(1)
     });
@@ -212,8 +212,8 @@ $(document).ready(function () {
     });
     $(this).find(".mdl-tabs__tab:eq(3)").click(function() {
       select_tab(3)
-    });        
-  });  
+    });
+  });
 });
 """
 copybutton_js = r"""
@@ -334,6 +334,10 @@ div.mdl-tabs__tab-bar { justify-content: left; }
 
 .mdl-tabs .mdl-tabs__tab-bar {
     height: 32px;
+}
+
+.mdl-tabs .mdl-tabs__tab-bar.text {
+    margin-bottom: 12px;
 }
 """
 

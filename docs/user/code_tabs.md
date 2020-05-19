@@ -1,9 +1,26 @@
-# Group Code Blocks into Tabs  
+# Group Code Blocks into Tabs
 
 Here is an example showing grouping code blocks into three tabs.
 
 ## Example
 
+Instructions:
+
+:begin_tab:`python`
+You need to have python installed
+
+:end_tab:
+
+:begin_tab:`numpy`
+You can install numpy by
+```bash
+pip install numpy
+```
+:end_tab:
+
+:begin_tab:`cpython`
+Please install cpython
+:end_tab:
 
 Implement $a+b$:
 
@@ -44,7 +61,7 @@ a - b
 
 ## Usages
 
-To enable multi-tabs, first configure the `tabs` entry in the `config.ini` file. For example, here we use `tabs = python, numpy, cpython`. `python` is the default tab. To specify a code block that doesn't belong to the default tab, add `#@tab`, followed by the tab name (case insensitive), in the first line of the code block. 
+To enable multi-tabs, first configure the `tabs` entry in the `config.ini` file. For example, here we use `tabs = python, numpy, cpython`. `python` is the default tab. To specify a code block that doesn't belong to the default tab, add `#@tab`, followed by the tab name (case insensitive), in the first line of the code block.
 
 Sometimes these codes blocks conflict with each others. We can activate one tab at a time, so only code blocks belong to this tab can be evaluated in Jupyter. For example
 

@@ -6,22 +6,22 @@ _markdown_src = r'''
 
 first para
 
-:tab_begin:`python2`
+:begin_tab:`python2`
 python is good
-:tab_end:
+:end_tab:
 
 another para
 
 :eqref:`sec_1`
 
-:tab_begin:`python 3`
+:begin_tab:`python 3`
 python3 is better
 
 ```python 3
 print(3)
 ```
 
-:tab_end:
+:end_tab:
 
 
 ```bash

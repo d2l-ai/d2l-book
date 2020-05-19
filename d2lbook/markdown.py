@@ -40,8 +40,8 @@ def split_markdown(source: str) -> List[Dict[str, str]]:
                 cur_code_mark, cur_tag = code.groups()
                 in_code ^= True
         elif tab:
-            begin = tab.groups()[0] == 'tab_begin'
-            end = tab.groups()[0] == 'tab_end'
+            begin = tab.groups()[0] == 'begin_tab'
+            end = tab.groups()[0] == 'end_tab'
             if in_code or (not begin and not end):
                 cur_src.append(l)
             else:
@@ -63,10 +63,10 @@ def join_markdown_cells(cells: List[Dict]) -> str:
     for c in cells:
         if c['type'] == 'markdown':
             if 'class' in c:
-                src.append(f':tab_begin:{c["class"]}')
+                src.append(f':begin_tab:{c["class"]}')
             src.append(c['source'])
             if 'class' in c:
-                src.append(':tab_end:')
+                src.append(':end_tab:')
         else:
             src += ['```'+c['class'], c['source'], '```']
     return '\n'.join(src)

@@ -9,27 +9,27 @@ _markdown_src = r'''
 
 first para
 
-:tab_begin:`python2`
+:begin_tab:`python2`
 python is good
-:tab_end:
+:end_tab:
 
 another para
 
 This is :eqref:`sec_1`
 
-:tab_begin:`python2`
+:begin_tab:`python2`
 ```python2
 1+2+3
 ```
-:tab_end:
+:end_tab:
 
-:tab_begin:`python3`
+:begin_tab:`python3`
 python3 is better
 
 - here
 - haha
 
-:tab_end:
+:end_tab:
 
 ```{.input .python}
 1+2+3

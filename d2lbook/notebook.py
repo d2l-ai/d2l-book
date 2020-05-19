@@ -50,6 +50,7 @@ def split_markdown_cell(nb: notebooknode.NotebookNode) -> notebooknode.NotebookN
                     assert tab.startswith('`') and tab.endswith('`'), tab
                     new_cell.metadata['tab'] = tab[1:-1]
                 new_cells.append(new_cell)
+    new_cells = [cell for cell in new_cells if cell.source]
     return create_new_notebook(nb, new_cells)
 
 def _get_cell_tab(cell: notebooknode.NotebookNode, default_tab: str='') -> Optional[str]:
@@ -91,7 +92,7 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
                     src_tab = common.source_tab_pattern.search(line)
                     text_tab = common.md_mark_pattern.search(line)
                     if src_tab or (text_tab and (
-                            text_tab[1]=='tab_begin' or text_tab[1]=='tab_end')):
+                            text_tab[1]=='begin_tab' or text_tab[1]=='end_tab')):
                         del lines[j]
                     new_cell.source = '\n'.join(lines)
                 new_cells.append(new_cell)
@@ -113,16 +114,12 @@ def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
             new_cells[cell.metadata['origin_pos']] = copy.deepcopy(cell)
     return create_new_notebook(src_notebooks[0], new_cells)
 
-def _get_tab_bar(tabs, tab_id, default_tab):
-    code = r'''```eval_rst
-.. raw:: html
-
-    <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect"><div class="mdl-tabs__tab-bar">'''
+def _get_tab_bar(tabs, tab_id, default_tab, div_class=''):
+    code = f"```eval_rst\n\n.. raw:: html\n\n    <div class=\"mdl-tabs mdl-js-tabs mdl-js-ripple-effect\"><div class=\"mdl-tabs__tab-bar {div_class}\">"
     for i, tab in enumerate(tabs):
         active = 'is-active' if tab == default_tab else ''
         code +=f'<a href="#{tab}-{tab_id}-{i}" class="mdl-tabs__tab {active}">{tab}</a>'
-    code += r'''</div>
-```'''
+    code += "</div>\n```"
     return nbformat.v4.new_markdown_cell(code)
 
 def _get_tab_panel(cell, tab, tab_id, default_tab):
@@ -136,15 +133,29 @@ def _get_tab_panel(cell, tab, tab_id, default_tab):
 
 def add_html_tab(nb: notebooknode.NotebookNode, default_tab: str) -> notebooknode.NotebookNode:
     """Add html codes for the tabs"""
-    cell_groups = common.group_list(nb.cells,
-                                    lambda cell, _: bool(_get_cell_tab(cell)))
+    # TODO(mli) cannot handle text/code tabs are cont
+
+    def _tab_status(cell, status):
+        if _get_cell_tab(cell):
+            return 1 if cell.cell_type == 'markdown' else 2
+        return 0
+    cell_groups = common.group_list(nb.cells, _tab_status)
     new_cells = []
+    # maximal number of tabs
+    def _n_tab(i):
+        tabs = [len(group) for in_tab, group in cell_groups if in_tab == i]
+        return max(tabs) if tabs else 0
+    n_md_tab, n_code_tab = _n_tab(1), _n_tab(2)
+    if n_md_tab <= 1 and n_code_tab <=1:
+        return nb
+
     for i, (in_tab, group) in enumerate(cell_groups):
         if not in_tab:
             new_cells.extend(group)
         else:
             tabs = [cell.metadata['tab'] for cell in group]
-            new_cells.append(_get_tab_bar(tabs, i, default_tab))
+            div_class = "code" if in_tab == 2 else "text"
+            new_cells.append(_get_tab_bar(tabs, i, default_tab, div_class))
             for j, (tab, cell) in enumerate(zip(tabs, group)):
                 new_cells.extend(_get_tab_panel(cell, tab, f'{i}-{j}', default_tab))
             new_cells.append(nbformat.v4.new_markdown_cell(
