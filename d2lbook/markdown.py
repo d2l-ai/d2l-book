@@ -21,7 +21,7 @@ def split_markdown(source: str) -> List[Dict[str, str]]:
         if cur_src:
             src = '\n'.join(cur_src)
             if in_code:
-                cells.append({'type':'code', 'class':cur_tag, 'source':src})
+                cells.append({'type':'code', 'fence':cur_code_mark, 'class':cur_tag, 'source':src})
             else:
                 cells.append({'type':'markdown', 'source':src})
                 if cur_tag:
@@ -68,5 +68,5 @@ def join_markdown_cells(cells: List[Dict]) -> str:
             if 'class' in c:
                 src.append(':end_tab:')
         else:
-            src += ['```'+c['class'], c['source'], '```']
+            src += [c['fence']+c['class'], c['source'], c['fence']]
     return '\n'.join(src)

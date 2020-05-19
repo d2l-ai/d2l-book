@@ -172,9 +172,10 @@ def _process_rst(body):
             start, end = match.start(), match.end()
             # e.g., origin=':label:``fig_jupyter``', key='label', value='fig_jupyter'
             origin, key, value = match[0], match[1], match[2]
+            assert value.startswith('``') and value.endswith('``'), value
+            value = value[2:-2]
             new_line += line[pos:start]
             pos = end
-
             # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
             if key == 'label':
                 new_line += '.. _' + value + ':'
@@ -194,6 +195,7 @@ def _process_rst(body):
                     deletes.append(i-1)
             elif key in ['width', 'height']:
                 new_line += '   :'+key+': '+value
+                print(new_line)
             elif key == 'bibliography':
                 # a hard coded plain bibtex style...
                 new_line += ('.. bibliography:: ' + value +

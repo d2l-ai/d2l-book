@@ -24,11 +24,11 @@ print(3)
 :end_tab:
 
 
+````bash
 ```bash
-````
 $ ls
-````
 ```
+````
 '''
 
 class TestMarkdown(unittest.TestCase):
@@ -40,6 +40,7 @@ class TestMarkdown(unittest.TestCase):
         self.assertEqual(cells[1]['type'], 'markdown')
         self.assertEqual(cells[1]['class'], '`python2`')
         self.assertEqual(cells[3]['class'], '`python 3`')
+        print(cells[5])
         self.assertEqual(cells[5]['class'], 'bash')
 
     def test_merge(self):
