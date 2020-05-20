@@ -122,42 +122,56 @@ def _get_tab_bar(tabs, tab_id, default_tab, div_class=''):
     code += "</div>\n```"
     return nbformat.v4.new_markdown_cell(code)
 
-def _get_tab_panel(cell, tab, tab_id, default_tab):
+def _get_tab_panel(cells, tab, tab_id, default_tab):
     active = 'is-active' if tab == default_tab else ''
     tab_panel_begin = nbformat.v4.new_markdown_cell(
         f"```eval_rst\n.. raw:: html\n\n    <div class=\"mdl-tabs__panel {active}\" id=\"{tab}-{tab_id}\">\n```")
     tab_panel_end = nbformat.v4.new_markdown_cell(
         "```eval_rst\n.. raw:: html\n\n    </div>\n```")
-    return [tab_panel_begin, cell, tab_panel_end]
+    return [tab_panel_begin, *cells, tab_panel_end]
 
 
-def add_html_tab(nb: notebooknode.NotebookNode, default_tab: str) -> notebooknode.NotebookNode:
-    """Add html codes for the tabs"""
-    # TODO(mli) cannot handle text/code tabs are cont
-
+def _merge_tabs(nb: notebooknode.NotebookNode):
+    """merge side-by-side tabs into a single one"""
     def _tab_status(cell, status):
         if _get_cell_tab(cell):
             return 1 if cell.cell_type == 'markdown' else 2
         return 0
     cell_groups = common.group_list(nb.cells, _tab_status)
+    meta = [(in_tab, [cell.metadata['tab'] for cell in group] if in_tab else None
+             ) for in_tab, group in cell_groups]
     new_cells = []
-    # maximal number of tabs
-    def _n_tab(i):
-        tabs = [len(group) for in_tab, group in cell_groups if in_tab == i]
-        return max(tabs) if tabs else 0
-    n_md_tab, n_code_tab = _n_tab(1), _n_tab(2)
-    if n_md_tab <= 1 and n_code_tab <=1:
-        return nb
+    i = 0
+    while i < len(meta):
+        in_tab, tabs = meta[i]
+        if not in_tab:
+            new_cells.append((False, cell_groups[i][1]))
+            i += 1
+        else:
+            for j in range(i+1, len(meta)):
+                if meta[j][1] != tabs:
+                    groups = [group for _, group in cell_groups[i:j]]
+                    new_cells.append((True, [x for x in zip(*groups)]))
+                    i = j
+                    break
+    return new_cells
 
+def add_html_tab(nb: notebooknode.NotebookNode, default_tab: str) -> notebooknode.NotebookNode:
+    """Add html codes for the tabs"""
+    cell_groups = _merge_tabs(nb)
+    tabs = [len(group) for in_tab, group in cell_groups if in_tab]
+    if not tabs or max(tabs) <= 1:
+        return nb
+    new_cells = []
     for i, (in_tab, group) in enumerate(cell_groups):
         if not in_tab:
             new_cells.extend(group)
         else:
-            tabs = [cell.metadata['tab'] for cell in group]
-            div_class = "code" if in_tab == 2 else "text"
+            tabs = [cells[0].metadata['tab'] for cells in group]
+            div_class = "code" if group[0][0].cell_type == 'code' == 2 else "text"
             new_cells.append(_get_tab_bar(tabs, i, default_tab, div_class))
-            for j, (tab, cell) in enumerate(zip(tabs, group)):
-                new_cells.extend(_get_tab_panel(cell, tab, f'{i}-{j}', default_tab))
+            for j, (tab, cells) in enumerate(zip(tabs, group)):
+                new_cells.extend(_get_tab_panel(cells, tab, f'{i}-{j}', default_tab))
             new_cells.append(nbformat.v4.new_markdown_cell(
                 "```eval_rst\n.. raw:: html\n\n    </div>\n```"))
     return create_new_notebook(nb, new_cells)

@@ -4,7 +4,7 @@ Here is an example showing grouping code blocks into three tabs.
 
 ## Example
 
-Instructions:
+Let's implement $a+b$. We first show instructions, then demonstrate the codes.
 
 :begin_tab:`python`
 You need to have python installed
@@ -22,7 +22,6 @@ pip install numpy
 Please install cpython
 :end_tab:
 
-Implement $a+b$:
 
 ```{.python .input}
 a = [1,1,1]

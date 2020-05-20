@@ -195,7 +195,6 @@ def _process_rst(body):
                     deletes.append(i-1)
             elif key in ['width', 'height']:
                 new_line += '   :'+key+': '+value
-                print(new_line)
             elif key == 'bibliography':
                 # a hard coded plain bibtex style...
                 new_line += ('.. bibliography:: ' + value +
