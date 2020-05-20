@@ -203,8 +203,11 @@ class Builder(object):
             logging.info(f'merge {src_notebooks} into {merged}')
             src_nbs = [nbformat.read(open(fn, 'r'), as_version=4)
                        for fn in src_notebooks]
-            dst_nb = notebook.merge_tab_notebooks(src_nbs)
-            dst_nb = notebook.add_html_tab(dst_nb, self.config.default_tab)
+            if len(src_nbs) > 1:
+                dst_nb = notebook.merge_tab_notebooks(src_nbs)
+                dst_nb = notebook.add_html_tab(dst_nb, self.config.default_tab)
+            else:
+                dst_nb = src_nbs[0]
             mkdir(os.path.dirname(merged))
             with open(merged, 'w') as f:
                 nbformat.write(dst_nb, f)
