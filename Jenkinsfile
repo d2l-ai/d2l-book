@@ -11,6 +11,7 @@ stage("Build and Publish") {
       pip install mypy
       mypy --ignore-missing-imports d2lbook/*_test.py
       cd docs
+      rm -rf _build
       pip install matplotlib numpy mypy
       d2lbook build eval
       d2lbook build eval --tab numpy
