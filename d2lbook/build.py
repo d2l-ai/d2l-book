@@ -198,7 +198,7 @@ class Builder(object):
             for tab_dir in tab_dirs:
                 fname = os.path.join(tab_dir,
                     os.path.relpath(default, default_eval_dir))
-                if os.path.exists(fname):
+                if os.path.exists(fname) and os.stat(fname).st_size > 0:
                     src_notebooks.append(fname)
             logging.info(f'merge {src_notebooks} into {merged}')
             src_nbs = [nbformat.read(open(fn, 'r'), as_version=4)
@@ -421,9 +421,8 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
     nb = notebook.get_tab_notebook(nb, tab, default_tab)
     if not nb:
         logging.info(f"Skip to eval tab {tab} for {input_fn}")
-        # delete the .ipynb if exists
-        if os.path.exists(output_fn):
-            os.remove(output_fn)
+        # write an emtpy file to track the dependencies
+        open(output_fn, 'w')
         return
     # evaluate
     if run_cells:
