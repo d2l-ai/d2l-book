@@ -139,7 +139,7 @@ $(document).ready(function () {
 replace_qr = """
 $(document).ready(function () {
     $('h2').each(function(){
-        if ($(this).text().indexOf("Discuss") != -1) {
+        if ($(this).text().indexOf("Discussions") != -1) {
             var url = $(this).find('a').attr('href');
             var tokens = url.split('/');
             var topic_id = tokens[tokens.length-1];
