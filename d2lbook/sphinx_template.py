@@ -139,7 +139,7 @@ $(document).ready(function () {
 replace_qr = """
 $(document).ready(function () {
     $('h2').each(function(){
-        if ($(this).text().indexOf("Discussions") != -1) {
+        if ($(this).text().indexOf("Discuss") != -1) {
             var url = $(this).find('a').attr('href');
             var tokens = url.split('/');
             var topic_id = tokens[tokens.length-1];
@@ -179,7 +179,7 @@ dl.citation span.brackets {
 discourse_js = r"""
 function discourse_embed() {
     $('a').each(function(){
-        if ($(this).text().indexOf("Discuss") != -1) {
+        if ($(this).text().indexOf("Discussions") != -1) {
             var pp = $(this).parent().parent();
             if (pp.hasClass('mdl-tabs__panel') && !pp.hasClass('is-active')) {
                 return;
