@@ -176,42 +176,77 @@ dl.citation span.brackets {
 }
 """
 
+discourse_js = r"""
+function discourse_embed() {
+    $('a').each(function(){
+        if ($(this).text().indexOf("Discuss") != -1) {
+            var pp = $(this).parent().parent();
+            if (pp.hasClass('mdl-tabs__panel') && !pp.hasClass('is-active')) {
+                return;
+            }
+            var url = $(this).attr('href');
+            var tokens = url.split('/');
+            var topic_id = tokens[tokens.length-1];
+            var domain = tokens[0]+'//'+tokens[2]+'/';
+            $("#discourse-comments").remove();
+            $(this).parent().append('<div id="discourse-comments"></div>');
+
+
+            DiscourseEmbed = { discourseUrl: domain, topicId: topic_id };
+            (function() {
+                var d = document.createElement('script'); d.type = 'text/javascript';
+                d.async = true;
+                d.src = DiscourseEmbed.discourseUrl + 'javascripts/embed.js';
+                (document.getElementsByTagName('head')[0] ||
+                 document.getElementsByTagName('body')[0]).appendChild(d);
+            })();
+            $(this).hide()
+        }
+    });
+}
+
+$(document).ready(function(){
+    discourse_embed();
+});
+"""
+
 tabbar_js = r"""
 function select_tab(i) {
-  var n = 4;
-  $(".mdl-tabs").each(function(index){
-    var j;
-    for (j = 0; j < n; j++) {
-      if (j != i) {
-        $(this).find(".mdl-tabs__panel:eq("+j.toString()+")").removeClass('is-active');
-      }
-    }
-    $(this).find(".mdl-tabs__panel:eq("+i.toString()+")").addClass('is-active');
-  });
-  $(".mdl-tabs__tab-bar").each(function(index){
-    var j;
-    for (j = 0; j < n; j++) {
-      if (j != i) {
-        $(this).find(".mdl-tabs__tab:eq("+j.toString()+")").removeClass('is-active');
-      }
-    }
-    $(this).find(".mdl-tabs__tab:eq("+i.toString()+")").addClass('is-active');
-  });
+    var n = 4;
+    $(".mdl-tabs").each(function(index){
+        var j;
+        for (j = 0; j < n; j++) {
+            if (j != i) {
+                $(this).find(".mdl-tabs__panel:eq("+j.toString()+")").removeClass('is-active');
+            }
+        }
+        $(this).find(".mdl-tabs__panel:eq("+i.toString()+")").addClass('is-active');
+    });
+    $(".mdl-tabs__tab-bar").each(function(index){
+        var j;
+        for (j = 0; j < n; j++) {
+            if (j != i) {
+                $(this).find(".mdl-tabs__tab:eq("+j.toString()+")").removeClass('is-active');
+            }
+        }
+        $(this).find(".mdl-tabs__tab:eq("+i.toString()+")").addClass('is-active');
+    });
+    discourse_embed();
 }
 
 $(document).ready(function () {
   $(".mdl-tabs__tab-bar").each(function(index){
     $(this).find(".mdl-tabs__tab:eq(0)").click(function() {
-      select_tab(0)
+        select_tab(0);
     });
     $(this).find(".mdl-tabs__tab:eq(1)").click(function() {
-      select_tab(1)
+        select_tab(1);
     });
     $(this).find(".mdl-tabs__tab:eq(2)").click(function() {
-      select_tab(2)
+        select_tab(2);
     });
     $(this).find(".mdl-tabs__tab:eq(3)").click(function() {
-      select_tab(3)
+        select_tab(3);
     });
   });
 });

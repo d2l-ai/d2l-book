@@ -148,12 +148,15 @@ def _merge_tabs(nb: notebooknode.NotebookNode):
             new_cells.append((False, cell_groups[i][1]))
             i += 1
         else:
-            for j in range(i+1, len(meta)):
+            j = i + 1
+            while j < len(meta):
                 if meta[j][1] != tabs:
-                    groups = [group for _, group in cell_groups[i:j]]
-                    new_cells.append((True, [x for x in zip(*groups)]))
-                    i = j
                     break
+                j += 1
+            groups = [group for _, group in cell_groups[i:j]]
+            new_cells.append((True, [x for x in zip(*groups)]))
+            i = j
+
     return new_cells
 
 def add_html_tab(nb: notebooknode.NotebookNode, default_tab: str) -> notebooknode.NotebookNode:
