@@ -24,6 +24,11 @@ linkcheck_ignore = [r'.*localhost.*']
 linkcheck_timeout = 5
 linkcheck_workers = 20
 
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+}
+
 html_theme = 'mxtheme'
 html_theme_options = {
     'primary_color': 'blue',
