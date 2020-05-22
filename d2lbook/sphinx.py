@@ -23,8 +23,10 @@ class SphinxEnv(object):
             self._update_pyconf(key, self.config.project[key])
         self._update_pyconf('index', self.config.build['index'])
         self._update_pyconf('sphinx_configs', self.config.build['sphinx_configs'])
+
         extensions = ['recommonmark', 'sphinxcontrib.bibtex',
-                      'sphinxcontrib.rsvgconverter', 'sphinx.ext.autodoc']
+                      'sphinxcontrib.rsvgconverter', 'sphinx.ext.autodoc',
+                      'sphinx.ext.viewcode']
         extensions.extend(self.config.build['sphinx_extensions'].split())
         self._update_pyconf('extensions', ','.join('"'+ext+'"' for ext in extensions))
         for font in ['main_font', 'sans_font', 'mono_font']:
