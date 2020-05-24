@@ -416,14 +416,16 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
                               lang='python', tab=None, default_tab=None):
     with open(input_fn, 'r') as f:
         md = f.read()
-    # get the tab
-    nb = notebook.split_markdown_cell(notebook.read_markdown(md))
-    nb = notebook.get_tab_notebook(nb, tab, default_tab)
-    if not nb:
-        logging.info(f"Skip to eval tab {tab} for {input_fn}")
-        # write an emtpy file to track the dependencies
-        open(output_fn, 'w')
-        return
+    nb = notebook.read_markdown(md)
+    if tab:
+        # get the tab
+        nb = notebook.split_markdown_cell()
+        nb = notebook.get_tab_notebook(nb, tab, default_tab)
+        if not nb:
+            logging.info(f"Skip to eval tab {tab} for {input_fn}")
+            # write an emtpy file to track the dependencies
+            open(output_fn, 'w')
+            return
     # evaluate
     if run_cells:
         # change to the notebook directory to resolve the relpaths properly
