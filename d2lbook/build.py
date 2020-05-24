@@ -419,7 +419,7 @@ def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
     nb = notebook.read_markdown(md)
     if tab:
         # get the tab
-        nb = notebook.split_markdown_cell()
+        nb = notebook.split_markdown_cell(nb)
         nb = notebook.get_tab_notebook(nb, tab, default_tab)
         if not nb:
             logging.info(f"Skip to eval tab {tab} for {input_fn}")
