@@ -47,6 +47,17 @@ $ ls
 ```
 '''
 
+_multi_tab_cell = r'''
+# Test
+
+```{.input .python}
+#@tab python2, python3
+1+2
+```
+
+The end
+'''
+
 class TestNotebook(unittest.TestCase):
 
     def test_split_markdown_cell(self):
@@ -56,11 +67,11 @@ class TestNotebook(unittest.TestCase):
         self.assertEqual(len(cells), 8)
         self.assertEqual(cells[0].cell_type, 'markdown')
         self.assertEqual(cells[1].cell_type, 'markdown')
-        self.assertEqual(cells[1].metadata['tab'], 'python2')
+        self.assertEqual(cells[1].metadata['tab'], ['python2'])
         self.assertEqual(cells[2].cell_type, 'markdown')
         self.assertEqual('tab' in cells[2].metadata, False)
-        self.assertEqual(cells[3].metadata['tab'], 'python2')
-        self.assertEqual(cells[4].metadata['tab'], 'python3')
+        self.assertEqual(cells[3].metadata['tab'], ['python2'])
+        self.assertEqual(cells[4].metadata['tab'], ['python3'])
         self.assertEqual(cells[5].cell_type, 'code')
         self.assertEqual(cells[6].cell_type, 'code')
 
@@ -70,18 +81,27 @@ class TestNotebook(unittest.TestCase):
         cells = new_nb.cells
         self.assertEqual(cells[0].cell_type, 'markdown')
         self.assertEqual(cells[1].cell_type, 'markdown')
-        self.assertEqual(cells[1].metadata['tab'], 'python2')
+        self.assertEqual(cells[1].metadata['tab'], ['python2'])
         self.assertEqual(cells[2].cell_type, 'markdown')
         self.assertEqual('tab' in cells[2].metadata, False)
-        self.assertEqual(cells[3].metadata['tab'], 'python2')
+        self.assertEqual(cells[3].metadata['tab'], ['python2'])
         self.assertEqual(cells[4].cell_type, 'code')
-        self.assertEqual(cells[4].metadata['tab'], 'python2')
+        self.assertEqual(cells[4].metadata['tab'], ['python2'])
         self.assertEqual(len(cells), 6)
 
         new_nb = notebook.get_tab_notebook(nb, tab='python3', default_tab='python3')
         cells = new_nb.cells
-        self.assertEqual(cells[3].metadata['tab'], 'python3')
+        self.assertEqual(cells[3].metadata['tab'], ['python3'])
         self.assertEqual(len(cells), 5)
+
+        nb = notebook.read_markdown(_multi_tab_cell)
+        cells = notebook.get_tab_notebook(nb, tab='python2', default_tab='python3').cells
+        self.assertEqual(len(cells), 3)
+        self.assertEqual(cells[1].metadata['tab'], ['python2', 'python3'])
+
+        cells = notebook.get_tab_notebook(nb, tab='python3', default_tab='python3').cells
+        self.assertEqual(len(cells), 3)
+        self.assertEqual(cells[1].metadata['tab'], ['python2', 'python3'])
 
     def test_merge_tab_notebooks(self):
         nb = notebook.split_markdown_cell(notebook.read_markdown(_markdown_src))

@@ -48,21 +48,21 @@ def split_markdown_cell(nb: notebooknode.NotebookNode) -> notebooknode.NotebookN
                 if is_tab:
                     tab = md_group[0]['class']
                     assert tab.startswith('`') and tab.endswith('`'), tab
-                    new_cell.metadata['tab'] = tab[1:-1]
+                    new_cell.metadata['tab'] = [tab[1:-1]]
                 new_cells.append(new_cell)
     new_cells = [cell for cell in new_cells if cell.source]
     return create_new_notebook(nb, new_cells)
 
-def _get_cell_tab(cell: notebooknode.NotebookNode, default_tab: str='') -> Optional[str]:
+def _get_cell_tab(cell: notebooknode.NotebookNode, default_tab: str='') -> List[str]:
     """Get the cell tab"""
     if 'tab' in cell.metadata:
         return cell.metadata['tab']
     if cell.cell_type != 'code':
-        return None
+        return []
     match = common.source_tab_pattern.search(cell.source)
     if match:
-        return match[1]
-    return default_tab
+        return [tab.strip() for tab in match[1].split(',')]
+    return [default_tab,]
 
 def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
                      ) -> notebooknode.NotebookNode:
@@ -83,7 +83,7 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
         if not cell_tab:
             new_cells.append(new_cell)
         else:
-            if cell_tab == tab:
+            if tab in cell_tab:
                 new_cell.metadata['tab'] = cell_tab
                 matched_tab = True
                 # remove the tab from source
