@@ -15,6 +15,7 @@ from d2lbook.sphinx import prepare_sphinx_env
 from d2lbook.config import Config
 from d2lbook import colab, sagemaker
 from d2lbook import markdown
+from d2lbook import library
 from d2lbook import notebook
 from d2lbook import rst as rst_lib
 
@@ -300,13 +301,13 @@ class Builder(object):
         save_patterns = self.config.library['save_patterns']
         if save_patterns:
             items = split_config_str(save_patterns, num_items_per_line=2)
-            for lib_fname, save_mark in items:
-               _save_lib(notebooks, lib_fname, save_mark)
+            for lib_fname, tab in items:
+               library.save_tab(notebooks, lib_fname, tab, self.config.default_tab)
 
         save_mark = self.config.library['save_mark']
         lib_fname = self.config.library['save_filename']
         if save_mark and lib_fname:
-            _save_lib(notebooks, lib_fname, save_mark)
+            library.save_mark(notebooks, lib_fname, save_mark)
 
     def all(self):
         self.eval()
@@ -314,56 +315,6 @@ class Builder(object):
         self.html()
         self.pdf()
         self.pkg()
-
-def _save_lib(notebooks, lib_fname, save_mark):
-    logging.info('Matching with the partten: "%s"', save_mark)
-    with open(lib_fname, 'w') as f:
-        lib_name = os.path.dirname(lib_fname)
-        lib_name = lib_name.split('/')[-1]
-        f.write('# This file is generated automatically through:\n')
-        f.write('#    d2lbook build lib\n')
-        f.write('# Don\'t edit it directly\n\n')
-        f.write('import sys\n'+lib_name+' = sys.modules[__name__]\n\n')
-
-        for nb in notebooks:
-            blocks = get_code_to_save(nb, save_mark)
-            if blocks:
-                logging.info('Found %d blocks in %s', len(blocks), nb)
-                for block in blocks:
-                    logging.info(' --- %s', block[0])
-                    code = '# Defined in file: %s\n%s\n\n\n' %(
-                        nb, '\n'.join(block))
-                    f.write(code)
-        logging.info('Saved into %s', lib_fname)
-
-def get_code_to_save(input_fn, save_mark):
-    """get the code blocks (import, class, def) that will be saved"""
-    reader = notedown.MarkdownReader(match='strict')
-    with open(input_fn, 'r') as f:
-        nb = reader.read(f)
-    saved = []
-    for cell in nb.cells:
-        if cell.cell_type == 'code':
-            lines = cell.source.split('\n')
-            for i, l in enumerate(lines):
-                if l.strip().startswith('#') and save_mark in l:
-                    block = [lines[i+1]]
-                    # For code block only containing import statements (e.g., in
-                    # preface.md)
-                    if lines[i+1].startswith('import') or lines[i+1].startswith('from'):
-                        for j in range(i+2, len(lines)):
-                            block.append(lines[j])
-                    # For code blocks containing def or class
-                    else:
-                        for j in range(i+2, len(lines)):
-                            l = lines[j]
-                            if not l.startswith(' ') and len(l):
-                                break
-                            block.append(l)
-                    if len(block[-1]) == 0:
-                        del block[-1]
-                    saved.append(block)
-    return saved
 
 def update_ipynb_toc(root):
     """Change the toc code block into a list of clickable links"""

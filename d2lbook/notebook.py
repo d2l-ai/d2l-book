@@ -83,8 +83,8 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
         if not cell_tab:
             new_cells.append(new_cell)
         else:
-            if tab in cell_tab:
-                new_cell.metadata['tab'] = cell_tab
+            if cell_tab == ['all'] or tab in cell_tab:
+                new_cell.metadata['tab'] = 'all' if cell_tab == ['all'] else tab
                 matched_tab = True
                 # remove the tab from source
                 lines = new_cell.source.split('\n')
@@ -134,8 +134,13 @@ def _get_tab_panel(cells, tab, tab_id, default_tab):
 def _merge_tabs(nb: notebooknode.NotebookNode):
     """merge side-by-side tabs into a single one"""
     def _tab_status(cell, status):
-        if _get_cell_tab(cell):
-            return 1 if cell.cell_type == 'markdown' else 2
+        tab = _get_cell_tab(cell)
+        if tab:
+            if cell.cell_type == 'markdown':
+                return 1
+            if tab == 'all':
+                return 0
+            return 2
         return 0
     cell_groups = common.group_list(nb.cells, _tab_status)
     meta = [(in_tab, [cell.metadata['tab'] for cell in group] if in_tab else None
@@ -171,6 +176,7 @@ def add_html_tab(nb: notebooknode.NotebookNode, default_tab: str) -> notebooknod
             new_cells.extend(group)
         else:
             tabs = [cells[0].metadata['tab'] for cells in group]
+            print(tabs)
             div_class = "code" if group[0][0].cell_type == 'code' == 2 else "text"
             new_cells.append(_get_tab_bar(tabs, i, default_tab, div_class))
             for j, (tab, cells) in enumerate(zip(tabs, group)):
