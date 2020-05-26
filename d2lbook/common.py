@@ -4,7 +4,7 @@ from typing import Optional, List, Any, Callable, Tuple
 # Our special mark in markdown, e.g. :label:`chapter_intro`
 md_mark_pattern = re.compile(':([-\/\\._\w\d]+):(`[\ \*-\/\\\._\w\d]+`)?')
 # Same for md_mark_pattern, but for rst files
-rst_mark_pattern = re.compile(':([-\/\\._\w\d:]+):(``[\ \*-\/\\\._\w\d]+``)?')
+rst_mark_pattern = re.compile(':([-\/\\._\w\d]+):(``[\ \*-\/\\\._\w\d]+``)?')
 # The source code tab mark
 source_tab_pattern = re.compile('# *@tab +([\w\,\ ]+)')
 
