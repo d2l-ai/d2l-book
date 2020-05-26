@@ -2,6 +2,7 @@
 from typing import List
 from d2lbook import notebook
 import logging
+import os
 
 def _write_header(f):
     f.write('# This file is generated automatically through:\n')
