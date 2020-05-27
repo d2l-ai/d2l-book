@@ -180,6 +180,10 @@ discourse_js = r"""
 function discourse_embed() {
     $('a').each(function(){
         if ($(this).text().indexOf("Discussions") != -1) {
+            var pp = $(this).parent();
+            if (pp.is('h2')  || pp.is('li')) {
+                return;
+            }
             var pp = $(this).parent().parent();
             if (pp.hasClass('mdl-tabs__panel') && !pp.hasClass('is-active')) {
                 return;
