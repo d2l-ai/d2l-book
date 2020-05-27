@@ -100,7 +100,7 @@ def _process_rst(body):
                 line_j = lines[j]
                 if indented(line_j):
                     lines[j] = line_j[3:]
-                    if '.. raw:: html' in lines[j] or '.. only::' in lines[j]:
+                    if lines[j].strip().startswith('.. '):
                         lines[j] = '\n'+lines[j].strip()
                 elif not blank(line_j):
                     break
