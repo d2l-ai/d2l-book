@@ -247,6 +247,13 @@ class Builder(object):
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
         colab.add_button(self.config.colab, self.config.html_dir)
 
+    def _default_tab_dir(self, dirname):
+        tokens = dirname.split('/')
+        if self.config.tabs and '_' in tokens[-1]:
+            tokens[-1] =  '_'.join(tokens[-1].split('_')[:-1])
+            return '/'.join(tokens)
+        return dirname
+
     @_once
     def ipynb(self):
         self.eval()
@@ -258,13 +265,13 @@ class Builder(object):
     def colab(self):
         self.ipynb()
         colab.generate_notebooks(
-            self.config.colab, self.config.ipynb_dir, self.config.colab_dir)
+            self.config.colab, self._default_tab_dir(self.config.ipynb_dir), self.config.colab_dir)
 
     @_once
     def sagemaker(self):
         self.ipynb()
         sagemaker.generate_notebooks(
-            self.config.sagemaker, self.config.ipynb_dir, self.config.sagemaker_dir)
+            self.config.sagemaker, self._default_tab_dir(self.config.ipynb_dir), self.config.sagemaker_dir)
 
     @_once
     def linkcheck(self):
