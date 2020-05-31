@@ -176,7 +176,6 @@ def add_html_tab(nb: notebooknode.NotebookNode, default_tab: str) -> notebooknod
             new_cells.extend(group)
         else:
             tabs = [cells[0].metadata['tab'] for cells in group]
-            print(tabs)
             div_class = "code" if group[0][0].cell_type == 'code' == 2 else "text"
             new_cells.append(_get_tab_bar(tabs, i, default_tab, div_class))
             for j, (tab, cells) in enumerate(zip(tabs, group)):

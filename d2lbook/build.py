@@ -38,7 +38,9 @@ def _once(func):
     # An decorator that run a method only once
     def warp(self):
         name = func.__name__
-        if self.done[name]:
+        if self.config.tab:
+            name += '_' + self.config.tab
+        if name in self.done and self.done[name]:
             return
         full_name = 'd2lbook build ' + name
         tik = datetime.datetime.now()
@@ -55,7 +57,7 @@ class Builder(object):
         self.sphinx_opts = '-j 4'
         if config.build['warning_is_error'].lower() == 'true':
             self.sphinx_opts += ' -W'
-        self.done = dict((cmd, False) for cmd in commands)
+        self.done = {}
 
     def _find_md_files(self):
         build = self.config.build
@@ -263,15 +265,20 @@ class Builder(object):
 
     @_once
     def colab(self):
+        tab = self.config.tab
+        self.config.set_tab(self.config.default_tab)
         self.ipynb()
         colab.generate_notebooks(
-            self.config.colab, self._default_tab_dir(self.config.ipynb_dir), self.config.colab_dir)
-
+            self.config.colab, self.config.ipynb_dir, self.config.colab_dir)
+        self.config.set_tab(tab)
     @_once
     def sagemaker(self):
+        tab = self.config.tab
+        self.config.set_tab(self.config.default_tab)
         self.ipynb()
         sagemaker.generate_notebooks(
-            self.config.sagemaker, self._default_tab_dir(self.config.ipynb_dir), self.config.sagemaker_dir)
+            self.config.sagemaker, self.config.ipynb_dir, self.config.sagemaker_dir)
+        self.config.set_tab(tab)
 
     @_once
     def linkcheck(self):
@@ -291,12 +298,23 @@ class Builder(object):
 
     @_once
     def pkg(self):
-        self.ipynb()
         zip_fname = 'out.zip'
-        run_cmd(['cd', self.config.ipynb_dir, '&& zip -r',
-                 zip_fname, '*'])
-        shutil.move(os.path.join(self.config.ipynb_dir, zip_fname),
-                    self.config.pkg_fname)
+        if not self.config.tabs:
+            self.ipynb()
+            run_cmd(['cd', self.config.ipynb_dir, '&& zip -r',
+                     zip_fname, '*'])
+            shutil.move(os.path.join(self.config.ipynb_dir, zip_fname),
+                        self.config.pkg_fname)
+        else:
+            origin_tab = self.config.tab
+            for tab in self.config.tabs:
+                self.config.set_tab(tab)
+                self.ipynb()
+                run_cmd(['rm -rf', tab])
+                run_cmd(['cp -r', self.config.ipynb_dir, tab])
+            run_cmd(['zip -r', zip_fname]+self.config.tabs)
+            shutil.move(zip_fname, self.config.pkg_fname)
+            self.config.set_tab(origin_tab)
 
     @_once
     def lib(self):
@@ -327,6 +345,8 @@ def update_ipynb_toc(root):
     """Change the toc code block into a list of clickable links"""
     notebooks = find_files('**/*.ipynb', root)
     for fn in notebooks:
+        if os.stat(fn).st_size == 0:
+            continue
         with open(fn, 'r') as f:
             notebook = nbformat.read(f, as_version=4)
         for cell in notebook.cells:
