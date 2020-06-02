@@ -58,6 +58,7 @@ class Builder(object):
         if config.build['warning_is_error'].lower() == 'true':
             self.sphinx_opts += ' -W'
         self.done = {}
+        self._colab = colab.Colab(config)
 
     def _find_md_files(self):
         build = self.config.build
@@ -247,7 +248,7 @@ class Builder(object):
         self.sagemaker()
         run_cmd(['sphinx-build', self.config.rst_dir, self.config.html_dir,
                  '-b html -c', self.config.rst_dir, self.sphinx_opts])
-        colab.add_button(self.config.colab, self.config.html_dir)
+        self._colab.add_button(self.config.html_dir)
 
     def _default_tab_dir(self, dirname):
         tokens = dirname.split('/')
@@ -265,12 +266,18 @@ class Builder(object):
 
     @_once
     def colab(self):
-        tab = self.config.tab
-        self.config.set_tab(self.config.default_tab)
-        self.ipynb()
-        colab.generate_notebooks(
-            self.config.colab, self.config.ipynb_dir, self.config.colab_dir)
-        self.config.set_tab(tab)
+        def _run(tab):
+            self.ipynb()
+            self._colab.generate_notebooks(self.config.ipynb_dir,
+                                           self.config.colab_dir, tab)
+        if self.config.tab == 'all':
+            for tab in self.config.tabs:
+                self.config.set_tab(tab)
+                _run(tab)
+            self.config.set_tab('all')
+        else:
+            _run(self.config.tab)
+
     @_once
     def sagemaker(self):
         tab = self.config.tab
@@ -333,6 +340,18 @@ class Builder(object):
         lib_fname = self.config.library['save_filename']
         if save_mark and lib_fname:
             library.save_mark(notebooks, lib_fname, save_mark)
+
+        version = self.config.library['version']
+        version_fn = self.config.library['version_file']
+        if version and version_fn:
+            with open(version_fn, 'r') as f:
+                lines = f.read().split('\n')
+            for i, l in enumerate(lines):
+                if '__version__' in l:
+                    lines[i] = f'__version__ = "{version}"'
+                    logging.info(f'save {lines[i]} into {version_fn}')
+            with open(version_fn, 'w') as f:
+                f.write('\n'.join(lines))
 
     def all(self):
         self.eval()
