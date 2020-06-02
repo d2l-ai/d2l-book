@@ -226,6 +226,15 @@ function select_tab(i) {
         }
         $(this).find(".mdl-tabs__panel:eq("+i.toString()+")").addClass('is-active');
     });
+    $(".d2l-tabs").each(function(index){
+        var j;
+        for (j = 0; j < n; j++) {
+            if (j != i) {
+                $(this).find(".d2l-tabs__tab:eq("+j.toString()+")").hide();
+            }
+        }
+        $(this).find(".d2l-tabs__tab:eq("+i.toString()+")").show();
+    });
     $(".mdl-tabs__tab-bar").each(function(index){
         var j;
         for (j = 0; j < n; j++) {
@@ -239,6 +248,7 @@ function select_tab(i) {
 }
 
 $(document).ready(function () {
+  select_tab(0);
   $(".mdl-tabs__tab-bar").each(function(index){
     $(this).find(".mdl-tabs__tab:eq(0)").click(function() {
         select_tab(0);
