@@ -208,10 +208,6 @@ function discourse_embed() {
         }
     });
 }
-
-$(document).ready(function(){
-    discourse_embed();
-});
 """
 
 tabbar_js = r"""

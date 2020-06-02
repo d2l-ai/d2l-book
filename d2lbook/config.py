@@ -86,6 +86,16 @@ class Config():
                     ' in `config.init`. Examples: `rsts = index.rst' \
                     ' api/**/*.rst`.'
 
+
+    def iter_tab(self, fn):
+        if self.tab == 'all':
+            for tab in self.tabs:
+                self.set_tab(tab)
+                fn()
+            self.set_tab('all')
+        else:
+            fn()
+
     def set_tab(self, tab):
         assert tab in self.tabs + ['all'], f"{tab} doesn't exist in {self.tabs}"
         self.tab = tab
@@ -93,6 +103,7 @@ class Config():
         self.ipynb_dir = self._set_tab_dir(self.ipynb_dir, tab)
         self.rst_dir = self._set_tab_dir(self.rst_dir, tab)
         self.pdf_dir = self._set_tab_dir(self.pdf_dir, tab)
+        self.colab_dir = self._set_tab_dir(self.colab_dir, tab)
 
     def _default_tab_dir(self, dirname):
         tokens = dirname.split('/')

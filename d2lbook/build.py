@@ -266,17 +266,11 @@ class Builder(object):
 
     @_once
     def colab(self):
-        def _run(tab):
+        def _run():
             self.ipynb()
             self._colab.generate_notebooks(self.config.ipynb_dir,
-                                           self.config.colab_dir, tab)
-        if self.config.tab == 'all':
-            for tab in self.config.tabs:
-                self.config.set_tab(tab)
-                _run(tab)
-            self.config.set_tab('all')
-        else:
-            _run(self.config.tab)
+                                           self.config.colab_dir, self.config.tab)
+        self.config.iter_tab(_run)
 
     @_once
     def sagemaker(self):
@@ -364,11 +358,10 @@ def update_ipynb_toc(root):
     """Change the toc code block into a list of clickable links"""
     notebooks = find_files('**/*.ipynb', root)
     for fn in notebooks:
-        if os.stat(fn).st_size == 0:
+        nb = notebook.read(fn)
+        if not nb:
             continue
-        with open(fn, 'r') as f:
-            notebook = nbformat.read(f, as_version=4)
-        for cell in notebook.cells:
+        for cell in nb.cells:
             if (cell.cell_type == 'markdown' and '```toc' in cell.source):
                 md_cells = markdown.split_markdown(cell.source)
                 for c in md_cells:
@@ -381,7 +374,7 @@ def update_ipynb_toc(root):
                         c['type'] = 'markdown'
                 cell.source = markdown.join_markdown_cells(md_cells)
         with open(fn, 'w') as f:
-            f.write(nbformat.writes(notebook))
+            f.write(nbformat.writes(nb))
 
 def get_toc(root):
     """return a list of files in the order defined by TOC"""

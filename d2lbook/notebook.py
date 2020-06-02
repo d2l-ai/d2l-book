@@ -2,6 +2,7 @@
 
 from typing import Union, List, Optional
 
+import os
 import copy
 import notedown
 import nbformat
@@ -17,6 +18,13 @@ def create_new_notebook(nb: notebooknode.NotebookNode,
     new_nb = copy.deepcopy(nb)
     new_nb.cells = cells
     return new_nb
+
+def read(fname: str):
+    if not os.path.exists(fname) or os.stat(fname).st_size == 0:
+        return None
+    with open(fname, 'r') as f:
+        return nbformat.read(f, as_version=4)
+
 
 def read_markdown(source: Union[str, List[str]]) -> notebooknode.NotebookNode:
     """Returns a notebook from markdown source"""

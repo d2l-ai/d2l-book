@@ -14,6 +14,6 @@ def generate_notebooks(config, eval_dir, sagemaker_dir):
         with open(fn, 'r') as f:
             notebook = nbformat.read(f, as_version=4)
         update_notebook_kernel(notebook, config['kernel'])
-        insert_additional_installation(notebook, config)
+        # insert_additional_installation(notebook, config)
         with open(fn, 'w') as f:
             f.write(nbformat.writes(notebook))

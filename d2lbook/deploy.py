@@ -5,6 +5,7 @@ import argparse
 import shutil
 from d2lbook.utils import *
 from d2lbook.config import Config
+from d2lbook import colab
 
 __all__  = ['deploy']
 
@@ -31,9 +32,14 @@ class Deployer(object):
         self.config = config
 
     def colab(self):
-        if self.config.colab['github_repo']:
+        _colab = colab.Colab(self.config)
+        if not _colab.valid():
+            return
+        def _run():
+            repo = _colab.git_repo(self.config.tab)
             bash_fname = os.path.join(os.path.dirname(__file__), 'upload_github.sh')
-            run_cmd(['bash', bash_fname, self.config.colab_dir, self.config.colab['github_repo']])
+            run_cmd(['bash', bash_fname, self.config.colab_dir, repo])
+        self.config.iter_tab(_run)
 
     def sagemaker(self):
         if self.config.sagemaker['github_repo']:
