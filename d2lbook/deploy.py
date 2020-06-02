@@ -39,7 +39,10 @@ class Deployer(object):
             repo = _colab.git_repo(self.config.tab)
             bash_fname = os.path.join(os.path.dirname(__file__), 'upload_github.sh')
             run_cmd(['bash', bash_fname, self.config.colab_dir, repo])
+        tab = self.config.tab
+        self.config.set_tab('all')
         self.config.iter_tab(_run)
+        self.config.set_tab(tab)
 
     def sagemaker(self):
         if self.config.sagemaker['github_repo']:
