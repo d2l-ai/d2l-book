@@ -6,6 +6,7 @@ import shutil
 from d2lbook.utils import *
 from d2lbook.config import Config
 from d2lbook import colab
+from d2lbook import sagemaker
 
 __all__  = ['deploy']
 
