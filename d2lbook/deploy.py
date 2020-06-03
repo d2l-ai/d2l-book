@@ -45,10 +45,17 @@ class Deployer(object):
         self.config.set_tab(tab)
 
     def sagemaker(self):
-        if self.config.sagemaker['github_repo']:
+        _sagemaker = sagemaker.Sagemaker(self.config)
+        if not _sagemaker.valid():
+            return
+        def _run():
+            repo = _sagemaker.git_repo(self.config.tab)
             bash_fname = os.path.join(os.path.dirname(__file__), 'upload_github.sh')
-            run_cmd(['bash', bash_fname, self.config.sagemaker_dir, self.config.sagemaker['github_repo']])
-
+            run_cmd(['bash', bash_fname, self.config.sagemaker_dir, repo])
+        tab = self.config.tab
+        self.config.set_tab('all')
+        self.config.iter_tab(_run)
+        self.config.set_tab(tab)
 
 class GithubDeployer(Deployer):
     def __init__(self, config):

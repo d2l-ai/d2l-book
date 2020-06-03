@@ -59,6 +59,7 @@ class Builder(object):
             self.sphinx_opts += ' -W'
         self.done = {}
         self._colab = colab.Colab(config)
+        self._sagemaker = sagemaker.Sagemaker(config)
 
     def _find_md_files(self):
         build = self.config.build
@@ -274,12 +275,11 @@ class Builder(object):
 
     @_once
     def sagemaker(self):
-        tab = self.config.tab
-        self.config.set_tab(self.config.default_tab)
-        self.ipynb()
-        sagemaker.generate_notebooks(
-            self.config.sagemaker, self.config.ipynb_dir, self.config.sagemaker_dir)
-        self.config.set_tab(tab)
+        def _run():
+            self.ipynb()
+            self._sagemaker.generate_notebooks(self.config.ipynb_dir,
+                                               self.config.sagemaker_dir, self.config.tab)
+        self.config.iter_tab(_run)
 
     @_once
     def linkcheck(self):

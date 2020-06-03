@@ -104,6 +104,7 @@ class Config():
         self.rst_dir = self._set_tab_dir(self.rst_dir, tab)
         self.pdf_dir = self._set_tab_dir(self.pdf_dir, tab)
         self.colab_dir = self._set_tab_dir(self.colab_dir, tab)
+        self.sagemaker_dir = self._set_tab_dir(self.sagemaker_dir, tab)
 
     def _default_tab_dir(self, dirname):
         tokens = dirname.split('/')

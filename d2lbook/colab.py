@@ -6,6 +6,28 @@ import logging
 from d2lbook import notebook
 from d2lbook import utils
 
+def parse_repo_lib(repo_str, lib_str, version):
+    repo = utils.split_config_str(repo_str)
+    if len(repo) == 1 and len(repo[0]) == 1:
+        repos = {None:repo[0]}
+        libs = {None:utils.split_config_str(lib_str, 2)}
+    else:
+        repo = utils.split_config_str(repo_str, 2)
+        repos = {r[0]:r[1] for r in repo}
+        libs_list = utils.split_config_str(lib_str, 3)
+        libs = {}
+        for tab, pkg, install in libs_list:
+            if tab in libs:
+                libs[tab].append([pkg, install])
+            else:
+                libs[tab] = [[pkg, install]]
+    for tab in libs:
+        for i, l in enumerate(libs[tab]):
+            if '==version' in l[1]:
+                libs[tab][i][1] = l[1].replace('==version', f'=={version}')
+    return repos, libs
+
+
 class Colab():
     def __init__(self, config):
         self._valid = config.colab and config.colab['github_repo']
@@ -13,28 +35,8 @@ class Colab():
             return
         self.tabs = config.tabs
         self.config = config.colab
-
-        # tab to github repo and pkg installation
-        repo = utils.split_config_str(self.config['github_repo'])
-        if len(repo) == 1 and len(repo[0]) == 1:
-            self._repo = {config.default_tab:repo[0]}
-            self._libs = {config.default_tab:
-                          utils.split_config_str(self.config['libs'], 2)}
-        else:
-            repo = utils.split_config_str(self.config['github_repo'], 2)
-            self._repo = {r[0]:r[1] for r in repo}
-            libs = utils.split_config_str(self.config['libs'], 3)
-            self._libs = {}
-            for tab, pkg, install in libs:
-                if tab in self._libs:
-                    self._libs[tab].append([pkg, install])
-                else:
-                    self._libs[tab] = [[pkg, install]]
-        for tab in self._libs:
-            for i, l in enumerate(self._libs[tab]):
-                if '==version' in l[1]:
-                    self._libs[tab][i][1] = l[1].replace('==version', f'=={config.library["version"]}')
-
+        self._repo, self._libs = parse_repo_lib(
+            self.config['github_repo'], self.config['libs'], config.library["version"])
 
     def valid(self):
         return self._valid
