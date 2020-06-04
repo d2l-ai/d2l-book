@@ -126,7 +126,7 @@ def _get_tab_bar(tabs, tab_id, default_tab, div_class=''):
     code = f"```eval_rst\n\n.. raw:: html\n\n    <div class=\"mdl-tabs mdl-js-tabs mdl-js-ripple-effect\"><div class=\"mdl-tabs__tab-bar {div_class}\">"
     for i, tab in enumerate(tabs):
         active = 'is-active' if tab == default_tab else ''
-        code +=f'<a href="#{tab}-{tab_id}-{i}" class="mdl-tabs__tab {active}">{tab}</a>'
+        code +=f'<a href="#{tab}-{tab_id}-{i}" onclick="tagClick(\'{tab}\'); return false;" class="mdl-tabs__tab {active}">{tab}</a>'
     code += "</div>\n```"
     return nbformat.v4.new_markdown_cell(code)
 

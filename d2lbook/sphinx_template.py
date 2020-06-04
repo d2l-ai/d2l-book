@@ -123,6 +123,12 @@ var captureOutboundLink = function(url) {
      'hitCallback': function(){document.location = url;}
    });
 }
+
+var tagClick = function(tab) {
+    ga('send', 'event', 'tab', 'click', tab, {
+        'transport': 'beacon'
+    });
+}
 """
 
 shorten_sec_num = """
