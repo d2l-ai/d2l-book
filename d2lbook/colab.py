@@ -100,7 +100,7 @@ class Colab():
 def _get_colab_html(repo, url, text):
     id = text.replace(" ", "_")
     colab_link = f'https://colab.research.google.com/github/{repo}/blob/master/{url}'
-    colab_html = f'<a href="%s" onclick="captureOutboundLink(\'{colab_link}\'); return false;"> <button style="float:right", id="{id}" class="mdl-button mdl-js-button mdl-button--primary mdl-js-ripple-effect"> <i class=" fas fa-external-link-alt"></i> {text} </button></a><div class="mdl-tooltip" data-mdl-for="{id}"> Open the notebook in Colab</div>'
+    colab_html = f'<a href="{colab_link}" onclick="captureOutboundLink(\'{colab_link}\'); return false;"> <button style="float:right", id="{id}" class="mdl-button mdl-js-button mdl-button--primary mdl-js-ripple-effect"> <i class=" fas fa-external-link-alt"></i> {text} </button></a><div class="mdl-tooltip" data-mdl-for="{id}"> Open the notebook in Colab</div>'
     return colab_html
 
 def insert_additional_installation(notebook, lib, lib_header):
