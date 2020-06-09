@@ -372,6 +372,9 @@ pre.output {
   max-height: 400px;
   overflow-y: scroll;
 }
+div[class^="output"] {
+    margin-bottom: 1em;
+}
 """
 
 tabbar_css = r"""
