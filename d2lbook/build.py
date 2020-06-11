@@ -22,7 +22,7 @@ from d2lbook import rst as rst_lib
 __all__  = ['build']
 
 commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'ipynb',
-            'outputcheck', 'lib', 'colab', 'sagemaker', 'all', 'merge']
+            'outputcheck', 'tabcheck', 'lib', 'colab', 'sagemaker', 'all', 'merge']
 
 def build():
     parser = argparse.ArgumentParser(description='Build the documents')
@@ -81,13 +81,30 @@ class Builder(object):
             pure_markdowns, self.config.src_dir, self.config.eval_dir, 'md', 'md', latest_depend)
         return updated_notebooks, updated_markdowns
 
+    def tabcheck(self):
+        notebooks, _, _ = self._find_md_files()
+        error = False
+        for fn in notebooks:
+            with open(fn, 'r') as f:
+                nb = notebook.read_markdown(f.read())
+            nb = notebook.split_markdown_cell(nb)
+            for c in nb.cells:
+                tabs = notebook.get_cell_tab(c)
+                for tab in tabs:
+                    if tab and tab not in self.config.tabs + ['all']:
+                        logging.error(f"Unknown tab \"{tab}\" in {fn}")
+                        logging.error(f"The cell is {c}")
+                        error = True
+        if error:
+            exit(-1)
+
     def outputcheck(self):
         notebooks, _, _ = self._find_md_files()
         reader = notedown.MarkdownReader()
         error = False
         for fn in notebooks:
             with open(fn, 'r') as f:
-                notebook= reader.read(f)
+                notebook = reader.read(f)
             for c in notebook.cells:
                 if 'outputs' in c and len(c['outputs']):
                     logging.error("Found execution outputs in %s", fn)

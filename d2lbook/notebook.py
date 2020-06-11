@@ -61,7 +61,7 @@ def split_markdown_cell(nb: notebooknode.NotebookNode) -> notebooknode.NotebookN
     new_cells = [cell for cell in new_cells if cell.source]
     return create_new_notebook(nb, new_cells)
 
-def _get_cell_tab(cell: notebooknode.NotebookNode, default_tab: str='') -> List[str]:
+def get_cell_tab(cell: notebooknode.NotebookNode, default_tab: str='') -> List[str]:
     """Get the cell tab"""
     if 'tab' in cell.metadata:
         return cell.metadata['tab']
@@ -87,7 +87,7 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
     for i, cell in enumerate(nb.cells):
         new_cell = copy.deepcopy(cell)
         new_cell.metadata['origin_pos'] = i
-        cell_tab = _get_cell_tab(new_cell, default_tab)
+        cell_tab = get_cell_tab(new_cell, default_tab)
         if not cell_tab:
             new_cells.append(new_cell)
         else:
@@ -142,7 +142,7 @@ def _get_tab_panel(cells, tab, tab_id, default_tab):
 def _merge_tabs(nb: notebooknode.NotebookNode):
     """merge side-by-side tabs into a single one"""
     def _tab_status(cell, status):
-        tab = _get_cell_tab(cell)
+        tab = get_cell_tab(cell)
         if tab:
             if cell.cell_type == 'markdown':
                 return 1
