@@ -47,14 +47,14 @@ def split_markdown_cell(nb: notebooknode.NotebookNode) -> notebooknode.NotebookN
             new_cells.extend(group)
         else:
             src = '\n\n'.join(cell.source for cell in group)
-            md_cells = markdown.split_markdown(src)
-            is_tab_cell = lambda cell, _: cell['type']=='markdown' and 'class' in cell
+            md_cells = markdown.split_markdown(src)            
+            is_tab_cell = lambda cell, _: cell['class'] if (
+                cell['type']=='markdown' and 'class' in cell) else 'not_tab_cell'
             grouped_md_cells = common.group_list(md_cells, is_tab_cell)
-            for is_tab, md_group in grouped_md_cells:
+            for tab, md_group in grouped_md_cells:
                 new_cell = nbformat.v4.new_markdown_cell(
                     markdown.join_markdown_cells(md_group))
-                if is_tab:
-                    tab = md_group[0]['class']
+                if tab != 'not_tab_cell':                    
                     assert tab.startswith('`') and tab.endswith('`'), tab
                     new_cell.metadata['tab'] = [tab[1:-1]]
                 new_cells.append(new_cell)

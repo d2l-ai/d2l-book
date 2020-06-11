@@ -4,8 +4,7 @@ import unittest
 import nbconvert
 
 
-_markdown_src = r'''
-# Test
+_markdown_src = r'''# Test
 
 first para
 
@@ -47,8 +46,7 @@ $ ls
 ```
 '''
 
-_multi_tab_cell = r'''
-# Test
+_multi_tab_cell = r'''# Test
 
 ```{.input .python}
 #@tab python2, python3
