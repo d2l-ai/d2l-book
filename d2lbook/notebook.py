@@ -119,7 +119,7 @@ def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
     """    
     n = max([max([cell.metadata['origin_pos'] for cell in nb.cells])
              for nb in src_notebooks])
-    new_cells = [[] for _ in range(n+1)]
+    new_cells = [[] for _ in range(n+1)]  # type: ignore
     has_output = lambda cell: 'outputs' in cell and len(cell['outputs'])
     # for compatability
     tab_list = lambda tab: [tab] if type(tab) == str else tab
@@ -184,7 +184,7 @@ def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
             new_groups.append((False, cells))
             continue
         # the general case
-        group_dict = {tab:[] for tab in tabs}
+        group_dict = {tab:[] for tab in tabs}  # type: ignore
         for cell in cells:
             for tab in cell.metadata['tab']:
                 group_dict[tab].append(cell)
