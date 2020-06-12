@@ -384,6 +384,8 @@ div.mdl-tabs__tab-bar { justify-content: left; }
     font-size: 13px;
     height: 32px;
     line-height: 32px;
+    border-radius: 4px 4px 0 0;
+    letter-spacing: .5px;
 }
 
 .mdl-tabs .mdl-tabs__tab-bar {
