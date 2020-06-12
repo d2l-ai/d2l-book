@@ -391,7 +391,15 @@ div.mdl-tabs__tab-bar { justify-content: left; }
 }
 
 .mdl-tabs .mdl-tabs__tab-bar.text {
-    margin-bottom: 12px;
+    margin-bottom: .5em;
+}
+
+.mdl-tabs .mdl-tabs__tab-bar.code {
+    margin-bottom: -1em;
+}
+
+.mdl-tabs__tab.is-active {
+    background: rgb(0,0,0,.09);    
 }
 """
 

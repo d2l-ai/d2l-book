@@ -25,3 +25,17 @@ def group_list(list_obj: List[Any], status_fn: Callable[[Any, Any], Any]
         prev_status = cur_status
     ret.append((cur_status, list_obj[prev_pos:]))
     return ret
+
+def flatten(x):
+    """flatten a list of lists into a list."""
+    return [item for sublist in x for item in sublist]
+
+def print_list(x):
+    print(f'len: {len(x)}')
+    for i, y in enumerate(x):
+        print(f'{i}\t{y}')
+
+def print_dict(x):
+    print(f'len: {len(x)}')
+    for k in x:
+        print(f'{k}\t{x[k]}')

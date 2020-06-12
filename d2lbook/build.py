@@ -227,7 +227,7 @@ class Builder(object):
                        for fn in src_notebooks]
             if len(src_nbs) > 1:
                 dst_nb = notebook.merge_tab_notebooks(src_nbs)
-                dst_nb = notebook.add_html_tab(dst_nb, self.config.default_tab)
+                dst_nb = notebook.add_html_tab(dst_nb, self.config.tabs)
             else:
                 dst_nb = src_nbs[0]
             mkdir(os.path.dirname(merged))
