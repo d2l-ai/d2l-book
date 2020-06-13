@@ -1,5 +1,5 @@
 import argparse
-from d2lbook import markdown
+from d2lbook import markdown, common
 import glob
 import re
 import sys
@@ -21,13 +21,13 @@ _tab_re = re.compile('# *@tab +([\w]+)')
 
 def _get_cell_tab(cell):
     if cell['type'] != 'code':
-        return None
+        return []
     if not '.input' in cell['class'] and not 'python' in cell['class']:
-        return None
-    match = _tab_re.search(cell['source'])
+        return []
+    match = common.source_tab_pattern.search(cell['source'])
     if match:
-        return match[1]
-    return 'default'
+        return [tab.strip() for tab in match[1].split(',')]
+    return ['default']
 
 def _activate_tab(filename, tab):
     with open(filename, 'r') as f:
@@ -37,7 +37,7 @@ def _activate_tab(filename, tab):
         cell_tab = _get_cell_tab(cell)
         if not cell_tab:
             continue
-        if tab == 'all' or cell_tab == 'all' or cell_tab == tab:
+        if tab == 'all' or cell_tab == ['all'] or tab in cell_tab:
             # activate
             cell['class'] = '{.python .input}'
         else: # disactivate
