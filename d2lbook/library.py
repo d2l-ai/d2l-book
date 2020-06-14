@@ -48,18 +48,17 @@ def _save_code(input_fn, output_fp, save_mark=None, tab=None, default_tab=None):
                         block = [lines[i+1]]
                     else:
                         block = lines[i:i+2]
-                    # For code block only containing import statements (e.g., in
-                    # preface.md)
-                    if lines[i+1].startswith('import') or lines[i+1].startswith('from'):
-                        for j in range(i+2, len(lines)):
+                    for j in range(i+2, len(lines)):
+                        l = lines[j]
+                        if not l.startswith(' ') and len(l):
                             block.append(lines[j])
-                    # For code blocks containing def or class
-                    else:
-                        for j in range(i+2, len(lines)):
-                            l = lines[j]
-                            if not l.startswith(' ') and len(l):
-                                break
-                            block.append(l)
+                        else:
+                            for k in range(j, len(lines)):
+                                if lines[k].startswith(' ') or not len(lines[k]):
+                                    block.append(lines[k])
+                                else:
+                                    break
+                            break
                     if len(block[-1]) == 0:
                         del block[-1]
                     saved.append(block)
