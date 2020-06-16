@@ -15,8 +15,11 @@ commands = ['html', 'pdf', 'pkg', 'colab', 'sagemaker', 'all']
 def deploy():
     parser = argparse.ArgumentParser(description='Deploy documents')
     parser.add_argument('commands', nargs='+', choices=commands)
+    parser.add_argument('--s3', help='s3 bucket')
     args = parser.parse_args(sys.argv[2:])
     config = Config()
+    if args.s3:
+        config.deploy['s3_bucket'] = args.s3
     if config.deploy['s3_bucket']:
         deployer = S3Deployer(config)
     elif config.deploy['github_repo']:
@@ -85,8 +88,6 @@ class S3Deployer(Deployer):
     def html(self):
         bash_fname = os.path.join(os.path.dirname(__file__), 'upload_doc_s3.sh')
         run_cmd(['bash', bash_fname, self.config.html_dir, self.config.deploy['s3_bucket']])
-        self.colab()
-        self.sagemaker()
 
     def pdf(self):
         url = self.config.deploy['s3_bucket']
