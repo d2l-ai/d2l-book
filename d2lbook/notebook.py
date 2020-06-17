@@ -48,14 +48,14 @@ def split_markdown_cell(nb: notebooknode.NotebookNode) -> notebooknode.NotebookN
             new_cells.extend(group)
         else:
             src = '\n\n'.join(cell.source for cell in group)
-            md_cells = markdown.split_markdown(src)            
+            md_cells = markdown.split_markdown(src)
             is_tab_cell = lambda cell, _: cell['class'] if (
                 cell['type']=='markdown' and 'class' in cell) else 'not_tab_cell'
             grouped_md_cells = common.group_list(md_cells, is_tab_cell)
             for tab, md_group in grouped_md_cells:
                 new_cell = nbformat.v4.new_markdown_cell(
                     markdown.join_markdown_cells(md_group))
-                if tab != 'not_tab_cell':                    
+                if tab != 'not_tab_cell':
                     assert tab.startswith('`') and tab.endswith('`'), tab
                     new_cell.metadata['tab'] = [
                         t.strip() for t in tab[1:-1].split(',')]
@@ -85,6 +85,15 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
     A `origin_pos` property is added to the metadata for each cell, which
     records its position in the original notebook `nb`.
     """
+    has_tab = False
+    if tab != default_tab:
+        for cell in nb.cells:
+            if tab in get_cell_tab(cell):
+                has_tab = True
+                break
+    if not has_tab:
+        return None
+
     matched_tab = False
     new_cells = []
     for i, cell in enumerate(nb.cells):
@@ -116,7 +125,7 @@ def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
     """Merge the tab notebooks into a single one.
 
     The reserved function of get_tab_notebook.
-    """    
+    """
     n = max([max([cell.metadata['origin_pos'] for cell in nb.cells])
              for nb in src_notebooks])
     new_cells = [[] for _ in range(n+1)]  # type: ignore
@@ -126,7 +135,7 @@ def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
     for nb in src_notebooks:
         for cell in nb.cells:
             cell = copy.deepcopy(cell)
-            p = cell.metadata['origin_pos']            
+            p = cell.metadata['origin_pos']
             if len(new_cells[p]):
                 if has_output(new_cells[p][-1]) or has_output(cell):
                     new_cells[p].append(cell)
@@ -163,11 +172,11 @@ def _get_tab_panel(cells, tab, tab_id, default_tab):
 
 def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
     """merge side-by-side tabs into a single one.
-    
-    Returns a list of item, an item can be (False, a list of not-in-tab-cell) or 
+
+    Returns a list of item, an item can be (False, a list of not-in-tab-cell) or
     (True, a list of (tab_name, a list of cell-in-this-tab))
     """
-    tab_status = lambda cell, _: 1 if get_cell_tab(cell) else 0        
+    tab_status = lambda cell, _: 1 if get_cell_tab(cell) else 0
     cell_groups = common.group_list(nb.cells, tab_status)
     new_groups = []
     for in_tab, cells in cell_groups:
@@ -195,11 +204,11 @@ def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
 def add_html_tab(nb: notebooknode.NotebookNode, tabs: List[str]) -> notebooknode.NotebookNode:
     """Add html codes for the tabs"""
     cell_groups = _merge_tabs(nb, tabs)
-    all_tabs = common.flatten([[tab for tab, _ in group] 
+    all_tabs = common.flatten([[tab for tab, _ in group]
         for in_tab, group in cell_groups if in_tab])
-    # If there is only one tab, assume it's the default tab. 
+    # If there is only one tab, assume it's the default tab.
     if len(set(all_tabs)) <= 1:
-        return nb        
+        return nb
     new_cells = []
     for i, (in_tab, group) in enumerate(cell_groups):
         if not in_tab:
@@ -210,7 +219,7 @@ def add_html_tab(nb: notebooknode.NotebookNode, tabs: List[str]) -> notebooknode
             for _, cells in group:
                 if cells[0].cell_type != "code":
                     div_class = "text"
-            new_cells.append(_get_tab_bar(cur_tabs, i, tabs[0], div_class))            
+            new_cells.append(_get_tab_bar(cur_tabs, i, tabs[0], div_class))
             for j, (tab, cells) in enumerate(group):
                 new_cells.extend(_get_tab_panel(cells, tab, f'{i}-{j}', tabs[0]))
             new_cells.append(nbformat.v4.new_markdown_cell(
