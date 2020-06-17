@@ -91,8 +91,9 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
             if tab in get_cell_tab(cell):
                 has_tab = True
                 break
-    if not has_tab:
-        return None
+        if not has_tab:
+            return None
+
 
     matched_tab = False
     new_cells = []
