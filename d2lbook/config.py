@@ -97,7 +97,8 @@ class Config():
             fn()
 
     def set_tab(self, tab):
-        assert tab in self.tabs + ['all'], f"{tab} doesn't exist in {self.tabs}"
+        if tab:
+            assert tab in self.tabs + ['all'], f"{tab} doesn't exist in {self.tabs}"
         self.tab = tab
         self.eval_dir = self._set_tab_dir(self.eval_dir, tab)
         self.ipynb_dir = self._set_tab_dir(self.ipynb_dir, tab)
