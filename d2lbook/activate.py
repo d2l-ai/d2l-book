@@ -1,5 +1,5 @@
 import argparse
-from d2lbook import markdown, common
+from d2lbook import markdown, common, config
 import glob
 import re
 import sys
@@ -11,15 +11,17 @@ commands = ['tab']
 def activate():
     parser = argparse.ArgumentParser(description='Activate tabs')
     parser.add_argument('tab', default='all', help='the tab to activate')
-    parser.add_argument('filename', help='the markdown files to activate')
+    parser.add_argument('filename', nargs='+', help='the markdown files to activate')
     args = parser.parse_args(sys.argv[2:])
 
-    for fn in glob.glob(args.filename):
-        _activate_tab(fn, args.tab)
+    cf = config.Config()
+    for fn in args.filename:
+        for f in glob.glob(fn):
+            _activate_tab(f, args.tab, cf.default_tab)
 
 _tab_re = re.compile('# *@tab +([\w]+)')
 
-def _get_cell_tab(cell):
+def _get_cell_tab(cell, default_tab):
     if cell['type'] != 'code':
         return []
     if not '.input' in cell['class'] and not 'python' in cell['class']:
@@ -27,14 +29,16 @@ def _get_cell_tab(cell):
     match = common.source_tab_pattern.search(cell['source'])
     if match:
         return [tab.strip() for tab in match[1].split(',')]
-    return ['default']
+    return [default_tab]
 
-def _activate_tab(filename, tab):
+def _activate_tab(filename, tab, default_tab):
+    if tab == 'default':
+        tab = default_tab
     with open(filename, 'r') as f:
         src = f.read()
     cells = markdown.split_markdown(src)
     for cell in cells:
-        cell_tab = _get_cell_tab(cell)
+        cell_tab = _get_cell_tab(cell, default_tab)
         if not cell_tab:
             continue
         if tab == 'all' or cell_tab == ['all'] or tab in cell_tab:
