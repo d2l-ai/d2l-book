@@ -32,7 +32,7 @@ class Translate(object):
         if commit == 'latest':
             self.commit = str(self.repo.commit())[:7]
         else:
-            self.repo.git.reset(commit)
+            self.repo.git.reset(commit, '--hard')
             self.commit = commit[:7]
 
     def translate(self, filename: str):
