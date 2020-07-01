@@ -3,7 +3,6 @@ import glob
 import sys
 import os
 from d2lbook import config, markdown, utils
-import git
 import logging
 
 def translate():
@@ -19,6 +18,7 @@ def translate():
 
 class Translate(object):
     def __init__(self, cf: config.Config, commit: str):
+        import git
         self.config = cf
         self.repo_dir = os.path.join(cf.tgt_dir, 'origin_repo')
         self.url = 'https://github.com/' + cf.build['origin_repo']
