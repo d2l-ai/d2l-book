@@ -352,7 +352,7 @@ class Builder(object):
         if save_mark and lib_fname:
             library.save_mark(notebooks, lib_fname, save_mark)
 
-        version = self.config.library['version']
+        version = self.config.project['release']
         version_fn = self.config.library['version_file']
         if version and version_fn:
             with open(version_fn, 'r') as f:

@@ -23,8 +23,8 @@ def parse_repo_lib(repo_str, lib_str, version):
                 libs[tab] = [[pkg, install]]
     for tab in libs:
         for i, l in enumerate(libs[tab]):
-            if '==version' in l[1]:
-                libs[tab][i][1] = l[1].replace('==version', f'=={version}')
+            if '==RELEASE' in l[1]:
+                libs[tab][i][1] = l[1].replace('==RELEASE', f'=={version}')
     return repos, libs
 
 
@@ -36,7 +36,7 @@ class Colab():
         self.tabs = config.tabs
         self.config = config.colab
         self._repo, self._libs = parse_repo_lib(
-            self.config['github_repo'], self.config['libs'], config.library["version"])
+            self.config['github_repo'], self.config['libs'], config.project["release"])
 
     def valid(self):
         return self._valid
