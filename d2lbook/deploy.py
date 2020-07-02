@@ -42,7 +42,8 @@ class Deployer(object):
         def _run():
             repo = _colab.git_repo(self.config.tab)
             bash_fname = os.path.join(os.path.dirname(__file__), 'upload_github.sh')
-            run_cmd(['bash', bash_fname, self.config.colab_dir, repo])
+            run_cmd(['bash', bash_fname, self.config.colab_dir, repo,
+                     self.config.project['release']])
         tab = self.config.tab
         self.config.set_tab('all')
         self.config.iter_tab(_run)
@@ -55,7 +56,8 @@ class Deployer(object):
         def _run():
             repo = _sagemaker.git_repo(self.config.tab)
             bash_fname = os.path.join(os.path.dirname(__file__), 'upload_github.sh')
-            run_cmd(['bash', bash_fname, self.config.sagemaker_dir, repo])
+            run_cmd(['bash', bash_fname, self.config.sagemaker_dir, repo,
+                     self.config.project['release']])
         tab = self.config.tab
         self.config.set_tab('all')
         self.config.iter_tab(_run)
@@ -79,7 +81,7 @@ class GithubDeployer(Deployer):
 
     def __del__(self):
         bash_fname = os.path.join(os.path.dirname(__file__), 'upload_github.sh')
-        run_cmd(['bash', bash_fname, self.git_dir, self.config.deploy['github_repo']])
+        run_cmd(['bash', bash_fname, self.git_dir, self.config.deploy['github_repo'], self.config.project['release']])
 
 class S3Deployer(Deployer):
     def __init__(self, config):

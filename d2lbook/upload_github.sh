@@ -2,10 +2,10 @@
 # Upload files into a github repo.
 set -e
 
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
     echo "ERROR: needs two arguments. "
     echo "Sample usage:"
-    echo "   $0 notebooks d2l-ai/notebooks"
+    echo "   $0 notebooks d2l-ai/notebooks version"
     exit -1
 fi
 
@@ -35,5 +35,5 @@ fi
 cd ${REPO_DIR}
 git config --global push.default simple
 git add -f --all .
-git diff-index --quiet HEAD || git commit -am "Uploaded by d2lbook"
+git diff-index --quiet HEAD || git commit -am "Version $3"
 git push origin master
