@@ -24,7 +24,10 @@ class Config():
         self.project = config['project']
         self.html = config['html']
         self.pdf = config['pdf']
-        self.library = config['library']
+        self.library = dict(config['library'].items())
+        for tab in self.tabs:
+            if f'library-{tab}' in config:
+                self.library[tab] = dict(config[f'library-{tab}'].items())
         self.colab = config['colab']
         self.sagemaker = config['sagemaker']
 

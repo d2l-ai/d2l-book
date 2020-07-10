@@ -29,6 +29,17 @@ def save_tab(notebooks: List[str], lib_fname: str, tab: str, default_tab: str):
            _save_code(nb, f, tab=tab, default_tab=default_tab)
         logging.info('Saved into %s', lib_fname)
 
+def save_version(version: str, version_fn: str):
+    if version and version_fn:
+        with open(version_fn, 'r') as f:
+            lines = f.read().split('\n')
+        for i, l in enumerate(lines):
+            if '__version__' in l:
+                lines[i] = f'__version__ = "{version}"'
+                logging.info(f'save {lines[i]} into {version_fn}')
+        with open(version_fn, 'w') as f:
+            f.write('\n'.join(lines))
+
 def _save_code(input_fn, output_fp, save_mark=None, tab=None, default_tab=None):
     """get the code blocks (import, class, def) that will be saved"""
     with open(input_fn, 'r') as f:

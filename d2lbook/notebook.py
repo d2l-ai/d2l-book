@@ -138,11 +138,9 @@ def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
             cell = copy.deepcopy(cell)
             p = cell.metadata['origin_pos']
             if len(new_cells[p]):
-                if has_output(new_cells[p][-1]) or has_output(cell):
+                if has_output(new_cells[p][-1]) or has_output(cell) or new_cells[p][-1].source != cell.source:
                     new_cells[p].append(cell)
                 else:
-                    assert new_cells[p][-1].source == cell.source, [
-                        new_cells[p][-1].source, cell.source]
                     if 'tab' in cell.metadata:
                         tab = tab_list(new_cells[p][-1].metadata['tab'])
                         tab.extend(tab_list(cell.metadata['tab']))

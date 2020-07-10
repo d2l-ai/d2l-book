@@ -139,8 +139,7 @@ class Builder(object):
                          get_time_diff(eval_tik, tik), src, tgt)
             mkdir(os.path.dirname(tgt))
             run_cells = self.config.build['eval_notebook'].lower()=='true'
-            process_and_eval_notebook(src, tgt, run_cells, tab=self.config.tab,
-                                      default_tab=self.config.default_tab)
+            _process_and_eval_notebook(src, tgt, run_cells, self.config)
             tok = datetime.datetime.now()
             logging.info('Finished in %s', get_time_diff(tik, tok))
 
@@ -341,28 +340,29 @@ class Builder(object):
         notebooks_enabled, _, _ = self._find_md_files()
         notebooks = [nb for nb in notebooks if nb in notebooks_enabled]
 
+        # deprecated, can be removed later
         save_patterns = self.config.library['save_patterns']
         if save_patterns:
             items = split_config_str(save_patterns, num_items_per_line=2)
             for lib_fname, tab in items:
                library.save_tab(notebooks, lib_fname, tab, self.config.default_tab)
 
+        for tab in self.config.tabs:
+            if tab in self.config.library:
+                library.save_tab(notebooks, self.config.library[tab]['lib_file'],
+                                 tab, self.config.default_tab)
+                if 'alias' in self.config.library[tab]:
+                    with open(self.config.library[tab]['lib_file'], 'a') as f:
+                        f.write('# Alias defined in config.ini\n')
+                        f.write(self.config.library[tab]['alias'].strip()+'\n\n')
+
         save_mark = self.config.library['save_mark']
         lib_fname = self.config.library['save_filename']
         if save_mark and lib_fname:
             library.save_mark(notebooks, lib_fname, save_mark)
 
-        version = self.config.project['release']
-        version_fn = self.config.library['version_file']
-        if version and version_fn:
-            with open(version_fn, 'r') as f:
-                lines = f.read().split('\n')
-            for i, l in enumerate(lines):
-                if '__version__' in l:
-                    lines[i] = f'__version__ = "{version}"'
-                    logging.info(f'save {lines[i]} into {version_fn}')
-            with open(version_fn, 'w') as f:
-                f.write('\n'.join(lines))
+        library.save_version(self.config.project['release'],
+                             self.config.library['version_file'])
 
     def all(self):
         self.eval()
@@ -419,20 +419,30 @@ def get_subpages(input_fn):
                         subpages.append(fn)
     return subpages
 
-def process_and_eval_notebook(input_fn, output_fn, run_cells, timeout=20*60,
-                              lang='python', tab=None, default_tab=None):
+def _process_and_eval_notebook(input_fn, output_fn, run_cells, config,
+                               timeout=20*60, lang='python'):
     with open(input_fn, 'r') as f:
         md = f.read()
     nb = notebook.read_markdown(md)
+    tab = config.tab
     if tab:
         # get the tab
         nb = notebook.split_markdown_cell(nb)
-        nb = notebook.get_tab_notebook(nb, tab, default_tab)
+        nb = notebook.get_tab_notebook(nb, tab, config.default_tab)
         if not nb:
             logging.info(f"Skip to eval tab {tab} for {input_fn}")
             # write an emtpy file to track the dependencies
             open(output_fn, 'w')
             return
+        # replace alias
+        if tab in config.library and 'reverse_alias' in config.library[tab]:
+            for cell in nb.cells:
+                if cell.cell_type == 'code':
+                    for line in config.library[tab]['reverse_alias'].splitlines():
+                        if line:
+                            p, r = line.split(' -> ')
+                            cell.source = re.sub(p, r, cell.source)
+
     # evaluate
     if run_cells:
         # change to the notebook directory to resolve the relpaths properly
