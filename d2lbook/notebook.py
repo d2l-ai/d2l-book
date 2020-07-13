@@ -94,7 +94,6 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
         if not has_tab:
             return None
 
-
     matched_tab = False
     new_cells = []
     for i, cell in enumerate(nb.cells):
@@ -121,6 +120,10 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
         return None
     return create_new_notebook(nb, new_cells)
 
+def _has_output(cell):
+    """Return if a cell has output"""
+    return 'outputs' in cell and len(cell['outputs'])
+
 def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
                         ) -> notebooknode.NotebookNode:
     """Merge the tab notebooks into a single one.
@@ -130,7 +133,7 @@ def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
     n = max([max([cell.metadata['origin_pos'] for cell in nb.cells])
              for nb in src_notebooks])
     new_cells = [[] for _ in range(n+1)]  # type: ignore
-    has_output = lambda cell: 'outputs' in cell and len(cell['outputs'])
+
     # for compatability
     tab_list = lambda tab: [tab] if type(tab) == str else tab
     for nb in src_notebooks:
@@ -138,7 +141,7 @@ def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
             cell = copy.deepcopy(cell)
             p = cell.metadata['origin_pos']
             if len(new_cells[p]):
-                if has_output(new_cells[p][-1]) or has_output(cell) or new_cells[p][-1].source != cell.source:
+                if _has_output(new_cells[p][-1]) or _has_output(cell) or new_cells[p][-1].source != cell.source:
                     new_cells[p].append(cell)
                 else:
                     if 'tab' in cell.metadata:
@@ -195,7 +198,16 @@ def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
         group_dict = {tab:[] for tab in tabs}  # type: ignore
         for cell in cells:
             for tab in cell.metadata['tab']:
-                group_dict[tab].append(cell)
+                if (len(group_dict[tab]) and
+                    group_dict[tab][-1].cell_type == 'code' and
+                    not _has_output(group_dict[tab][-1]) and
+                    cell.cell_type == 'code'):
+                    # merge two consecutive code blocks. The first
+                    # code should not contain output
+                    cell.source = group_dict[tab][-1].source + '\n' + cell.source
+                    group_dict[tab][-1] = cell
+                else:
+                    group_dict[tab].append(cell)
         group = [(tab, group_dict[tab]) for tab in tabs if len(group_dict[tab])]
         new_groups.append((True, group))
     return new_groups
