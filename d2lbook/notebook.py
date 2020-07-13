@@ -204,7 +204,7 @@ def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
                     cell.cell_type == 'code'):
                     # merge two consecutive code blocks. The first
                     # code should not contain output
-                    cell.source = group_dict[tab][-1].source + '\n' + cell.source
+                    cell.source = group_dict[tab][-1].source + '\n\n' + cell.source
                     group_dict[tab][-1] = cell
                 else:
                     group_dict[tab].append(cell)
