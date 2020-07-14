@@ -198,18 +198,27 @@ def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
         group_dict = {tab:[] for tab in tabs}  # type: ignore
         for cell in cells:
             for tab in cell.metadata['tab']:
-                if (len(group_dict[tab]) and
-                    group_dict[tab][-1].cell_type == 'code' and
-                    not _has_output(group_dict[tab][-1]) and
-                    cell.cell_type == 'code'):
-                    # merge two consecutive code blocks. The first
-                    # code should not contain output
-                    cell.source = group_dict[tab][-1].source + '\n\n' + cell.source
-                    group_dict[tab][-1] = cell
-                else:
-                    group_dict[tab].append(cell)
+                group_dict[tab].append(cell)
         group = [(tab, group_dict[tab]) for tab in tabs if len(group_dict[tab])]
         new_groups.append((True, group))
+    # merge two consecutive code blocks. The first
+    # code should not contain output
+    for is_tab, group in new_groups:
+        if not is_tab:
+            continue
+        for i, (tab, tab_cell) in enumerate(group):
+            new_tab_cell = []
+            for cell in tab_cell:
+                if (len(new_tab_cell) > 0 and
+                    new_tab_cell[-1].cell_type == 'code' and
+                    cell.cell_type == 'code' and
+                    not _has_output(new_tab_cell[-1])):
+                    cell = copy.deepcopy(cell)
+                    cell.source = new_tab_cell[-1].source + '\n\n' + cell.source
+                    new_tab_cell[-1] = cell
+                else:
+                    new_tab_cell.append(cell)
+            group[i] = (tab, new_tab_cell)
     return new_groups
 
 def add_html_tab(nb: notebooknode.NotebookNode, tabs: List[str]) -> notebooknode.NotebookNode:
