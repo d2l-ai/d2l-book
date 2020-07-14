@@ -77,6 +77,5 @@ def _save_code(input_fn, output_fp, save_mark=None, tab=None, default_tab=None):
     if saved:
         logging.info('Found %d blocks in %s', len(saved), input_fn)
         for block in saved:
-            logging.info(' --- %s', block[0])
             code = '# Defined in file: %s\n%s\n\n\n' %(input_fn, '\n'.join(block))
             output_fp.write(code)

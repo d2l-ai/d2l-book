@@ -349,12 +349,22 @@ class Builder(object):
 
         for tab in self.config.tabs:
             if tab in self.config.library:
-                library.save_tab(notebooks, self.config.library[tab]['lib_file'],
+                tab_lib = self.config.library[tab]
+                library.save_tab(notebooks, tab_lib['lib_file'],
                                  tab, self.config.default_tab)
-                if 'alias' in self.config.library[tab]:
-                    with open(self.config.library[tab]['lib_file'], 'a') as f:
+                alias = ''
+                if 'alias' in tab_lib:
+                    alias += tab_lib['alias'].strip()+'\n'
+                if 'simple_alias' in tab_lib and 'lib_name' in tab_lib:
+                    names = []
+                    for l in tab_lib['simple_alias'].splitlines():
+                        names += [n.strip() for n in l.split(',')]
+                    alias += '\n'.join([f'{n} = {tab_lib["lib_name"]}.{n}'
+                                        for n in names if n])
+                if alias:
+                    with open(tab_lib['lib_file'], 'a') as f:
                         f.write('# Alias defined in config.ini\n')
-                        f.write(self.config.library[tab]['alias'].strip()+'\n\n')
+                        f.write(alias+'\n\n')
 
         save_mark = self.config.library['save_mark']
         lib_fname = self.config.library['save_filename']
@@ -431,17 +441,26 @@ def _process_and_eval_notebook(input_fn, output_fn, run_cells, config,
         nb = notebook.get_tab_notebook(nb, tab, config.default_tab)
         if not nb:
             logging.info(f"Skip to eval tab {tab} for {input_fn}")
-            # write an emtpy file to track the dependencies
+            # write an empty file to track the dependencies
             open(output_fn, 'w')
             return
         # replace alias
-        if tab in config.library and 'reverse_alias' in config.library[tab]:
+        if tab in config.library:
+            tab_lib = config.library[tab]
+            patterns = []
+            if 'reverse_alias' in tab_lib:
+                patterns += [line.split(' -> ') for line in tab_lib[
+                    'reverse_alias'].splitlines() if line]
+            if 'simple_alias' in tab_lib and 'lib_name' in tab_lib:
+                for line in tab_lib['simple_alias'].splitlines():
+                    for n in line.split(','):
+                        n = n.strip()
+                        if n:
+                            patterns.append((f'd2l.{n}', f'{tab_lib["lib_name"]}.{n}'))
             for cell in nb.cells:
                 if cell.cell_type == 'code':
-                    for line in config.library[tab]['reverse_alias'].splitlines():
-                        if line:
-                            p, r = line.split(' -> ')
-                            cell.source = re.sub(p, r, cell.source)
+                    for p, r in patterns:
+                        cell.source = re.sub(p, r, cell.source)
 
     # evaluate
     if run_cells:
