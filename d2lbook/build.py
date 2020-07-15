@@ -352,19 +352,7 @@ class Builder(object):
                 tab_lib = self.config.library[tab]
                 library.save_tab(notebooks, tab_lib['lib_file'],
                                  tab, self.config.default_tab)
-                alias = ''
-                if 'alias' in tab_lib:
-                    alias += tab_lib['alias'].strip()+'\n'
-                if 'simple_alias' in tab_lib and 'lib_name' in tab_lib:
-                    names = []
-                    for l in tab_lib['simple_alias'].splitlines():
-                        names += [n.strip() for n in l.split(',')]
-                    alias += '\n'.join([f'{n} = {tab_lib["lib_name"]}.{n}'
-                                        for n in names if n])
-                if alias:
-                    with open(tab_lib['lib_file'], 'a') as f:
-                        f.write('# Alias defined in config.ini\n')
-                        f.write(alias+'\n\n')
+                library.save_alias(tab_lib)
 
         save_mark = self.config.library['save_mark']
         lib_fname = self.config.library['save_filename']
@@ -446,21 +434,7 @@ def _process_and_eval_notebook(input_fn, output_fn, run_cells, config,
             return
         # replace alias
         if tab in config.library:
-            tab_lib = config.library[tab]
-            patterns = []
-            if 'reverse_alias' in tab_lib:
-                patterns += [line.split(' -> ') for line in tab_lib[
-                    'reverse_alias'].splitlines() if line]
-            if 'simple_alias' in tab_lib and 'lib_name' in tab_lib:
-                for line in tab_lib['simple_alias'].splitlines():
-                    for n in line.split(','):
-                        n = n.strip()
-                        if n:
-                            patterns.append((f'd2l.{n}', f'{tab_lib["lib_name"]}.{n}'))
-            for cell in nb.cells:
-                if cell.cell_type == 'code':
-                    for p, r in patterns:
-                        cell.source = re.sub(p, r, cell.source)
+            nb = library.replace_alias(nb, config.library[tab])
 
     # evaluate
     if run_cells:

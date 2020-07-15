@@ -3,6 +3,8 @@ from typing import List
 from d2lbook import notebook
 import logging
 import os
+import copy
+import re
 
 def _write_header(f):
     f.write('# This file is generated automatically through:\n')
@@ -79,3 +81,61 @@ def _save_code(input_fn, output_fp, save_mark=None, tab=None, default_tab=None):
         for block in saved:
             code = '# Defined in file: %s\n%s\n\n\n' %(input_fn, '\n'.join(block))
             output_fp.write(code)
+
+def _parse_mapping_config(config: str):
+    """Parse config such as: numpy -> asnumpy, reshape, ...
+    Return a list of string pairs
+    """
+    mapping = []
+    for line in config.splitlines():
+        for term in line.split(','):
+            term = term.strip()
+            if not term:
+                continue
+            if len(term.split('->')) == 2:
+                a, b = term.split('->')
+                mapping.append((a.strip(), b.strip()))
+            else:
+                mapping.append((term, term))
+    return mapping
+
+def save_alias(tab_lib):
+    """Save alias into the library file"""
+    alias = ''
+    if 'alias' in tab_lib:
+        alias += tab_lib['alias'].strip()+'\n'
+    if 'lib_name' in tab_lib:
+        lib_name = tab_lib["lib_name"]
+        if 'simple_alias' in tab_lib:
+            mapping = _parse_mapping_config(tab_lib['simple_alias'])
+            alias += '\n'+'\n'.join([f'{a} = {lib_name}.{b}' for a, b in mapping])
+        if 'fluent_alias' in tab_lib:
+            mapping = _parse_mapping_config(tab_lib['fluent_alias'])
+            alias += '\n'+'\n'.join([f'{a} = lambda x, *args, **kwargs: x.{b}(*args, **kwargs)'
+                                for a, b in mapping])
+    if alias:
+        lib_file = tab_lib['lib_file']
+        with open(lib_file, 'a') as f:
+            logging.info(f'Wrote {len(alias.splitlines())} alias into {lib_file}')
+            f.write('# Alias defined in config.ini\n')
+            f.write(alias+'\n\n')
+
+def replace_alias(nb, tab_lib):
+    nb = copy.deepcopy(nb)
+    patterns = []
+    if 'reverse_alias' in tab_lib:
+        patterns += _parse_mapping_config(tab_lib['reverse_alias'])
+    if 'lib_name' in tab_lib:
+        lib_name = tab_lib["lib_name"]
+        if 'simple_alias' in tab_lib:
+            mapping = _parse_mapping_config(tab_lib['simple_alias'])
+            patterns += [(f'd2l.{a}', f'{lib_name}.{b}') for a, b in mapping]
+        if 'fluent_alias' in tab_lib:
+            mapping = _parse_mapping_config(tab_lib['fluent_alias'])
+            patterns += [(rf'd2l.{a}\(([\w\_\d]+)\,\ *', rf'\1.{b}(')
+                         for a, b in mapping]
+    for cell in nb.cells:
+        if cell.cell_type == 'code':
+            for p, r in patterns:
+                cell.source = re.sub(p, r, cell.source)
+    return nb
