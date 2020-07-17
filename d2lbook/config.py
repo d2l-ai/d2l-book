@@ -19,6 +19,7 @@ class Config():
             assert self.tabs, 'No tabs is specified'
             if self.tab != 'all':
                 assert self.tab in tabs, self.tab + ' is not found in tabs, which are ' + tabs
+        self.translation = config['translation']
         self.build = config['build']
         self.deploy = config['deploy']
         self.project = config['project']

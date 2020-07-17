@@ -74,3 +74,10 @@ def join_markdown_cells(cells: List[Dict]) -> str:
             cell_src += [c['fence']+c['class'], c['source'], c['fence']]
         src.append('\n'.join(cell_src))
     return '\n\n'.join(src)+'\n'
+
+def split_paragraphs(text: str) -> List[str]:
+    """Split text into a list of paragraphs"""
+    lines = text.splitlines()
+    groups = common.group_list(lines, lambda a, _: a.strip()=='')
+    return ['\n'.join(item) for empty_line, item in groups if not empty_line]
+
