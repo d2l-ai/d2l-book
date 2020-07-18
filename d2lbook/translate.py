@@ -63,7 +63,7 @@ class Translate(object):
                 f.write(f2.read())
 
         tgt_fn = os.path.join(self.config.src_dir, filename)
-        if self.translator:
+        if self.translator and ext == '.md':
             self.translator.translate_markdown(src_fn, tgt_fn)
             logging.info(f'Write translated results into {tgt_fn}')
         else:
@@ -71,8 +71,6 @@ class Translate(object):
                 with open(tgt_fn, 'w') as f:
                     logging.info(f'Create an empty file {tgt_fn}')
 
-# token = r'[\ \*-\/\\\._\w\d]+'
-token = r'[\:\^\(\)\{\}\[\]\ \*-\/\\\.,_=\w\d]+'
 
 class MarkdownText(object):
     def __init__(self):
@@ -90,12 +88,14 @@ class MarkdownText(object):
         return text
 
     def encode(self, text:str) -> str:
-        patterns = [rf'(`{token}`)', rf'(:{token}:`{token}`)',
-                    rf'(\${token}\$)']
+        patterns = [rf'(`{markdown.token}`)',  # code
+                    rf'(:{markdown.token}:`{markdown.token}`)', # mark
+                    rf'(\${markdown.token}\$)', # inline match
+                    rf'(\[{markdown.basic_token}\]\(markdown.basic_token\))', # link
+                    ]
         for p in patterns:
             text = self._encode_pattern(p, text)
         return text
-
 
     def decode(self, text:str) -> str:
         for key, value in self.mapping:
@@ -107,29 +107,18 @@ class Translator(object):
     def translate(self, text: str):
         raise NotImplemented()
 
-    def _translate_markdown_paragraph(self, paragraph):
-        groups = common.group_list(
-            paragraph.splitlines(),
-            lambda a, _: a.strip().startswith(':') and a.strip().endswith('`'))
-        results = []
-        markdown_text = MarkdownText()
-        for mark, item in groups:
-            text = '\n'.join(item)
-            if not mark:
-                text = markdown_text.decode(self.translate(
-                    markdown_text.encode(text)))
-            results.append(text)
-        return '\n'.join(results)
-
     def translate_markdown(self, src_fn: str, tgt_fn: str):
         with open(src_fn, 'r') as f:
             cells = markdown.split_markdown(f.read())
         for cell in cells:
             if cell['type'] == 'markdown':
-                translated_text = '\n\n'.join([
-                    self._translate_markdown_paragraph(p)
-                    for p in markdown.split_paragraphs(cell['source'])])
-                cell['source'] = translated_text
+                text_cells = markdown.split_text(cell['source'])
+                for t_cell in text_cells:
+                    if t_cell['type'] in ['text', 'list', 'title']:
+                        markdown_text = MarkdownText()
+                        t_cell['source'] = markdown_text.decode(self.translate(
+                            markdown_text.encode(t_cell['source'])))
+                cell['source'] = markdown.join_text(text_cells)
         with open(tgt_fn, 'w') as f:
             f.write(markdown.join_markdown_cells(cells))
 

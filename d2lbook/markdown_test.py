@@ -1,4 +1,4 @@
-from d2lbook import markdown
+from d2lbook import markdown, common
 import unittest
 
 _markdown_src = r'''# Test
@@ -28,6 +28,38 @@ $ ls
 ````
 '''
 
+_markdown_text_src = r'''# Test
+:label:`sec`
+
+THis is good. A paragraph.
+
+![Image](../a.png)
+:label:`a.png`
+
+Assume A
+
+$$
+X^{(N)} = \sum_{i=1}^N X_i.
+$$
+:label:`adsf`
+
+and
+
+$$\|\boldsymbol{x}\|_2 = \sqrt{\sum_{i=1}^n x_i^2}.$$
+
+Here is a list
+- sadf
+  wer
+  - asdf sadf
+    sd sdf
+- asdf
+
+1. wer asdf
+  asdf asdf
+
+## Test 2
+'''
+
 class TestMarkdown(unittest.TestCase):
 
     def test_split(self):
@@ -43,6 +75,16 @@ class TestMarkdown(unittest.TestCase):
         cells = markdown.split_markdown(_markdown_src)
         src = markdown.join_markdown_cells(cells)
         self.assertEqual(_markdown_src, src)
+
+    def test_split_text(self):
+        cells = markdown.split_text(_markdown_text_src)
+        common.print_list(cells)
+
+    def test_join_text(self):
+        cells = markdown.split_text(_markdown_text_src)
+        src = markdown.join_text(cells)
+        self.assertEqual(_markdown_text_src, src)
+
 
 if __name__ == '__main__':
     unittest.main()

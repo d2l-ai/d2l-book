@@ -1,7 +1,9 @@
 """utilities to handle markdown
 """
+import re
 from d2lbook import common
 from typing import List, Dict
+import logging
 
 def split_markdown(source: str) -> List[Dict[str, str]]:
     """Split markdown into a list of text and code cells.
@@ -75,9 +77,95 @@ def join_markdown_cells(cells: List[Dict]) -> str:
         src.append('\n'.join(cell_src))
     return '\n\n'.join(src)+'\n'
 
-def split_paragraphs(text: str) -> List[str]:
-    """Split text into a list of paragraphs"""
+basic_token = r'[\ \*-\/\\\._\w\d\:/]+'
+token = r'[\:\<\>\^\(\)\{\}\[\]\ \*-\/\\\.,_=\w\d]+'
+
+def _is_mark(lines):
+    if isinstance(lines, str):
+        lines = [lines]
+    for l in lines:
+        l = l.strip()
+        if l:
+            m = re.match(rf':{token}:(`{token}`)?', l)
+            if m is None or m.span() != (0, len(l)):
+                return False
+    return True
+
+def _list(line, prev_prefix):
+    m = re.match(r' *[-\*\+] *', line) or re.match(r' *[\w]+\. *', line)
+    if m:
+        return m[0]
+    if prev_prefix == '':
+        return ''
+    if prev_prefix is not None and len(
+        re.match(r' *', line)[0]) > len(re.match(r' *', prev_prefix)[0]):
+        return prev_prefix
+    return ''
+
+def split_text(text: str) -> List[Dict[str, str]]:
+    """Split text into a list of paragraphs
+
+    1. type: text, list, image, title, equation
+    1. source:
+    1. prefix:
+    1. mark:
+    """
+    # split into paragraphs
     lines = text.splitlines()
     groups = common.group_list(lines, lambda a, _: a.strip()=='')
-    return ['\n'.join(item) for empty_line, item in groups if not empty_line]
+    paras = ['\n'.join(item) for empty_line, item in groups if not empty_line]
 
+    def _fallback(p, type):
+        logging.warn(f'Wrong {type} format:\n'+p)
+        cells.append({'type':'text', 'source':p})
+
+    cells = []
+    for p in paras:
+        lines = p.splitlines() + ['']
+        p += '\n'
+        if p.startswith('#'):
+            # parse title
+            if not _is_mark(lines[1:]):
+                _fallback(p, 'title')
+            else:
+                m = re.match(r'#+ *', lines[0])
+                cells.append(
+                    {'type':'title', 'prefix':m[0],
+                    'source':lines[0][m.span()[1]:],
+                    'mark':'\n'.join(lines[1:])})
+        elif p.startswith('$$'):
+            # parse equations
+            m = re.findall(r'\$\$', p)
+            if len(m) != 2:
+                _fallback(p, 'equation')
+            else:
+                cells.append(
+                    {'type':'equation',  'source':p})
+        elif p.startswith('!['):
+            # parse images
+            if not lines[0].strip().endswith(')') or not _is_mark(lines[1:]):
+                _fallback(p, 'image')
+            else:
+                cells.append(
+                    {'type':'image',  'source':p})
+        else:
+            groups = common.group_list(lines, _list)
+            for prefix, item in groups:
+                source = '\n'.join(item)[len(prefix):]
+                if prefix == '':
+                    cells.append({'type':'text', 'source':source})
+                else:
+                    cells.append({'type':'list', 'prefix':prefix,
+                                  'source':source})
+    return cells
+
+def join_text(cells) -> str:
+    paras = []
+    for cell in cells:
+        l = cell['source']
+        if 'prefix' in cell:
+            l = cell['prefix'] + l
+        if 'mark' in cell:
+            l += '\n' + cell['mark']
+        paras.append(l)
+    return '\n'.join(paras)
