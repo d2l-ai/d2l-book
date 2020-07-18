@@ -91,7 +91,7 @@ class MarkdownText(object):
         patterns = [rf'(`{markdown.token}`)',  # code
                     rf'(:{markdown.token}:`{markdown.token}`)', # mark
                     rf'(\${markdown.token}\$)', # inline match
-                    rf'(\[{markdown.basic_token}\]\(markdown.basic_token\))', # link
+                    rf'(\[{markdown.basic_token}\]\({markdown.basic_token}\))', # link
                     ]
         for p in patterns:
             text = self._encode_pattern(p, text)
@@ -113,11 +113,17 @@ class Translator(object):
         for cell in cells:
             if cell['type'] == 'markdown':
                 text_cells = markdown.split_text(cell['source'])
+                common.print_list(text_cells)
                 for t_cell in text_cells:
-                    if t_cell['type'] in ['text', 'list', 'title']:
+                    if t_cell['source'] and (
+                        t_cell['type'] in ['text', 'list', 'title']):
+                        text = t_cell['source']
                         markdown_text = MarkdownText()
                         t_cell['source'] = markdown_text.decode(self.translate(
-                            markdown_text.encode(t_cell['source'])))
+                            markdown_text.encode(text)))
+                        if text.endswith('\n'):
+                            t_cell['source'] += '\n'
+
                 cell['source'] = markdown.join_text(text_cells)
         with open(tgt_fn, 'w') as f:
             f.write(markdown.join_markdown_cells(cells))

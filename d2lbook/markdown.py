@@ -71,10 +71,12 @@ def join_markdown_cells(cells: List[Dict]) -> str:
                 cell_src.append(f':begin_tab:{c["class"]}')
             cell_src.append(c['source'])
             if 'class' in c:
+                if cell_src[-1].endswith('\n'):
+                    cell_src[-1] = cell_src[-1][:-1]
                 cell_src.append(':end_tab:')
         else:
             cell_src += [c['fence']+c['class'], c['source'], c['fence']]
-        src.append('\n'.join(cell_src))
+        src.append('\n'.join(cell_src).strip())
     return '\n\n'.join(src)+'\n'
 
 basic_token = r'[\ \*-\/\\\._\w\d\:/]+'
@@ -92,9 +94,13 @@ def _is_mark(lines):
     return True
 
 def _list(line, prev_prefix):
-    m = re.match(r' *[-\*\+] *', line) or re.match(r' *[\w]+\. *', line)
+    m = re.match(r' *[-\*\+] *', line) or re.match(r' *[\d]+\. *', line)
     if m:
-        return m[0]
+        if prev_prefix is not None and len(prev_prefix.split('__')) == 2:
+            p = int(prev_prefix.split('__')[1]) + 1
+        else:
+            p = 0
+        return m[0] + '__' + str(p)
     if prev_prefix == '':
         return ''
     if prev_prefix is not None and len(
@@ -151,6 +157,8 @@ def split_text(text: str) -> List[Dict[str, str]]:
         else:
             groups = common.group_list(lines, _list)
             for prefix, item in groups:
+                if len(prefix.split('__')) == 2:
+                    prefix = prefix.split('__')[0]
                 source = '\n'.join(item)[len(prefix):]
                 if prefix == '':
                     cells.append({'type':'text', 'source':source})

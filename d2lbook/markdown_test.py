@@ -57,7 +57,8 @@ Here is a list
 1. wer asdf
   asdf asdf
 
-## Test 2
+1. Run the code in this section. Change the conditional statement `x == y` in this section to `x < y` or `x > y`, and then see what kind of tensor you can get.
+1. Replace the two tensors that operate by element in the broadcasting mechanism with other shapes, e.g., 3-dimensional tensors. Is the result the same as expected?
 '''
 
 class TestMarkdown(unittest.TestCase):
