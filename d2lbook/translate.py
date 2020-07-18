@@ -5,6 +5,7 @@ import os
 from d2lbook import config, markdown, utils, common
 import logging
 import re
+import glob
 
 def translate():
     parser = argparse.ArgumentParser(description='Translate to another language')
@@ -49,20 +50,29 @@ class Translate(object):
 
     def translate(self, filename: str):
         src_fn = os.path.join(self.repo_dir, filename)
+        fns = glob.glob(src_fn)
+        if not len(fns):
+            logging.warn('Not found '+src_fn)
+            return
+        if len(fns) > 1:
+            for fn in fns:
+                self.translate(os.path.relpath(fn, self.repo_dir))
+            return
+        src_fn = fns[0]
+        filename = os.path.relpath(src_fn, self.repo_dir)
         basename, ext = os.path.splitext(filename)
-        tgt_fn = os.path.join(self.config.src_dir,
+        origin_tgt_fn = os.path.join(self.config.src_dir,
                               basename+'_origin'+ext)
-        header = (f'---\nsource: {self.url}/blob/master/{filename}\n'
-                  f'commit: {self.commit}\n---\n\n')
-
-        logging.info(f'Write original text into {tgt_fn}')
-        utils.mkdir(os.path.dirname(tgt_fn))
-        with open(tgt_fn, 'w') as f:
-            f.write(header)
+        tgt_fn = os.path.join(self.config.src_dir, filename)
+        if os.path.exists(tgt_fn):
+            logging.warn(f'File {tgt_fn} already exists, skip translation.')
+            return
+        logging.info(f'Write original text into {origin_tgt_fn}')
+        utils.mkdir(os.path.dirname(origin_tgt_fn))
+        with open(origin_tgt_fn, 'w') as f:
             with open(src_fn, 'r') as f2:
                 f.write(f2.read())
 
-        tgt_fn = os.path.join(self.config.src_dir, filename)
         if self.translator and ext == '.md':
             self.translator.translate_markdown(src_fn, tgt_fn)
             logging.info(f'Write translated results into {tgt_fn}')
@@ -82,14 +92,14 @@ class MarkdownText(object):
             # another solution is use some special tokens and put them in
             # the terminology. unfortuanly it doesn't work for amazon transcribe.
             # So use a number instead, hope it will not be translated.
-            token = '73214_'+str(len(self.mapping))
+            token = str(732293614+len(self.mapping))
             text = text.replace(m, token)
             self.mapping.append((m, token))
         return text
 
     def encode(self, text:str) -> str:
-        patterns = [rf'(`{markdown.token}`)',  # code
-                    rf'(:{markdown.token}:`{markdown.token}`)', # mark
+        patterns = [rf'(:{markdown.token}:`{markdown.token}`)', # mark
+                    rf'(`{markdown.token}`)',  # code
                     rf'(\${markdown.token}\$)', # inline match
                     rf'(\[{markdown.basic_token}\]\({markdown.basic_token}\))', # link
                     ]
@@ -107,26 +117,31 @@ class Translator(object):
     def translate(self, text: str):
         raise NotImplemented()
 
-    def translate_markdown(self, src_fn: str, tgt_fn: str):
-        with open(src_fn, 'r') as f:
-            cells = markdown.split_markdown(f.read())
+    def _translate_markdown(self, text):
+        cells = markdown.split_markdown(text)
         for cell in cells:
             if cell['type'] == 'markdown':
-                text_cells = markdown.split_text(cell['source'])
-                common.print_list(text_cells)
-                for t_cell in text_cells:
-                    if t_cell['source'] and (
-                        t_cell['type'] in ['text', 'list', 'title']):
-                        text = t_cell['source']
-                        markdown_text = MarkdownText()
-                        t_cell['source'] = markdown_text.decode(self.translate(
-                            markdown_text.encode(text)))
-                        if text.endswith('\n'):
-                            t_cell['source'] += '\n'
+                if 'class' in cell and cell['class']:
+                    # it may have nested code blocks
+                    cell['source'] = self._translate_markdown(cell['source'])
+                else:
+                    text_cells = markdown.split_text(cell['source'])
+                    for t_cell in text_cells:
+                        if t_cell['source'] and (
+                            t_cell['type'] in ['text', 'list', 'title']):
+                            text = t_cell['source']
+                            markdown_text = MarkdownText()
+                            t_cell['source'] = markdown_text.decode(self.translate(
+                                markdown_text.encode(text)))
+                            if text.endswith('\n'):
+                                t_cell['source'] += '\n'
+                    cell['source'] = markdown.join_text(text_cells)
+        return markdown.join_markdown_cells(cells)
 
-                cell['source'] = markdown.join_text(text_cells)
-        with open(tgt_fn, 'w') as f:
-            f.write(markdown.join_markdown_cells(cells))
+    def translate_markdown(self, src_fn: str, tgt_fn: str):
+        with open(src_fn, 'r') as r:
+            with open(tgt_fn, 'w') as w:
+                w.write(self._translate_markdown(r.read()))
 
 class AWS(Translator):
     """Use Amazon Translate"""

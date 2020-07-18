@@ -80,7 +80,7 @@ def join_markdown_cells(cells: List[Dict]) -> str:
     return '\n\n'.join(src)+'\n'
 
 basic_token = r'[\ \*-\/\\\._\w\d\:/]+'
-token = r'[\:\<\>\^\(\)\{\}\[\]\ \*-\/\\\.,_=\w\d]+'
+token = r'[\|\'\:\;\<\>\^\(\)\{\}\[\]\ \*-\/\\\.,_=\w\d]+'
 
 def _is_mark(lines):
     if isinstance(lines, str):
@@ -111,7 +111,7 @@ def _list(line, prev_prefix):
 def split_text(text: str) -> List[Dict[str, str]]:
     """Split text into a list of paragraphs
 
-    1. type: text, list, image, title, equation
+    1. type: text, list, image, title, equation, table
     1. source:
     1. prefix:
     1. mark:
@@ -154,6 +154,16 @@ def split_text(text: str) -> List[Dict[str, str]]:
             else:
                 cells.append(
                     {'type':'image',  'source':p})
+        elif p.startswith('|'):
+            # parse table
+            for i, l in enumerate(lines):
+                if not l.startswith('|'):
+                    break
+            if not _is_mark(lines[i:]):
+                _fallback(p, 'equation')
+            else:
+                cells.append(
+                    {'type':'table',  'source':p})
         else:
             groups = common.group_list(lines, _list)
             for prefix, item in groups:
