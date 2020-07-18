@@ -8,8 +8,8 @@ stage("Build and Publish") {
       conda activate d2l-book-build
       pip install .
       python -m unittest d2lbook/*_test.py
-      pip install mypy
-      mypy --ignore-missing-imports d2lbook/*_test.py
+      # pip install mypy
+      # mypy --ignore-missing-imports d2lbook/*_test.py
       cd docs
       rm -rf _build
       pip install matplotlib numpy mypy
