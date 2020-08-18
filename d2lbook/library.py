@@ -28,12 +28,12 @@ def save_tab(notebooks: List[str], lib_fname: str, tab: str, default_tab: str):
     with open(lib_fname, 'w') as f:
         _write_header(f)
         for nb in notebooks:
-           _save_code(nb, f, tab=tab, default_tab=default_tab)
+            _save_code(nb, f, tab=tab, default_tab=default_tab)
         logging.info('Saved into %s', lib_fname)
 
 def save_version(version: str, version_fn: str):
     if version and version_fn:
-        with open(version_fn, 'r') as f:
+        with open(version_fn, 'r', encoding='UTF-8') as f:
             lines = f.read().split('\n')
         for i, l in enumerate(lines):
             if '__version__' in l:
@@ -44,7 +44,7 @@ def save_version(version: str, version_fn: str):
 
 def _save_code(input_fn, output_fp, save_mark=None, tab=None, default_tab=None):
     """get the code blocks (import, class, def) that will be saved"""
-    with open(input_fn, 'r') as f:
+    with open(input_fn, 'r', encoding='UTF-8') as f:
         nb = notebook.read_markdown(f.read())
     if tab:
         nb = notebook.get_tab_notebook(nb, tab, default_tab)

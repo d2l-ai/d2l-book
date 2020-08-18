@@ -403,7 +403,7 @@ def get_subpages(input_fn):
     """read toc in input_fn, returns what it contains"""
     subpages = []
     reader = notedown.MarkdownReader()
-    with open(input_fn, 'r') as f:
+    with open(input_fn, 'r', encoding='UTF-8') as f:
         nb = reader.read(f)
     for cell in nb.cells:
         if (cell.cell_type == 'code' and

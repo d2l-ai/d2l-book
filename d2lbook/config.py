@@ -7,10 +7,10 @@ class Config():
         config = configparser.ConfigParser()
         default_config_name = os.path.join(
             os.path.dirname(__file__), 'config_default.ini')
-        config.read(default_config_name)
+        config.read(default_config_name, encoding='UTF-8')
         if os.path.exists(config_fname):
             logging.info('Load configure from %s', config_fname)
-            config.read(config_fname)
+            config.read(config_fname, encoding='UTF-8')
         tabs = config['build']['tabs']
         self.tabs = [tab.strip() for tab in tabs.lower().split(',')] if tabs else []
         self.default_tab = self.tabs[0] if self.tabs else None
