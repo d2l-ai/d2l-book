@@ -443,6 +443,12 @@ def _process_and_eval_notebook(input_fn, output_fn, run_cells, config,
         os.chdir(os.path.join(cwd, os.path.dirname(output_fn)))
         notedown.run(nb, timeout)
         os.chdir(cwd)
+    # change stderr output to stdout output
+    for cell in nb.cells:
+        if cell.cell_type == 'code' and 'outputs' in cell:
+            for out in cell['outputs']:
+                if 'name' in out and out['name'] == 'stderr':
+                    out['name'] = 'stdout'
     # write
     nb['metadata'].update({'language_info':{'name':lang}})
     with open(output_fn, 'w') as f:
