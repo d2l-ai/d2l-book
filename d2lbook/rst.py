@@ -169,6 +169,7 @@ def _process_rst(body):
             if match is None:
                 new_line += line[pos:]
                 break
+            # e.g., case :math:`x`, :numref:`y`, match[0] = ':math:'
             elif match[2] is None:
                 end = match.end()
                 new_line += line[pos:end]
