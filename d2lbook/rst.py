@@ -166,9 +166,15 @@ def _process_rst(body):
         pos, new_line = 0, ''
         while True:
             match = common.rst_mark_pattern.search(line, pos)
-            if match is None or match[2] is None:
+            if match is None:
                 new_line += line[pos:]
                 break
+            elif match[2] is None:
+                end = match.end()
+                new_line += line[pos:end]
+                pos = end
+                continue
+
             start, end = match.start(), match.end()
             # e.g., origin=':label:``fig_jupyter``', key='label', value='fig_jupyter'
             origin, key, value = match[0], match[1], match[2]
