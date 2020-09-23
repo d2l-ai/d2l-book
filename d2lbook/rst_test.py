@@ -61,8 +61,9 @@ develop/index
 
 ![Estimating the length of a foot](../img/koebel.jpg)
 :width:`400px`
-'''
 
+$x=1$, :numref:`sec_2`
+'''
 
 class TestRst(unittest.TestCase):
 
@@ -70,4 +71,9 @@ class TestRst(unittest.TestCase):
     def test_convert_notebook(self):
         nb = notebook.read_markdown(_markdown_src)
         body, _ = rst.convert_notebook(nb, {})
-        # print(body)
+        lines = body.split('\n')
+
+        for l in lines:
+            if l.startswith(':math:`x=1`'):
+                self.assertEqual(l, ':math:`x=1`, :numref:`sec_2`')
+
