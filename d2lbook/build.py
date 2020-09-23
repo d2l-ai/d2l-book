@@ -446,9 +446,16 @@ def _process_and_eval_notebook(input_fn, output_fn, run_cells, config,
     # change stderr output to stdout output
     for cell in nb.cells:
         if cell.cell_type == 'code' and 'outputs' in cell:
+            outputs = []
             for out in cell['outputs']:
+                if ('data' in out and 'text/plain' in out['data'] and
+                    out['data']['text/plain'].startswith('HBox')):
+                    # that's tqdm progress bar cannot displayed properly.
+                    continue
                 if 'name' in out and out['name'] == 'stderr':
                     out['name'] = 'stdout'
+                outputs.append(out)
+            cell['outputs'] = outputs
     # write
     nb['metadata'].update({'language_info':{'name':lang}})
     with open(output_fn, 'w') as f:
