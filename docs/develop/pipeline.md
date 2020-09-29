@@ -14,7 +14,7 @@ Then our building pipeline runs the following steps to publish the artifacts.
    we use .md file as source format is because it's easy to review the source
    changes. We evaluate every time to guarantee every notebook is
    executable. This evaluation step may be time consuming, we can
-- Assume every notebook can be executed in 10 minutes, we may use multiple
+   - Assume every notebook can be executed in 10 minutes, we may use multiple
      GPUs to accelerate the execution
    - If the source .md file hasn't change since last evaluation, we can reuse
      the cached .ipynb file to avoid execution again.
