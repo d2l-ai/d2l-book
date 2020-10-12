@@ -28,9 +28,11 @@ def build():
     parser = argparse.ArgumentParser(description='Build the documents')
     parser.add_argument('commands', nargs='+', choices=commands)
     parser.add_argument('--tab', default=None, help='The tab to build, if multi-tab is enabled.')
+    parser.add_argument('--timeout', type=int,default=1200,help="Timeout for excution. Default: 1200 (s). Set timeout -1 to disable timeout.")
     args = parser.parse_args(sys.argv[2:])
     config = Config(tab=args.tab)
-    builder = Builder(config)
+    timeout = args.timeout
+    builder = Builder(config, timeout)
     for cmd in args.commands:
         getattr(builder, cmd)()
 
@@ -51,8 +53,9 @@ def _once(func):
     return warp
 
 class Builder(object):
-    def __init__(self, config):
+    def __init__(self, config, timeout):
         self.config = config
+        self.timeout = timeout
         mkdir(self.config.tgt_dir)
         self.sphinx_opts = '-j 4'
         if config.build['warning_is_error'].lower() == 'true':
@@ -139,7 +142,7 @@ class Builder(object):
                          get_time_diff(eval_tik, tik), src, tgt)
             mkdir(os.path.dirname(tgt))
             run_cells = self.config.build['eval_notebook'].lower()=='true'
-            _process_and_eval_notebook(src, tgt, run_cells, self.config)
+            _process_and_eval_notebook(src, tgt, run_cells, self.config, self.timeout)
             tok = datetime.datetime.now()
             logging.info('Finished in %s', get_time_diff(tik, tok))
 
