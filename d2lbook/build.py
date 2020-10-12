@@ -28,7 +28,7 @@ def build():
     parser = argparse.ArgumentParser(description='Build the documents')
     parser.add_argument('commands', nargs='+', choices=commands)
     parser.add_argument('--tab', default=None, help='The tab to build, if multi-tab is enabled.')
-    parser.add_argument('--timeout',default=20*60,help="Timeout for excution. Default: 1200 (s). Set timeout -1 to disable timeout.")
+    parser.add_argument('--timeout', type=int,default=1200,help="Timeout for excution. Default: 1200 (s). Set timeout -1 to disable timeout.")
     args = parser.parse_args(sys.argv[2:])
     config = Config(tab=args.tab)
     timeout = args.timeout
