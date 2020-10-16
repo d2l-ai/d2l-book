@@ -20,10 +20,15 @@ git clone git@github.com:${REPO}.git ${REPO_DIR}
 
 # remove all except for README.md and .git.
 tmp=$(mktemp -d)
-mv ${REPO_DIR}/README.md $tmp/
+
+if [[ -f "${REPO_DIR}/README.md" ]]; then
+    mv ${REPO_DIR}/README.md $tmp/
+fi
 mv ${REPO_DIR}/.git $tmp/
 rm -rf ${REPO_DIR}/*
-mv $tmp/README.md ${REPO_DIR}/
+if [[ -f "$tmp/README.md" ]]; then
+    mv $tmp/README.md ${REPO_DIR}/
+fi
 mv $tmp/.git ${REPO_DIR}/.git
 
 cp -r ${IN_DIR}/* ${REPO_DIR}/
@@ -36,4 +41,4 @@ cd ${REPO_DIR}
 git config --global push.default simple
 git add -f --all .
 git diff-index --quiet HEAD || git commit -am "Version $3"
-git push origin master
+git push origin
