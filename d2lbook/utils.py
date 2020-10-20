@@ -51,7 +51,7 @@ def get_updated_files(src_fnames, src_dir, tgt_dir,
             or get_mtimes(src_fn) > get_mtimes(tgt_fn) # target is old
             or get_mtimes(tgt_fn) < deps_mtime): # deps is updated
             updated_fnames.append((src_fn, tgt_fn))
-    return updated_fnames
+    return list(set(updated_fnames))
 
 
 def get_tgt_files_from_src_pattern(pattern, tgt_dir, src_ext, tgt_ext):
