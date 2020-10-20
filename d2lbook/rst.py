@@ -186,7 +186,7 @@ def _process_rst(body):
             # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
             if key == 'label':
                 new_line += '.. _' + value + ':'
-            elif key in ['ref', 'numref', 'cite', 'py:func', 'py:class']:
+            elif key in ['ref', 'numref', 'cite', 'py:func', 'py:class', 'py:mod']:
                 new_line += ':'+key+':`'+value+'`'
             elif key == 'eqref':
                 new_line += ':eq:`'+value+'`'
