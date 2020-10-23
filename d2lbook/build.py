@@ -339,6 +339,10 @@ class Builder(object):
         notebooks = get_toc(root)
         notebooks_enabled, _, _ = self._find_md_files()
         notebooks = [nb for nb in notebooks if nb in notebooks_enabled]
+        root_dir = self.config.library['root_dir']
+        if root_dir:
+            for nb in notebooks:
+                library.save_file(root_dir, nb)
 
         # deprecated, can be removed later
         save_patterns = self.config.library['save_patterns']

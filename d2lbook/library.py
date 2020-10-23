@@ -5,11 +5,41 @@ import logging
 import os
 import copy
 import re
+import pathlib
 
 def _write_header(f):
     f.write('# This file is generated automatically through:\n')
     f.write('#    d2lbook build lib\n')
     f.write('# Don\'t edit it directly\n\n')
+
+def save_file(root_dir: str, nbfile: str):
+    nbfile = pathlib.Path(nbfile)
+    pyfile = root_dir / nbfile.with_suffix('.py')
+
+    with nbfile.open('r') as f:
+        nb = notebook.read_markdown(f.read())
+
+    saved = []
+    for cell in nb.cells:
+        if cell.cell_type == 'code':
+            m = re.search('# *@save_cell', cell.source.lstrip())
+            if m:
+                if m.span()[0] == 0:
+                    saved.append(cell.source.lstrip()[m.span()[1]:].lstrip())
+                else:
+                    logging.warning(f'{m[0]} should be on the first line of the code cell:\n\n{cell.source} ')
+            else:
+                blk = _save_block(cell.source, '@save')
+                if blk:
+                    saved.append(blk)
+    if saved:
+        with pyfile.open('w') as f:
+            f.write(f'# This file is generated from {str(nbfile)} automatically through:\n')
+            f.write('#    d2lbook build lib\n')
+            f.write('# Don\'t edit it directly\n\n')
+            for blk in saved:
+                f.write(blk+'\n\n')
+            logging.info(f'Found {len(saved)} blocks in {str(nbfile)}')
 
 def save_mark(notebooks: List[str], lib_fname: str, save_mark: str):
     logging.info('Matching with the pattern: "%s"', save_mark)
@@ -42,7 +72,29 @@ def save_version(version: str, version_fn: str):
         with open(version_fn, 'w') as f:
             f.write('\n'.join(lines))
 
-def _save_code(input_fn, output_fp, save_mark=None, tab=None, default_tab=None):
+def _save_block(source: str, save_mark: str):
+    if not save_mark: return ''
+    lines = source.splitlines()
+    block = []
+    for i, l in enumerate(lines):
+        m = re.search(f'# *{save_mark}', l)
+        if m:
+            l = l[:m.span()[0]].rstrip()
+            if l: block.append(l)
+            for j in range(i+1, len(lines)):
+                l = lines[j]
+                if not l.startswith(' ') and len(l):
+                    block.append(lines[j])
+                else:
+                    for k in range(j, len(lines)):
+                        if lines[k].startswith(' ') or not len(lines[k]):
+                            block.append(lines[k])
+                        else:
+                            break
+                    break
+    return '\n'.join(block).strip()
+
+def _save_code(input_fn, output_fp, save_mark='@save', tab=None, default_tab=None):
     """get the code blocks (import, class, def) that will be saved"""
     with open(input_fn, 'r', encoding='UTF-8') as f:
         nb = notebook.read_markdown(f.read())
@@ -53,33 +105,12 @@ def _save_code(input_fn, output_fp, save_mark=None, tab=None, default_tab=None):
     saved = []
     for cell in nb.cells:
         if cell.cell_type == 'code':
-            lines = cell.source.split('\n')
-            for i, l in enumerate(lines):
-                if ((save_mark and l.strip().startswith('#') and save_mark in l) or
-                    (tab and l.strip().endswith('@save') and '#'in l)):
-                    if l.strip().startswith('#'):
-                        block = [lines[i+1]]
-                    else:
-                        block = lines[i:i+2]
-                    for j in range(i+2, len(lines)):
-                        l = lines[j]
-                        if not l.startswith(' ') and len(l):
-                            block.append(lines[j])
-                        else:
-                            for k in range(j, len(lines)):
-                                if lines[k].startswith(' ') or not len(lines[k]):
-                                    block.append(lines[k])
-                                else:
-                                    break
-                            break
-                    if len(block[-1]) == 0:
-                        del block[-1]
-                    saved.append(block)
-
+            block = _save_block(cell.source, save_mark)
+            if block: saved.append(block)
     if saved:
         logging.info('Found %d blocks in %s', len(saved), input_fn)
         for block in saved:
-            code = '# Defined in file: %s\n%s\n\n\n' %(input_fn, '\n'.join(block))
+            code = '# Defined in file: %s\n%s\n\n\n' %(input_fn, block)
             output_fp.write(code)
 
 def _parse_mapping_config(config: str):
