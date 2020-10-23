@@ -41,9 +41,10 @@ def _process_nb(nb):
     # hide/show
     for cell in new_cells:
         if cell.cell_type == 'code':
-            if '# hide outputs' in cell.source.lower():
+            src = cell.source.lower()
+            if '# hide outputs' in src or '#@hide' in src or '#@hide_output' in src:
                 cell.outputs = []
-            if '# hide code' in cell.source.lower():
+            if '# hide code' in src or '#@hide' in src or '#@hide_code' in src:
                 cell.source = ''
     return notebook.create_new_notebook(nb, new_cells)
 
