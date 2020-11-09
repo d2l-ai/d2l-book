@@ -15,7 +15,9 @@ requirements = [
     'sphinxcontrib-svg2pdfconverter',
     'numpydoc',
     'awscli',
-    'gitpython'
+    'gitpython',
+    'sphinx_autodoc_typehints',
+
 ]
 
 setup(
