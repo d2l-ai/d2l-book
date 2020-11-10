@@ -20,16 +20,16 @@ def save_file(root_dir: str, nbfile: str):
         nb = notebook.read_markdown(f.read())
 
     saved = []
+    save_all = False
     for cell in nb.cells:
         if cell.cell_type == 'code':
-            m = re.search('# *@save_cell', cell.source.lstrip())
-            if m:
-                if m.span()[0] == 0:
-                    saved.append(cell.source.lstrip()[m.span()[1]:].lstrip())
-                else:
-                    logging.warning(f'{m[0]} should be on the first line of the code cell:\n\n{cell.source} ')
+            src = cell.source.lstrip()
+            if re.search('# *@save_all', src):
+                save_all = True
+            if save_all or re.search('# *@save_cell', src):
+                saved.append(src)
             else:
-                blk = _save_block(cell.source, '@save')
+                blk = _save_block(src, '@save')
                 if blk:
                     saved.append(blk)
     if saved:

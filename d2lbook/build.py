@@ -10,6 +10,7 @@ import re
 import regex
 import subprocess
 import hashlib
+import pathlib
 from d2lbook.utils import *  # TODO(mli), don't report *
 from d2lbook.sphinx import prepare_sphinx_env
 from d2lbook.config import Config
