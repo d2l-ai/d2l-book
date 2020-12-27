@@ -8,7 +8,7 @@ requirements = [
     'recommonmark',
     'nbformat',
     'nbconvert<=5.6.1',  # there is an issue with the newest 6.0.0a1
-    'sphinxcontrib-bibtex>=1.0.0',
+    'sphinxcontrib-bibtex=1.0.0',
     'pybtex-apa-style',
     'mu-notedown',
     'mxtheme>=0.3.11',
