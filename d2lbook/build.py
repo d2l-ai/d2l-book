@@ -22,7 +22,7 @@ from d2lbook import rst as rst_lib
 
 __all__  = ['build']
 
-commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'ipynb',
+commands = ['eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'ipynb', 'slides',
             'outputcheck', 'tabcheck', 'lib', 'colab', 'sagemaker', 'all', 'merge']
 
 def build():
@@ -470,6 +470,7 @@ def _process_and_eval_notebook(input_fn, output_fn, run_cells, config,
 def ipynb2rst(input_fn, output_fn):
     with open(input_fn, 'r') as f:
         nb = nbformat.read(f, as_version=4)
+    nb = notebook.remove_slides(nb)
     sig = hashlib.sha1(input_fn.encode()).hexdigest()[:6]
     resources = {'unique_key':
                  'output_'+rm_ext(os.path.basename(output_fn))+'_'+sig}

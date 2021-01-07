@@ -25,6 +25,7 @@ class Config():
         self.project = config['project']
         self.html = config['html']
         self.pdf = config['pdf']
+        self.slides = config['slides']
         self.library = dict(config['library'].items())
         for tab in self.tabs:
             if f'library-{tab}' in config:

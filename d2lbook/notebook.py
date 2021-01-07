@@ -10,6 +10,7 @@ import nbconvert
 from nbformat import notebooknode
 from d2lbook import markdown
 from d2lbook import common
+from d2lbook import config
 
 
 def create_new_notebook(nb: notebooknode.NotebookNode,
@@ -245,3 +246,69 @@ def add_html_tab(nb: notebooknode.NotebookNode, tabs: List[str]) -> notebooknode
             new_cells.append(nbformat.v4.new_markdown_cell(
                 "```eval_rst\n.. raw:: html\n\n    </div>\n```"))
     return create_new_notebook(nb, new_cells)
+
+def remove_slides(nb: notebooknode.NotebookNode) -> notebooknode.NotebookNode:
+    """Remove all slide blocks and return."""
+    new_cells = []
+    for cell in nb.cells:
+        if cell.cell_type=='markdown':
+            lines = cell.source.splitlines()
+            blk = []
+            in_blk = False
+            for l in lines:
+                mark = common.md_mark_pattern.match(l)
+                begin = mark and mark.groups()[0] == 'begin_slide'
+                end = mark and mark.groups()[0] == 'end_slide'
+                if begin:
+                    in_blk = True
+                    keep = 'keep' in (mark.groups()[1] if mark.groups()[1] else '')
+                elif end:
+                    in_blk = False
+                else:
+                    if not in_blk or keep:
+                        blk.append(l)
+            new_cells.append(nbformat.v4.new_markdown_cell('\n'.join(blk)))
+        else:
+            new_cells.append(cell)
+    return create_new_notebook(nb, new_cells)
+
+def get_slides(nb: notebooknode.NotebookNode, cf: config.Config) -> notebooknode.NotebookNode:
+    """Get all slide blocks and return."""
+    new_cells = []
+    for cell in nb.cells:
+        if cell.cell_type=='markdown':
+            lines = cell.source.splitlines()
+            blk = []
+            in_blk = False
+            for l in lines:
+                mark = common.md_mark_pattern.match(l)
+                begin = mark and mark.groups()[0] == 'begin_slide'
+                end = mark and mark.groups()[0] == 'end_slide'
+                if begin:
+                    in_blk = True
+                    typ = [a.strip().replace('`','') for a in mark.groups()[1].split(',')] if mark.groups()[1] else []
+                    slide_type = "slide"
+                    if 'cont' in typ:
+                        slide_type = '-'
+                elif end:
+                    if blk:
+                        new_cells.append(nbformat.v4.new_markdown_cell('\n'.join(blk),
+                            metadata={"slideshow": {"slide_type": slide_type}}))
+                        blk = []
+                        in_blk = False
+                elif in_blk:
+                    if l.startswith('# '):
+                        l = '### ' + l[2:]
+                    blk.append(l)
+        else:
+            new_cells.append(cell)
+    slide = create_new_notebook(nb, new_cells)
+    slide['metadata'].update({
+        'language_info':{'name':'python'},
+        'celltoolbar':'Slideshow',
+        'rise': {
+            "autolaunch": True,
+            "enable_chalkboard": True,
+            "overlay": f"<div class='my-top-right'>{cf.slides['top_right']}</div>"
+        }})
+    return slide
