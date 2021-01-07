@@ -14,6 +14,7 @@ import pathlib
 from d2lbook.utils import *  # TODO(mli), don't report *
 from d2lbook.sphinx import prepare_sphinx_env
 from d2lbook.config import Config
+from d2lbook.slides import Slides
 from d2lbook import colab, sagemaker
 from d2lbook import markdown
 from d2lbook import library
@@ -234,6 +235,19 @@ class Builder(object):
             with open(merged, 'w') as f:
                 nbformat.write(dst_nb, f)
         self._copy_resources(default_eval_dir, self.config.eval_dir)
+
+    @_once
+    def slides(self):
+        self.eval()
+        notebooks = find_files(os.path.join(self.config.eval_dir, '**', '*.ipynb'))
+        updated_notebooks = get_updated_files(
+            notebooks, self.config.eval_dir, self.config.slides_dir, 'ipynb', 'ipynb')
+        sd = Slides(self.config)
+        for src, tgt in updated_notebooks:
+            nb = notebook.read(src)
+            if not nb:
+                continue
+            sd.generate(nb, tgt)
 
     @_once
     def rst(self):

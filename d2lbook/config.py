@@ -48,6 +48,7 @@ class Config():
         self.colab_dir = os.path.join(self.tgt_dir, 'colab')
         self.sagemaker_dir = os.path.join(self.tgt_dir, 'sagemaker')
         self.linkcheck_dir = os.path.join(self.tgt_dir, 'linkcheck')
+        self.slides_dir = os.path.join(self.tgt_dir, 'slides')
 
         # Some targets names.
         self.pdf_fname = os.path.join(self.pdf_dir, self.project['name']+'.pdf')
@@ -111,6 +112,8 @@ class Config():
         self.pdf_dir = self._set_tab_dir(self.pdf_dir, tab)
         self.colab_dir = self._set_tab_dir(self.colab_dir, tab)
         self.sagemaker_dir = self._set_tab_dir(self.sagemaker_dir, tab)
+        self.slides_dir = self._set_tab_dir(self.slides_dir, tab)
+
 
     def _default_tab_dir(self, dirname):
         tokens = dirname.split('/')
