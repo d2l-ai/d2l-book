@@ -72,8 +72,11 @@ class Slides():
                             slide_type = '-'
                     elif end:
                         if blk:
-                            new_cells.append(nbformat.v4.new_markdown_cell('\n'.join(blk),
-                                metadata={"slideshow": {"slide_type": slide_type}}))
+                            if slide_type == '-' and new_cells[-1].cell_type == 'markdown':
+                                new_cells[-1].source += '\n\n' + '\n'.join(blk)
+                            else:
+                                new_cells.append(nbformat.v4.new_markdown_cell('\n'.join(blk),
+                                    metadata={"slideshow": {"slide_type": slide_type}}))
                             blk = []
                             in_blk = False
                     elif in_blk:
@@ -107,7 +110,7 @@ class Slides():
         with open(dirname + '/rise.css', 'w') as f:
             f.write('''
 div.text_cell_render.rendered_html {
-    padding: 0 0.5em;
+    padding: 0.35em 0.1em;
 }
 
 div.code_cell {
