@@ -24,8 +24,8 @@ class TestLibrary(unittest.TestCase):
 
     def test_replace_alias(self):
         # Test https://github.com/d2l-ai/d2l-book/issues/14
-        pairs = [('X = d2l.reshape(d2l.arange(10),(2,3))',
-                  'X = torch.arange(10).reshape((2,3))'),
+        pairs = [('X = d2l.reshape(d2l.arange(10,20),(2,3))',
+                  'X = torch.arange(10,20).reshape((2,3))'),
                   ('d2l.numpy(a)', 'a.detach().numpy()'),
                   ('d2l.transpose(a)', 'a.t()'),
                   ('metric.add(l * d2l.size(y), d2l.size(y))',

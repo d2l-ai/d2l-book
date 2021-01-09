@@ -165,7 +165,7 @@ def replace_alias(nb, tab_lib):
             mapping = _parse_mapping_config(tab_lib['fluent_alias'])
             for a, b in mapping:
                 w = r'[\w\_\d\.]'
-                patterns.append((rf'd2l.{a}\(({w}+\({w}*\){w}*)\,?\ *', rf'\1.{b}('))
+                patterns.append((rf'd2l.{a}\(({w}+\([\w\_\d\.\,]*\){w}*)\,?\ *', rf'\1.{b}('))
                 patterns.append((rf'd2l.{a}\(({w}+)\,?\ *', rf'\1.{b}('))
 
     for cell in nb.cells:
