@@ -163,8 +163,11 @@ def replace_alias(nb, tab_lib):
             patterns += [(f'd2l.{a}', f'{lib_name}.{b}') for a, b in mapping]
         if 'fluent_alias' in tab_lib:
             mapping = _parse_mapping_config(tab_lib['fluent_alias'])
-            patterns += [(rf'd2l.{a}\(([\w\_\d]+)\,\ *', rf'\1.{b}(')
-                         for a, b in mapping]
+            for a, b in mapping:
+                w = r'[\w\_\d\.]'
+                patterns.append((rf'd2l.{a}\(({w}+\({w}*\){w}*)\,?\ *', rf'\1.{b}('))
+                patterns.append((rf'd2l.{a}\(({w}+)\,?\ *', rf'\1.{b}('))
+
     for cell in nb.cells:
         if cell.cell_type == 'code':
             for p, r in patterns:
