@@ -48,7 +48,7 @@ class TestLibrary(unittest.TestCase):
             # Y[i, j] = d2l.reduce_sum((X[i: i + h, j: j + w] * K))
             # d2l.reshape(multistep_preds[i - tau: i], (1, -1)))
         ]
-        for a, b in pairs:
+        # for a, b in pairs:
             # self.nb.cells[0].source = a
             # nb = library.replace_alias(self.nb, self.tab_lib)
             # self.assertEqual(nb.cells[0].source, b)
