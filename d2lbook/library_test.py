@@ -26,7 +26,7 @@ class TestLibrary(unittest.TestCase):
         # Test https://github.com/d2l-ai/d2l-book/issues/14
         pairs = [ # before, after
             ('X = d2l.reshape(d2l.arange(10,20),(2,3))',
-             'X = torch.arange(10,20).reshape((2,3))'),
+             'X = torch.arange(10, 20).reshape((2, 3))'),
             ('d2l.numpy(a)', 'a.detach().numpy()'),
             ('d2l.transpose(a)', 'a.t()'),
             ('metric.add(l * d2l.size(y), d2l.size(y))',
@@ -35,10 +35,12 @@ class TestLibrary(unittest.TestCase):
              'float(cmp.astype(y.dtype).sum())'),
             ('d2l.numpy(nn.LeakyReLU(alpha)(x))',
              'nn.LeakyReLU(alpha)(x).detach().numpy()'),
-            ('d2l.reshape(X_tile(1 - d2l.eye(n_train)).astype(\'bool\')),',
-             'X_tile(1 - torch.eye(n_train)).astype(\'bool\').reshape()'),
+            ('d2l.reshape(X_tile(1 - d2l.eye(n_train)).astype(\'bool\'), (1,2))',
+             'X_tile(1 - torch.eye(n_train)).astype(\'bool\').reshape((1, 2))'),
             ('float(d2l.reduce_sum(d2l.astype(cmp, y.dtype)))',
-             'float(cmp.astype(y.dtype).sum())'),
+             'float(cmp.type(y.dtype).sum())'),
+            ('\nenc_attention_weights = d2l.reshape(\n    d2l.concat(net.encoder.attention_weights, 0),\n    (num_layers, num_heads, -1, num_steps))\nenc_attention_weights.shape = 2\n',
+             'enc_attention_weights = torch.cat(net.encoder.attention_weights, 0).reshape((\n    num_layers, num_heads, -1, num_steps))\nenc_attention_weights.shape = 2')
             # TODO(mli), a bunch of other cases
             # float(d2l.reduce_sum(d2l.abs(Y1 - Y2))) < 1e-6
             # d2l.plt.scatter(d2l.numpy(features[:, 1]), d2l.numpy(labels), 1);
@@ -48,9 +50,9 @@ class TestLibrary(unittest.TestCase):
             # Y[i, j] = d2l.reduce_sum((X[i: i + h, j: j + w] * K))
             # d2l.reshape(multistep_preds[i - tau: i], (1, -1)))
         ]
-        # for a, b in pairs:
-            # self.nb.cells[0].source = a
-            # nb = library.replace_alias(self.nb, self.tab_lib)
-            # self.assertEqual(nb.cells[0].source, b)
+        for a, b in pairs:
+            self.nb.cells[0].source = a
+            nb = library.replace_alias(self.nb, self.tab_lib)
+            self.assertEqual(nb.cells[0].source, b)
 
 
