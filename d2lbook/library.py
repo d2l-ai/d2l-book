@@ -6,6 +6,8 @@ import os
 import copy
 import re
 import pathlib
+import ast
+import astor
 
 def _write_header(f):
     f.write('# This file is generated automatically through:\n')
@@ -151,9 +153,22 @@ def save_alias(tab_lib):
             f.write('# Alias defined in config.ini\n')
             f.write(alias+'\n\n')
 
+class _FluentAlias(ast.NodeTransformer):
+    def __init__(self, mapping):
+        self._map = {a:b for a, b in mapping}
+
+    def visit_Call(self, node):
+        if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id == 'd2l' and node.func.attr in self._map:
+            new_node = ast.Call(
+                ast.Attribute(value=node.args[0], attr=self._map[node.func.attr]),
+                node.args[1:], node.keywords)
+            return self.generic_visit(new_node)
+        return self.generic_visit(node)
+
 def replace_alias(nb, tab_lib):
     nb = copy.deepcopy(nb)
     patterns = []
+    fluent_mapping = []
     if 'reverse_alias' in tab_lib:
         patterns += _parse_mapping_config(tab_lib['reverse_alias'])
     if 'lib_name' in tab_lib:
@@ -162,16 +177,17 @@ def replace_alias(nb, tab_lib):
             mapping = _parse_mapping_config(tab_lib['simple_alias'])
             patterns += [(f'd2l.{a}', f'{lib_name}.{b}') for a, b in mapping]
         if 'fluent_alias' in tab_lib:
-            mapping = _parse_mapping_config(tab_lib['fluent_alias'])
-            patterns += [(rf'd2l.{a}\(([\w\_\d]+)\,\ *', rf'\1.{b}(')
-                         for a, b in mapping]
-            # for a, b in mapping:
-            #     w = r'[\w\_\d\.]'
-            #     patterns.append((rf'd2l.{a}\(({w}+\([\w\_\d\.\,]*\){w}*)\,?\ *', rf'\1.{b}('))
-            #     patterns.append((rf'd2l.{a}\(({w}+)\,?\ *', rf'\1.{b}('))
+            fluent_mapping = _parse_mapping_config(tab_lib['fluent_alias'])
 
     for cell in nb.cells:
         if cell.cell_type == 'code':
             for p, r in patterns:
                 cell.source = re.sub(p, r, cell.source)
+            if fluent_mapping:
+                for a, _ in fluent_mapping:
+                    if 'd2l.'+a in cell.source:
+                        tree = ast.parse(cell.source)
+                        cell.source = astor.to_source(
+                            _FluentAlias(fluent_mapping).visit(tree)).rstrip()
+                        break
     return nb

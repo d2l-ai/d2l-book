@@ -17,7 +17,7 @@ requirements = [
     'awscli',
     'gitpython',
     'sphinx_autodoc_typehints',
-
+    'astor',
 ]
 
 setup(
