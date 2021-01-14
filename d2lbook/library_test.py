@@ -40,15 +40,16 @@ class TestLibrary(unittest.TestCase):
             ('float(d2l.reduce_sum(d2l.astype(cmp, y.dtype)))',
              'float(cmp.type(y.dtype).sum())'),
             ('\nenc_attention_weights = d2l.reshape(\n    d2l.concat(net.encoder.attention_weights, 0),\n    (num_layers, num_heads, -1, num_steps))\nenc_attention_weights.shape = 2\n',
-             'enc_attention_weights = torch.cat(net.encoder.attention_weights, 0).reshape((\n    num_layers, num_heads, -1, num_steps))\nenc_attention_weights.shape = 2')
+             'enc_attention_weights = torch.cat(net.encoder.attention_weights, 0).reshape((\n    num_layers, num_heads, -1, num_steps))\nenc_attention_weights.shape = 2'),
             # TODO(mli), a bunch of other cases
-            # float(d2l.reduce_sum(d2l.abs(Y1 - Y2))) < 1e-6
-            # d2l.plt.scatter(d2l.numpy(features[:, 1]), d2l.numpy(labels), 1);
-            # d2l.plt.scatter(d2l.numpy(data[:100, 0]), d2l.numpy(data[:100, 1]));
-            # d2l.reshape(multistep_preds[i - tau: i], (1, -1)))
-            # X = d2l.reshape(d2l.arange(16, dtype=d2l.float32), (1, 1, 4, 4))
-            # Y[i, j] = d2l.reduce_sum((X[i: i + h, j: j + w] * K))
-            # d2l.reshape(multistep_preds[i - tau: i], (1, -1)))
+            ('float(d2l.reduce_sum(d2l.abs(Y1 - Y2))) < 1e-6',
+             'float(torch.abs(Y1 - Y2).sum()) < 1e-06'),
+            ('d2l.plt.scatter(d2l.numpy(features[:, 1]), d2l.numpy(labels), 1);',
+             'd2l.plt.scatter(features[:, (1)].detach().numpy(), labels.detach().numpy(), 1)'),
+            ('d2l.reshape(multistep_preds[i - tau: i], (1, -1))',
+             'multistep_preds[i - tau:i].reshape((1, -1))'),
+            ('X = d2l.reshape(d2l.arange(16, dtype=d2l.float32), (1, 1, 4, 4))',
+            'X = torch.arange(16, dtype=torch.float32).reshape((1, 1, 4, 4))'),
         ]
         for a, b in pairs:
             self.nb.cells[0].source = a
