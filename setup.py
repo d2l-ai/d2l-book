@@ -18,13 +18,14 @@ requirements = [
     'gitpython',
     'sphinx_autodoc_typehints',
     'astor',
+    'yapf'
 ]
 
 setup(
     name='d2lbook',
     version=__version__,
     install_requires=requirements,
-    python_requires='>=3.5',
+    python_requires='>=3.8',
     author='D2L Developers',
     author_email='d2l.devs@gmail.com',
     url='https://book.d2l.ai',
