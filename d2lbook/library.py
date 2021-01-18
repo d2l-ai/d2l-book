@@ -8,6 +8,7 @@ import re
 import pathlib
 import ast
 import astor
+from yapf.yapflib.yapf_api import FormatCode
 
 def _write_header(f):
     f.write('# This file is generated automatically through:\n')
@@ -153,17 +154,30 @@ def save_alias(tab_lib):
             f.write('# Alias defined in config.ini\n')
             f.write(alias+'\n\n')
 
-class _FluentAlias(ast.NodeTransformer):
-    def __init__(self, mapping):
-        self._map = {a:b for a, b in mapping}
-
-    def visit_Call(self, node):
-        if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name) and node.func.value.id == 'd2l' and node.func.attr in self._map:
-            new_node = ast.Call(
-                ast.Attribute(value=node.args[0], attr=self._map[node.func.attr]),
-                node.args[1:], node.keywords)
-            return self.generic_visit(new_node)
-        return self.generic_visit(node)
+def replace_fluent_alias(source, fluent_mapping):
+    fluent_mapping = {a:b for a, b in fluent_mapping}
+    new_src = source
+    for _ in range(100):  # 100 is a (random) big enough number
+        replaced = False
+        tree = ast.parse(new_src)
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call) and
+                isinstance(node.func, ast.Attribute) and
+                isinstance(node.func.value, ast.Name) and
+                node.func.value.id == 'd2l' and
+                node.func.attr in fluent_mapping):
+                new_node = ast.Call(
+                    ast.Attribute(value=node.args[0],
+                                  attr=fluent_mapping[node.func.attr]),
+                    node.args[1:], node.keywords)
+                new_src = new_src.replace(
+                    ast.get_source_segment(new_src, node),
+                    astor.to_source(new_node).rstrip())
+                replaced = True
+                break
+        if not replaced:
+            break
+    return FormatCode(new_src)[0].rstrip()
 
 def replace_alias(nb, tab_lib):
     nb = copy.deepcopy(nb)
@@ -186,8 +200,6 @@ def replace_alias(nb, tab_lib):
             if fluent_mapping:
                 for a, _ in fluent_mapping:
                     if 'd2l.'+a in cell.source:
-                        tree = ast.parse(cell.source)
-                        cell.source = astor.to_source(
-                            _FluentAlias(fluent_mapping).visit(tree)).rstrip()
+                        cell.source = replace_fluent_alias(cell.source, fluent_mapping)
                         break
     return nb
