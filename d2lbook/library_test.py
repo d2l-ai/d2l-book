@@ -52,7 +52,7 @@ class TestLibrary(unittest.TestCase):
             ('# comments\nX = d2l.reshape(a)', '# comments\nX = a.reshape()'),
             ('X = d2l.reshape(a)  # comments', 'X = a.reshape()  # comments'),
             ('Y[i, j] = d2l.reduce_sum((X[i: i + h, j: j + w] * K))',
-             'Y[i, j] = (X[i: i + h, j: j + w] * K).sum()'),
+             'Y[i, j] = (X[i:i + h, j:j + w] * K).sum()'),
             ]
         for a, b in pairs:
             self.nb.cells[0].source = a
