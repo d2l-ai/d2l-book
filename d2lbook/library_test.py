@@ -41,9 +41,9 @@ class TestLibrary(unittest.TestCase):
              'float(cmp.type(y.dtype).sum())'),
             ('\nenc_attention_weights = d2l.reshape(\n    d2l.concat(net.encoder.attention_weights, 0),\n    (num_layers, num_heads, -1, num_steps))\nenc_attention_weights.shape = 2\n',
              'enc_attention_weights = torch.cat(net.encoder.attention_weights, 0).reshape(\n    (num_layers, num_heads, -1, num_steps))\nenc_attention_weights.shape = 2'),
-            # TODO(mli), a bunch of other cases
             ('float(d2l.reduce_sum(d2l.abs(Y1 - Y2))) < 1e-6',
              'float(torch.abs(Y1 - Y2).sum()) < 1e-6'),
+            # It may be good if the output is features[:, 1] instead of features[;, (1)]
             ('d2l.plt.scatter(d2l.numpy(features[:, 1]), d2l.numpy(labels), 1);',
              'd2l.plt.scatter(features[:, (1)].detach().numpy(),\n                labels.detach().numpy(), 1)'),
             ('d2l.reshape(multistep_preds[i - tau: i], (1, -1))',
@@ -52,7 +52,9 @@ class TestLibrary(unittest.TestCase):
             'X = torch.arange(16, dtype=torch.float32).reshape((1, 1, 4, 4))'),
             ('# comments\nX = d2l.reshape(a)', '# comments\nX = a.reshape()'),
             ('X = d2l.reshape(a)  # comments', 'X = a.reshape()  # comments'),
-        ]
+            ('Y[i, j] = d2l.reduce_sum((X[i: i + h, j: j + w] * K))',
+             'Y[i, j] = (X[i: i + h, j: j + w] * K).sum()'),
+            ]
         for a, b in pairs:
             self.nb.cells[0].source = a
             nb = library.replace_alias(self.nb, self.tab_lib)
