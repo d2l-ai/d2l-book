@@ -43,9 +43,8 @@ class TestLibrary(unittest.TestCase):
              'enc_attention_weights = torch.cat(net.encoder.attention_weights, 0).reshape(\n    (num_layers, num_heads, -1, num_steps))\nenc_attention_weights.shape = 2'),
             ('float(d2l.reduce_sum(d2l.abs(Y1 - Y2))) < 1e-6',
              'float(torch.abs(Y1 - Y2).sum()) < 1e-6'),
-            # It may be good if the output is features[:, 1] instead of features[;, (1)]
-            ('d2l.plt.scatter(d2l.numpy(features[:, 1]), d2l.numpy(labels), 1);',
-             'd2l.plt.scatter(features[:, (1)].detach().numpy(),\n                labels.detach().numpy(), 1)'),
+            ('d2l.plt.scatter(d2l.numpy(features[:, a + b]), d2l.numpy(labels), 1);',
+             'd2l.plt.scatter(features[:, a + b].detach().numpy(),\n                labels.detach().numpy(), 1)'),
             ('d2l.reshape(multistep_preds[i - tau: i], (1, -1))',
              'multistep_preds[i - tau:i].reshape((1, -1))'),
             ('X = d2l.reshape(d2l.arange(16, dtype=d2l.float32), (1, 1, 4, 4))',
