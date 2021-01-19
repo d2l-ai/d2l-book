@@ -211,7 +211,7 @@ def format_code(source: str):
 
     # fix bug yapf cannot handle jupyter magic
     for l in source.splitlines():
-        if l.startswith('%'):
+        if l.startswith('%') or l.startswith('!'):
             return source
     style = {
         'DISABLE_ENDING_COMMA_HEURISTIC':True,
