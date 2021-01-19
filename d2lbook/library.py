@@ -177,7 +177,7 @@ def replace_fluent_alias(source, fluent_mapping):
                 break
         if not replaced:
             break
-    return FormatCode(new_src)[0].rstrip()
+    return new_src
 
 def replace_alias(nb, tab_lib):
     nb = copy.deepcopy(nb)
@@ -202,4 +202,20 @@ def replace_alias(nb, tab_lib):
                     if 'd2l.'+a in cell.source:
                         cell.source = replace_fluent_alias(cell.source, fluent_mapping)
                         break
+    return nb
+
+def format_code(nb):
+    style = {
+        'ARITHMETIC_PRECEDENCE_INDICATION':True,
+        'DISABLE_ENDING_COMMA_HEURISTIC':True,
+        'SPACE_BETWEEN_ENDING_COMMA_AND_CLOSING_BRACKET':False,
+        'SPLIT_BEFORE_CLOSING_BRACKET':False,
+        'SPLIT_BEFORE_DICT_SET_GENERATOR':False,
+        'SPLIT_BEFORE_LOGICAL_OPERATOR':False,
+        'SPLIT_BEFORE_NAMED_ASSIGNS':False,
+        'COLUMN_LIMIT':78,
+    }
+    for cell in nb.cells:
+        if cell.cell_type == 'code':
+            cell.source = FormatCode(cell.source, style_config=style)[0]
     return nb

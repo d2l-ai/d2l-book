@@ -454,6 +454,7 @@ def _process_and_eval_notebook(input_fn, output_fn, run_cells, config,
         # replace alias
         if tab in config.library:
             nb = library.replace_alias(nb, config.library[tab])
+    nb = library.format_code(nb)
 
     # evaluate
     if run_cells:
