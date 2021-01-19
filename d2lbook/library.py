@@ -95,7 +95,7 @@ def _save_block(source: str, save_mark: str):
                         else:
                             break
                     break
-    return '\n'.join(block).strip()
+    return format_code('\n'.join(block)).strip()
 
 def _save_code(input_fn, output_fp, save_mark='@save', tab=None, default_tab=None):
     """get the code blocks (import, class, def) that will be saved"""
@@ -204,9 +204,8 @@ def replace_alias(nb, tab_lib):
                         break
     return nb
 
-def format_code(nb):
+def format_code(source: str):
     style = {
-        'ARITHMETIC_PRECEDENCE_INDICATION':True,
         'DISABLE_ENDING_COMMA_HEURISTIC':True,
         'SPACE_BETWEEN_ENDING_COMMA_AND_CLOSING_BRACKET':False,
         'SPLIT_BEFORE_CLOSING_BRACKET':False,
@@ -215,7 +214,10 @@ def format_code(nb):
         'SPLIT_BEFORE_NAMED_ASSIGNS':False,
         'COLUMN_LIMIT':78,
     }
+    return FormatCode(source, style_config=style)[0]
+
+def format_code_nb(nb):
     for cell in nb.cells:
         if cell.cell_type == 'code':
-            cell.source = FormatCode(cell.source, style_config=style)[0]
+            cell.source = format_code(cell.source)
     return nb
