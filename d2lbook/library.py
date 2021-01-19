@@ -205,6 +205,10 @@ def replace_alias(nb, tab_lib):
     return nb
 
 def format_code(source: str):
+    # fix bug yapf cannot handle jupyter magic
+    for l in source.splitlines:
+        if l.startswith('%'):
+            return source
     style = {
         'DISABLE_ENDING_COMMA_HEURISTIC':True,
         'SPACE_BETWEEN_ENDING_COMMA_AND_CLOSING_BRACKET':False,
