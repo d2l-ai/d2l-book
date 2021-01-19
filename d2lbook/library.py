@@ -9,6 +9,7 @@ import pathlib
 import ast
 import astor
 from yapf.yapflib.yapf_api import FormatCode
+import isort
 
 def _write_header(f):
     f.write('# This file is generated automatically through:\n')
@@ -205,6 +206,9 @@ def replace_alias(nb, tab_lib):
     return nb
 
 def format_code(source: str):
+    if 'import ' in source:
+        source = isort.code(source)
+
     # fix bug yapf cannot handle jupyter magic
     for l in source.splitlines():
         if l.startswith('%'):
