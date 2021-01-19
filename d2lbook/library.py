@@ -206,7 +206,7 @@ def replace_alias(nb, tab_lib):
 
 def format_code(source: str):
     # fix bug yapf cannot handle jupyter magic
-    for l in source.splitlines:
+    for l in source.splitlines():
         if l.startswith('%'):
             return source
     style = {
