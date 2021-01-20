@@ -9,6 +9,7 @@ import pathlib
 import ast
 import astor
 from yapf.yapflib.yapf_api import FormatCode
+import isort
 
 def _write_header(f):
     f.write('# This file is generated automatically through:\n')
@@ -95,7 +96,7 @@ def _save_block(source: str, save_mark: str):
                         else:
                             break
                     break
-    return '\n'.join(block).strip()
+    return format_code('\n'.join(block)).strip()
 
 def _save_code(input_fn, output_fp, save_mark='@save', tab=None, default_tab=None):
     """get the code blocks (import, class, def) that will be saved"""
@@ -177,7 +178,7 @@ def replace_fluent_alias(source, fluent_mapping):
                 break
         if not replaced:
             break
-    return FormatCode(new_src)[0].rstrip()
+    return new_src
 
 def replace_alias(nb, tab_lib):
     nb = copy.deepcopy(nb)
@@ -202,4 +203,29 @@ def replace_alias(nb, tab_lib):
                     if 'd2l.'+a in cell.source:
                         cell.source = replace_fluent_alias(cell.source, fluent_mapping)
                         break
+    return nb
+
+def format_code(source: str):
+    if 'import ' in source:
+        source = isort.code(source)
+
+    # fix bug yapf cannot handle jupyter magic
+    for l in source.splitlines():
+        if l.startswith('%') or l.startswith('!'):
+            return source
+    style = {
+        'DISABLE_ENDING_COMMA_HEURISTIC':True,
+        'SPACE_BETWEEN_ENDING_COMMA_AND_CLOSING_BRACKET':False,
+        'SPLIT_BEFORE_CLOSING_BRACKET':False,
+        'SPLIT_BEFORE_DICT_SET_GENERATOR':False,
+        'SPLIT_BEFORE_LOGICAL_OPERATOR':False,
+        'SPLIT_BEFORE_NAMED_ASSIGNS':False,
+        'COLUMN_LIMIT':78,
+    }
+    return FormatCode(source, style_config=style)[0]
+
+def format_code_nb(nb):
+    for cell in nb.cells:
+        if cell.cell_type == 'code':
+            cell.source = format_code(cell.source)
     return nb
