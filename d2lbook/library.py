@@ -221,6 +221,7 @@ def format_code(source: str):
         'SPLIT_BEFORE_LOGICAL_OPERATOR':False,
         'SPLIT_BEFORE_NAMED_ASSIGNS':False,
         'COLUMN_LIMIT':78,
+        'BLANK_LINES_AROUND_TOP_LEVEL_DEFINITION':1,
     }
     return FormatCode(source, style_config=style)[0]
 
