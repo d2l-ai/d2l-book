@@ -468,7 +468,7 @@ def get_subpages(input_fn):
     return subpages
 
 def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
-                               config, timeout=20*60, lang='python'):
+                               config, timeout=20 * 60, lang='python'):
     with open(input_fn, 'r') as f:
         md = f.read()
     nb = notebook.read_markdown(md)

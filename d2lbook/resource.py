@@ -112,8 +112,9 @@ class Scheduler():
         def _target(gpus, target, *args):
             if not gpus:
                 # it will triggler an runtime error if target actually uses a gpu
-                gpus = [self._num_gpus+1]
-            os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([str(g) for g in gpus])
+                gpus = [self._num_gpus + 1]
+            os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([
+                str(g) for g in gpus])
             return target(*args)
 
         def _device_info(task):
@@ -129,12 +130,12 @@ class Scheduler():
                 return task.message
             return 'Target {task.target} with args {task.args}'
 
-
         def _runtime(task):
-            end_time = task.end_time if task.end_time else datetime.datetime.now()
+            end_time = task.end_time if task.end_time else datetime.datetime.now(
+            )
             return utils.get_time_diff(task.start_time, end_time)
 
-        for t in range(24*60*60): # run at most 24 hours
+        for t in range(24 * 60 * 60):  # run at most 24 hours
             # check if all done
             num_done, num_not_started, num_running = 0, 0, 0
             for task in self._tasks:
@@ -146,10 +147,14 @@ class Scheduler():
                 break
 
             if (t+1) % 60 == 0:
-                logging.info(f'Status: {num_running} running tasks, {num_done} done, {num_not_started} not started')
+                logging.info(
+                    f'Status: {num_running} running tasks, {num_done} done, {num_not_started} not started'
+                )
                 for i, task in enumerate(self._tasks):
                     if task.process:
-                        logging.info(f'  - Task {i} on {_device_info(task)}is running for {_runtime(task)}  ')
+                        logging.info(
+                            f'  - Task {i} on {_device_info(task)}is running for {_runtime(task)}  '
+                        )
 
             for i, task in enumerate(self._tasks):
                 if task.process or task.done:
@@ -164,8 +169,8 @@ class Scheduler():
                 logging.info(message)
                 task.start_time = datetime.datetime.now()
                 gpus = [i - self._num_cpus for i in locks[task.num_cpus:]]
-                task.process = Process(
-                    target=_target, args=(gpus, task.target, *task.args))
+                task.process = Process(target=_target,
+                                       args=(gpus, task.target, *task.args))
                 task.process.start()
                 break
 
@@ -187,12 +192,15 @@ class Scheduler():
                     task.end_time = datetime.datetime.now()
                     logging.info(f'Task {i} is finished in {_runtime(task)}')
 
-
             time.sleep(1)
 
         if self._tasks:
-            logging.info(f'All {len(self._tasks)} tasks are done, here are the most time consuming ones:')
-            self._tasks.sort(reverse=True, key=lambda task: (task.end_time - task.start_time).seconds)
+            logging.info(
+                f'All {len(self._tasks)} tasks are done, here are the most time consuming ones:'
+            )
+            self._tasks.sort(
+                reverse=True, key=lambda task:
+                (task.end_time - task.start_time).seconds)
             for task in self._tasks[:5]:
                 logging.info(f'  - {_runtime(task)} {_task_message(task)}')
 
