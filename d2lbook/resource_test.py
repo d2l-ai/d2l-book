@@ -7,6 +7,7 @@ from d2lbook import resource
 import unittest
 import time
 import logging
+import os
 
 
 def _incorrect_code():
@@ -19,8 +20,19 @@ def _runtime_error():
 
 
 class TestResource(unittest.TestCase):
+
     def test_gpus(self):
-        self.assertGreaterEqual(len(resource.get_available_gpus()), 0)
+        if len(resource.get_available_gpus()) < 0:
+            return
+        scheduler = resource.Scheduler(num_cpu_workers=2)
+        def _job():
+            self.assertEqual(len(os.environ['CUDA_VISIBLE_DEVICES']), 1)
+            time.sleep(2)
+
+        scheduler = resource.Scheduler(num_cpu_workers=2)
+        scheduler.add(1,1, _job, ())
+        scheduler.add(1,1, _job, ())
+        scheduler.run()
 
     def test_scheduler(self):
         scheduler = resource.Scheduler(num_cpu_workers=2)

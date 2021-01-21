@@ -10,6 +10,7 @@ import threading
 import time
 import traceback
 from typing import Any, Optional, Sequence
+import os
 
 import fasteners
 
@@ -32,11 +33,9 @@ def get_notebook_gpus(notebook, max_gpus):
     # several heuristics, not necessary accurate
     # TODO(mli) support a special mark in notebook to hint the #gpus
     single_gpu_patterns = ('gpu()', 'gpu(0)', 'device(\'cuda\')',
-                           'device(\'/GPU:0\')', 'try_gpu()', 'try_gpu(0)',
-                           'train_ch6')  # FIXME remove train_ch6 later
+                           'device(\'/GPU:0\')', 'try_gpu()', 'try_gpu(0)')
     all_gpus_patterns = ('gpu(1)', 'device(\'cuda:1\')', 'device(\'/GPU:1\')',
                          'try_all_gpus', 'try_gpu(1)')
-
     n_gpus = 0
     for cell in notebook.cells:
         if cell.cell_type == 'code':
@@ -108,24 +107,31 @@ class Scheduler():
 
     def run(self):
         """Run the tasks and block until they are done."""
+        def _target(gpus, target, *args):
+            if gpus:
+                os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([str(g) for g in gpus])
+            return target(*args)
+
         while True:
             for i, task in enumerate(self._tasks):
                 if task.process or task.done:
                     continue
                 locks = self._lock(0, self._num_cpus, task.num_cpus) + \
                         self._lock(self._num_cpus, self._num_cpus+self._num_gpus, task.num_gpus)
+                cpus = locks[:task.num_cpus]
+                gpus = [i - self._num_cpus for i in locks[task.num_cpus:]]
                 if locks:
                     devices = ''
-                    if task.num_cpus:
-                        devices += f'CPU {locks[:task.num_cpus]} '
-                    if task.num_gpus:
-                        devices += f'GPU {i - self._num_cpus for i in locks[task.num_cpus:]}'
+                    if cpus:
+                        devices += f'CPU {cpus} '
+                    if gpus:
+                        devices += f'GPU {gpus} '
                     logging.info(
-                        f'Starting task {i} on {devices} for target {task.target} with args {task.args}'
+                        f'Starting task {i} on {devices}for target {task.target} with args {task.args}'
                     )
                     task.locks = locks
                     task.start_time = datetime.datetime.now()
-                    task.process = Process(target=task.target, args=task.args)
+                    task.process = Process(target=_target, args=(gpus, task.target, *task.args))
                     task.process.start()
                     break
 
@@ -158,12 +164,12 @@ class Scheduler():
         random.shuffle(ids)
         locks = []
         for i in ids:
+            if len(locks) >= n:
+                break
             if self._inter_locks[i].acquire(
                     blocking=False) and not self._locks[i]:
                 self._locks[i] = True
                 locks.append(i)
-            if len(locks) >= n:
-                break
         if len(locks) >= n:
             return locks
         for i in locks:
