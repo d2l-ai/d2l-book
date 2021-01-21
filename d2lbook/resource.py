@@ -4,18 +4,17 @@ import dataclasses
 import datetime
 import logging
 import multiprocessing as mp
+import os
 import random
 import subprocess
 import threading
 import time
 import traceback
 from typing import Any, Optional, Sequence
-import os
 
 import fasteners
 
 from d2lbook import utils
-
 
 def get_available_gpus():
     """Return a list of available GPUs with their names"""
@@ -26,7 +25,6 @@ def get_available_gpus():
     if process.returncode == 0:
         return stdout.decode().splitlines()
     return []
-
 
 def get_notebook_gpus(notebook, max_gpus):
     """Return the # of GPUs needed for a notebook."""
@@ -45,18 +43,17 @@ def get_notebook_gpus(notebook, max_gpus):
                 n_gpus = max(n_gpus, max_gpus)
     return n_gpus
 
-
 @dataclasses.dataclass
 class _Task():
     num_cpus: int
     num_gpus: int
     target: Any
     args: Sequence[Any]
+    message: str
     process: Optional[Any] = None
     locks: Sequence[int] = dataclasses.field(default_factory=list)
     done: bool = False
     start_time: datetime.datetime = datetime.datetime.now()
-
 
 class Process(mp.Process):
     def __init__(self, *args, **kwargs):
@@ -79,7 +76,6 @@ class Process(mp.Process):
             self._exception = self._pconn.recv()
         return self._exception
 
-
 class Scheduler():
     """A schedule run multiple jobs in parallel under the resource constraint."""
     def __init__(self, num_cpu_workers, num_gpu_workers=-1):
@@ -96,20 +92,26 @@ class Scheduler():
                 fasteners.InterProcessLock(f'/tmp/d2lbook_gpu_{i}')
                 for i in range(self._num_gpus)]
         self._tasks = []
+        self._failed_jobs = []
 
-    def add(self, num_cpus, num_gpus, target, args):
+    def add(self, num_cpus, num_gpus, target, args, message=''):
         """Add tasks into the queue."""
         if num_cpus == 0 and num_gpus == 0:
             raise ValueError('Need at least one CPU or GPU')
         if num_cpus > self._num_cpus or num_gpus > self._num_gpus:
             raise ValueError('Not enough resources to run the task')
-        self._tasks.append(_Task(num_cpus, num_gpus, target, args))
+        self._tasks.append(_Task(num_cpus, num_gpus, target, args, message))
+
+    @property
+    def failed_jobs(self):
+        return self._failed_jobs
 
     def run(self):
         """Run the tasks and block until they are done."""
         def _target(gpus, target, *args):
             if gpus:
-                os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([str(g) for g in gpus])
+                os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([
+                    str(g) for g in gpus])
             return target(*args)
 
         while True:
@@ -121,17 +123,20 @@ class Scheduler():
                 cpus = locks[:task.num_cpus]
                 gpus = [i - self._num_cpus for i in locks[task.num_cpus:]]
                 if locks:
-                    devices = ''
+                    message = f'Starting task {i} on '
                     if cpus:
-                        devices += f'CPU {cpus} '
+                        message += f'CPU {cpus} '
                     if gpus:
-                        devices += f'GPU {gpus} '
-                    logging.info(
-                        f'Starting task {i} on {devices}for target {task.target} with args {task.args}'
-                    )
+                        message += f'GPU {gpus} '
+                    if task.message:
+                        message += task.message
+                    else:
+                        message += f'for target {task.target} with args {task.args}'
+                    logging.info(message)
                     task.locks = locks
                     task.start_time = datetime.datetime.now()
-                    task.process = Process(target=_target, args=(gpus, task.target, *task.args))
+                    task.process = Process(
+                        target=_target, args=(gpus, task.target, *task.args))
                     task.process.start()
                     break
 
@@ -144,6 +149,7 @@ class Scheduler():
                         self._inter_locks[lock].release()
                     if task.process.exception:
                         error, traceback = task.process.exception
+                        self._failed_jobs.append(i)
                         logging.error(
                             f'Task {i} exited with error: {error}\n{traceback}'
                         )

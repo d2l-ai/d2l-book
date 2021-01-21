@@ -1,32 +1,32 @@
-import os
-import sys
-import notedown
-import nbformat
-import logging
-import shutil
-import datetime
 import argparse
-import re
-import regex
-import subprocess
+import datetime
 import hashlib
+import logging
+import os
 import pathlib
-from d2lbook.utils import *  # TODO(mli), don't report *
-from d2lbook.sphinx import prepare_sphinx_env
+import re
+import shutil
+import subprocess
+import sys
+
+import nbformat
+import notedown
+import regex
+
+from d2lbook import colab, library, markdown, notebook
+from d2lbook import rst as rst_lib
+from d2lbook import sagemaker
 from d2lbook.config import Config
 from d2lbook.slides import Slides
-from d2lbook import colab, sagemaker
-from d2lbook import markdown
-from d2lbook import library
-from d2lbook import notebook
-from d2lbook import rst as rst_lib
+from d2lbook.sphinx import prepare_sphinx_env
+from d2lbook.utils import *  # TODO(mli), don't import *
+from d2lbook import resource
 
 __all__ = ['build']
 
 commands = [
     'eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'ipynb', 'slides',
     'outputcheck', 'tabcheck', 'lib', 'colab', 'sagemaker', 'all', 'merge']
-
 
 def build():
     parser = argparse.ArgumentParser(description='Build the documents')
@@ -38,7 +38,6 @@ def build():
     builder = Builder(config)
     for cmd in args.commands:
         getattr(builder, cmd)()
-
 
 def _once(func):
     # An decorator that run a method only once
@@ -56,7 +55,6 @@ def _once(func):
         self.done[name] = True
 
     return warp
-
 
 class Builder(object):
     def __init__(self, config):
@@ -147,16 +145,16 @@ class Builder(object):
             logging.info('[%d] %s', i + 1, nb[0])
         self._copy_resources(self.config.src_dir, self.config.eval_dir)
 
+        scheduler = resource.Scheduler(num_cpu_workers=6)
+        run_cells = self.config.build['eval_notebook'].lower() == 'true'
         for i, (src, tgt) in enumerate(updated_notebooks):
-            tik = datetime.datetime.now()
-            logging.info('[%d/%d, %s] Evaluating %s, save as %s',
-                         i + 1, num_updated_notebooks,
-                         get_time_diff(eval_tik, tik), src, tgt)
             mkdir(os.path.dirname(tgt))
-            run_cells = self.config.build['eval_notebook'].lower() == 'true'
-            _process_and_eval_notebook(src, tgt, run_cells, self.config)
-            tok = datetime.datetime.now()
-            logging.info('Finished in %s', get_time_diff(tik, tok))
+            _process_and_eval_notebook(scheduler, src, tgt, run_cells,
+                                       self.config)
+
+        scheduler.run()
+        if len(scheduler.failed_jobs):
+            raise RuntimeError('Some notebooks are failed to evaluate')
 
         for src, tgt in updated_markdowns:
             logging.info('Copying %s to %s', src, tgt)
@@ -422,7 +420,6 @@ class Builder(object):
         self.pdf()
         self.pkg()
 
-
 def update_ipynb_toc(root):
     """Change the toc code block into a list of clickable links"""
     notebooks = find_files('**/*.ipynb', root)
@@ -445,7 +442,6 @@ def update_ipynb_toc(root):
         with open(fn, 'w') as f:
             f.write(nbformat.writes(nb))
 
-
 def get_toc(root):
     """return a list of files in the order defined by TOC"""
     subpages = get_subpages(root)
@@ -453,7 +449,6 @@ def get_toc(root):
     for fn in subpages:
         res.extend(get_toc(fn))
     return res
-
 
 def get_subpages(input_fn):
     """read toc in input_fn, returns what it contains"""
@@ -472,9 +467,8 @@ def get_subpages(input_fn):
                         subpages.append(fn)
     return subpages
 
-
-def _process_and_eval_notebook(input_fn, output_fn, run_cells, config,
-                               timeout=20 * 60, lang='python'):
+def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
+                               config, timeout=20 * 60, lang='python'):
     with open(input_fn, 'r') as f:
         md = f.read()
     nb = notebook.read_markdown(md)
@@ -492,31 +486,37 @@ def _process_and_eval_notebook(input_fn, output_fn, run_cells, config,
         if tab in config.library:
             nb = library.replace_alias(nb, config.library[tab])
 
-    # evaluate
-    if run_cells:
-        # change to the notebook directory to resolve the relpaths properly
-        cwd = os.getcwd()
-        os.chdir(os.path.join(cwd, os.path.dirname(output_fn)))
-        notedown.run(nb, timeout)
-        os.chdir(cwd)
-    # change stderr output to stdout output
-    for cell in nb.cells:
-        if cell.cell_type == 'code' and 'outputs' in cell:
-            outputs = []
-            for out in cell['outputs']:
-                if ('data' in out and 'text/plain' in out['data'] and
-                        out['data']['text/plain'].startswith('HBox')):
-                    # that's tqdm progress bar cannot displayed properly.
-                    continue
-                if 'name' in out and out['name'] == 'stderr':
-                    out['name'] = 'stdout'
-                outputs.append(out)
-            cell['outputs'] = outputs
-    # write
-    nb['metadata'].update({'language_info': {'name': lang}})
-    with open(output_fn, 'w') as f:
-        f.write(nbformat.writes(nb))
+    def _job(nb, output_fn, run_cells, timeout, lang):
+        # evaluate
+        if run_cells:
+            # change to the notebook directory to resolve the relpaths properly
+            cwd = os.getcwd()
+            os.chdir(os.path.join(cwd, os.path.dirname(output_fn)))
+            notedown.run(nb, timeout)
+            os.chdir(cwd)
+        # change stderr output to stdout output
+        for cell in nb.cells:
+            if cell.cell_type == 'code' and 'outputs' in cell:
+                outputs = []
+                for out in cell['outputs']:
+                    if ('data' in out and 'text/plain' in out['data'] and
+                            out['data']['text/plain'].startswith('HBox')):
+                        # that's tqdm progress bar cannot displayed properly.
+                        continue
+                    if 'name' in out and out['name'] == 'stderr':
+                        out['name'] = 'stdout'
+                    outputs.append(out)
+                cell['outputs'] = outputs
+        # write
+        nb['metadata'].update({'language_info': {'name': lang}})
+        with open(output_fn, 'w') as f:
+            f.write(nbformat.writes(nb))
 
+    # use at most 2 gpus to eval a notebook
+    max_gpus = 2
+    scheduler.add(1, resource.get_notebook_gpus(nb, max_gpus), target=_job,
+                  args=(nb, output_fn, run_cells, timeout, lang),
+                  message=f'Evaluating {input_fn}, save as {output_fn}')
 
 def ipynb2rst(input_fn, output_fn):
     with open(input_fn, 'r') as f:
@@ -535,7 +535,6 @@ def ipynb2rst(input_fn, output_fn):
         full_fn = os.path.join(base_dir, fn)
         with open(full_fn, 'wb') as f:
             f.write(outputs[fn])
-
 
 def process_latex(fname, script):
     with open(fname, 'r') as f:
@@ -556,19 +555,16 @@ def process_latex(fname, script):
             logging.error('%s', stderr.decode())
             exit(-1)
 
-
 def _combine_citations(lines):
     # convert \sphinxcite{A}\sphinxcite{B} to \sphinxcite{A,B}
     for i, l in enumerate(lines):
         if '}\sphinxcite{' in l:
             lines[i] = l.replace('}\sphinxcite{', ',')
 
-
 # E.g., tag = 'begin{figure}'
 def _tag_in_line(tag, line):
     assert '\\' not in set(tag)
     return any([elem.startswith(tag) for elem in line.split('\\')])
-
 
 def _center_graphics(lines):
     tabulary_cnt = 0
