@@ -54,6 +54,7 @@ class _Task():
     locks: Sequence[int] = dataclasses.field(default_factory=list)
     done: bool = False
     start_time: datetime.datetime = datetime.datetime.now()
+    end_time: Optional[datetime.datetime] = None
 
 class Process(mp.Process):
     def __init__(self, *args, **kwargs):
@@ -109,36 +110,64 @@ class Scheduler():
     def run(self):
         """Run the tasks and block until they are done."""
         def _target(gpus, target, *args):
-            if gpus:
-                os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([
-                    str(g) for g in gpus])
+            if not gpus:
+                # it will triggler an runtime error if target actually uses a gpu
+                gpus = [self._num_gpus+1]
+            os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([str(g) for g in gpus])
             return target(*args)
 
-        while True:
+        def _device_info(task):
+            cpus = task.locks[:task.num_cpus]
+            gpus = [i - self._num_cpus for i in task.locks[task.num_cpus:]]
+            info = ''
+            if cpus: info += f'CPU {cpus} '
+            if gpus: info += f'GPU {gpus} '
+            return info
+
+        def _task_message(task):
+            if task.message:
+                return task.message
+            return 'Target {task.target} with args {task.args}'
+
+
+        def _runtime(task):
+            end_time = task.end_time if task.end_time else datetime.datetime.now()
+            return utils.get_time_diff(task.start_time, end_time)
+
+        for t in range(24*60*60): # run at most 24 hours
+            # check if all done
+            num_done, num_not_started, num_running = 0, 0, 0
+            for task in self._tasks:
+                if task.done: num_done += 1
+                if task.process: num_running += 1
+                if not task.process and not task.done: num_not_started += 1
+
+            if num_done == len(self._tasks):
+                break
+
+            if (t+1) % 60 == 0:
+                logging.info(f'Status: {num_running} running tasks, {num_done} done, {num_not_started} not started')
+                for i, task in enumerate(self._tasks):
+                    if task.process:
+                        logging.info(f'  - Task {i} on {_device_info(task)}is running for {_runtime(task)}  ')
+
             for i, task in enumerate(self._tasks):
                 if task.process or task.done:
                     continue
                 locks = self._lock(0, self._num_cpus, task.num_cpus) + \
                         self._lock(self._num_cpus, self._num_cpus+self._num_gpus, task.num_gpus)
-                cpus = locks[:task.num_cpus]
+                if len(locks) < task.num_cpus + task.num_gpus:
+                    self._unlock(locks)
+                    continue
+                task.locks = locks
+                message = f'Starting task {i} on {_device_info(task)}{_task_message(task)}'
+                logging.info(message)
+                task.start_time = datetime.datetime.now()
                 gpus = [i - self._num_cpus for i in locks[task.num_cpus:]]
-                if locks:
-                    message = f'Starting task {i} on '
-                    if cpus:
-                        message += f'CPU {cpus} '
-                    if gpus:
-                        message += f'GPU {gpus} '
-                    if task.message:
-                        message += task.message
-                    else:
-                        message += f'for target {task.target} with args {task.args}'
-                    logging.info(message)
-                    task.locks = locks
-                    task.start_time = datetime.datetime.now()
-                    task.process = Process(
-                        target=_target, args=(gpus, task.target, *task.args))
-                    task.process.start()
-                    break
+                task.process = Process(
+                    target=_target, args=(gpus, task.target, *task.args))
+                task.process.start()
+                break
 
             # check if any one is finished
             for i, task in enumerate(self._tasks):
@@ -155,15 +184,17 @@ class Scheduler():
                         )
                     task.process = None
                     task.done = True
-                    runtime = utils.get_time_diff(task.start_time,
-                                                  datetime.datetime.now())
-                    logging.info(f'Task {i} is finished in {runtime}')
+                    task.end_time = datetime.datetime.now()
+                    logging.info(f'Task {i} is finished in {_runtime(task)}')
 
-            # check if all done
-            if all([task.done for task in self._tasks]):
-                return
 
             time.sleep(1)
+
+        if self._tasks:
+            logging.info(f'All {len(self._tasks)} tasks are done, here are the most time consuming ones:')
+            self._tasks.sort(reverse=True, key=lambda task: (task.end_time - task.start_time).seconds)
+            for task in self._tasks[:5]:
+                logging.info(f'  - {_runtime(task)} {_task_message(task)}')
 
     def _lock(self, start, end, n):
         ids = list(range(start, end))
@@ -176,9 +207,9 @@ class Scheduler():
                     blocking=False) and not self._locks[i]:
                 self._locks[i] = True
                 locks.append(i)
-        if len(locks) >= n:
-            return locks
+        return locks
+
+    def _unlock(self, locks):
         for i in locks:
             self._inter_locks[i].release()
             self._locks[i] = False
-        return []

@@ -18,7 +18,8 @@ requirements = [
     'gitpython',
     'sphinx_autodoc_typehints',
     'astor',
-    'yapf'
+    'yapf',
+    'fasteners',
 ]
 
 setup(

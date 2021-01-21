@@ -468,7 +468,7 @@ def get_subpages(input_fn):
     return subpages
 
 def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
-                               config, timeout=20 * 60, lang='python'):
+                               config, timeout=20*60, lang='python'):
     with open(input_fn, 'r') as f:
         md = f.read()
     nb = notebook.read_markdown(md)
@@ -512,11 +512,15 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
         with open(output_fn, 'w') as f:
             f.write(nbformat.writes(nb))
 
-    # use at most 2 gpus to eval a notebook
-    max_gpus = 2
-    scheduler.add(1, resource.get_notebook_gpus(nb, max_gpus), target=_job,
-                  args=(nb, output_fn, run_cells, timeout, lang),
-                  message=f'Evaluating {input_fn}, save as {output_fn}')
+    if not run_cells:
+        logging.info(f'Converting {input_fn} to {output_fn}')
+        _job(nb, output_fn, run_cells, timeout, lang)
+    else:
+        # use at most 2 gpus to eval a notebook
+        num_gpus = resource.get_notebook_gpus(nb, 2)
+        scheduler.add(1, num_gpus, target=_job,
+                      args=(nb, output_fn, run_cells, timeout, lang),
+                      message=f'Evaluating {input_fn}, save as {output_fn}')
 
 def ipynb2rst(input_fn, output_fn):
     with open(input_fn, 'r') as f:
