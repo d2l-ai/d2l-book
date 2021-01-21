@@ -11,6 +11,7 @@ import threading
 import time
 import traceback
 from typing import Any, Optional, Sequence
+import getpass
 
 import fasteners
 
@@ -87,10 +88,11 @@ class Scheduler():
                 f'# of available GPUs {self._num_gpus} is less than requested {num_gpu_workers}'
             )
         self._locks = [False] * (self._num_cpus + self._num_gpus)
+        user = getpass.getuser()
         self._inter_locks = [
-            fasteners.InterProcessLock(f'/tmp/d2lbook_cpu_{i}')
+            fasteners.InterProcessLock(f'/tmp/d2lbook_{user}_cpu_{i}')
             for i in range(self._num_cpus)] + [
-                fasteners.InterProcessLock(f'/tmp/d2lbook_gpu_{i}')
+                fasteners.InterProcessLock(f'/tmp/d2lbook_{user}_gpu_{i}')
                 for i in range(self._num_gpus)]
         self._tasks = []
         self._failed_jobs = []
