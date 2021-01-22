@@ -19,6 +19,7 @@ requirements = [
     'sphinx_autodoc_typehints',
     'astor',
     'yapf',
+    'fasteners',
     'isort'
 ]
 
