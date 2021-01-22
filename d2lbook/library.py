@@ -38,11 +38,13 @@ def save_file(root_dir: str, nbfile: str):
                     saved.append(blk)
     if saved:
         with pyfile.open('w') as f:
-            f.write(f'# This file is generated from {str(nbfile)} automatically through:\n')
+            f.write(
+                f'# This file is generated from {str(nbfile)} automatically through:\n'
+            )
             f.write('#    d2lbook build lib\n')
             f.write('# Don\'t edit it directly\n\n')
             for blk in saved:
-                f.write(blk+'\n\n')
+                f.write(blk + '\n\n')
             logging.info(f'Found {len(saved)} blocks in {str(nbfile)}')
 
 def save_mark(notebooks: List[str], lib_fname: str, save_mark: str):
@@ -51,14 +53,15 @@ def save_mark(notebooks: List[str], lib_fname: str, save_mark: str):
         _write_header(f)
         lib_name = os.path.dirname(lib_fname)
         lib_name = lib_name.split('/')[-1]
-        f.write('import sys\n'+lib_name+' = sys.modules[__name__]\n\n')
+        f.write('import sys\n' + lib_name + ' = sys.modules[__name__]\n\n')
 
         for nb in notebooks:
             _save_code(nb, f, save_mark=save_mark)
         logging.info('Saved into %s', lib_fname)
 
 def save_tab(notebooks: List[str], lib_fname: str, tab: str, default_tab: str):
-    logging.info(f'Matching with the pattern: "#@save", seaching for tab {tab}')
+    logging.info(
+        f'Matching with the pattern: "#@save", seaching for tab {tab}')
     with open(lib_fname, 'w') as f:
         _write_header(f)
         for nb in notebooks:
@@ -85,7 +88,7 @@ def _save_block(source: str, save_mark: str):
         if m:
             l = l[:m.span()[0]].rstrip()
             if l: block.append(l)
-            for j in range(i+1, len(lines)):
+            for j in range(i + 1, len(lines)):
                 l = lines[j]
                 if not l.startswith(' ') and len(l):
                     block.append(lines[j])
@@ -96,9 +99,10 @@ def _save_block(source: str, save_mark: str):
                         else:
                             break
                     break
-    return format_code('\n'.join(block)).strip()
+    return format_code('\n'.join(block))
 
-def _save_code(input_fn, output_fp, save_mark='@save', tab=None, default_tab=None):
+def _save_code(input_fn, output_fp, save_mark='@save', tab=None,
+               default_tab=None):
     """get the code blocks (import, class, def) that will be saved"""
     with open(input_fn, 'r', encoding='UTF-8') as f:
         nb = notebook.read_markdown(f.read())
@@ -114,7 +118,7 @@ def _save_code(input_fn, output_fp, save_mark='@save', tab=None, default_tab=Non
     if saved:
         logging.info('Found %d blocks in %s', len(saved), input_fn)
         for block in saved:
-            code = '# Defined in file: %s\n%s\n\n\n' %(input_fn, block)
+            code = '# Defined in file: %s\n%s\n\n\n' % (input_fn, block)
             output_fp.write(code)
 
 def _parse_mapping_config(config: str):
@@ -138,35 +142,38 @@ def save_alias(tab_lib):
     """Save alias into the library file"""
     alias = ''
     if 'alias' in tab_lib:
-        alias += tab_lib['alias'].strip()+'\n'
+        alias += tab_lib['alias'].strip() + '\n'
     if 'lib_name' in tab_lib:
         lib_name = tab_lib["lib_name"]
         if 'simple_alias' in tab_lib:
             mapping = _parse_mapping_config(tab_lib['simple_alias'])
-            alias += '\n'+'\n'.join([f'{a} = {lib_name}.{b}' for a, b in mapping])
+            alias += '\n' + '\n'.join([
+                f'{a} = {lib_name}.{b}' for a, b in mapping])
         if 'fluent_alias' in tab_lib:
             mapping = _parse_mapping_config(tab_lib['fluent_alias'])
-            alias += '\n'+'\n'.join([f'{a} = lambda x, *args, **kwargs: x.{b}(*args, **kwargs)'
-                                for a, b in mapping])
+            alias += '\n' + '\n'.join([
+                f'{a} = lambda x, *args, **kwargs: x.{b}(*args, **kwargs)'
+                for a, b in mapping])
     if alias:
         lib_file = tab_lib['lib_file']
         with open(lib_file, 'a') as f:
-            logging.info(f'Wrote {len(alias.splitlines())} alias into {lib_file}')
+            logging.info(
+                f'Wrote {len(alias.splitlines())} alias into {lib_file}')
             f.write('# Alias defined in config.ini\n')
-            f.write(alias+'\n\n')
+            f.write(alias + '\n\n')
 
 def replace_fluent_alias(source, fluent_mapping):
-    fluent_mapping = {a:b for a, b in fluent_mapping}
+    fluent_mapping = {a: b for a, b in fluent_mapping}
     new_src = source
     for _ in range(100):  # 100 is a (random) big enough number
         replaced = False
         tree = ast.parse(new_src)
         for node in ast.walk(tree):
             if (isinstance(node, ast.Call) and
-                isinstance(node.func, ast.Attribute) and
-                isinstance(node.func.value, ast.Name) and
-                node.func.value.id == 'd2l' and
-                node.func.attr in fluent_mapping):
+                    isinstance(node.func, ast.Attribute) and
+                    isinstance(node.func.value, ast.Name) and
+                    node.func.value.id == 'd2l' and
+                    node.func.attr in fluent_mapping):
                 new_node = ast.Call(
                     ast.Attribute(value=node.args[0],
                                   attr=fluent_mapping[node.func.attr]),
@@ -200,8 +207,9 @@ def replace_alias(nb, tab_lib):
                 cell.source = re.sub(p, r, cell.source)
             if fluent_mapping:
                 for a, _ in fluent_mapping:
-                    if 'd2l.'+a in cell.source:
-                        cell.source = replace_fluent_alias(cell.source, fluent_mapping)
+                    if 'd2l.' + a in cell.source:
+                        cell.source = replace_fluent_alias(
+                            cell.source, fluent_mapping)
                         break
     return nb
 
@@ -214,16 +222,15 @@ def format_code(source: str):
         if l.startswith('%') or l.startswith('!'):
             return source
     style = {
-        'DISABLE_ENDING_COMMA_HEURISTIC':True,
-        'SPACE_BETWEEN_ENDING_COMMA_AND_CLOSING_BRACKET':False,
-        'SPLIT_BEFORE_CLOSING_BRACKET':False,
-        'SPLIT_BEFORE_DICT_SET_GENERATOR':False,
-        'SPLIT_BEFORE_LOGICAL_OPERATOR':False,
-        'SPLIT_BEFORE_NAMED_ASSIGNS':False,
-        'COLUMN_LIMIT':78,
-        'BLANK_LINES_AROUND_TOP_LEVEL_DEFINITION':1,
-    }
-    return FormatCode(source, style_config=style)[0]
+        'DISABLE_ENDING_COMMA_HEURISTIC': True,
+        'SPACE_BETWEEN_ENDING_COMMA_AND_CLOSING_BRACKET': False,
+        'SPLIT_BEFORE_CLOSING_BRACKET': False,
+        'SPLIT_BEFORE_DICT_SET_GENERATOR': False,
+        'SPLIT_BEFORE_LOGICAL_OPERATOR': False,
+        'SPLIT_BEFORE_NAMED_ASSIGNS': False,
+        'COLUMN_LIMIT': 78,
+        'BLANK_LINES_AROUND_TOP_LEVEL_DEFINITION': 1,}
+    return FormatCode(source, style_config=style)[0].strip()
 
 def format_code_nb(nb):
     for cell in nb.cells:
