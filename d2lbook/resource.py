@@ -128,7 +128,7 @@ class Scheduler():
             info = []
             if cpus: info.append(f'CPU {cpus}')
             if gpus: info.append(f'GPU {gpus}')
-            return ','.join(info)
+            return ', '.join(info)
 
         def _runtime(task):
             end_time = task.end_time if task.end_time else datetime.datetime.now(
@@ -138,14 +138,13 @@ class Scheduler():
         def _summary_heavy_tasks():
             if self._tasks:
                 logging.info(
-                    f'All {len(self._tasks)} tasks are done, here are the most time consuming ones:'
+                    f'All {len(self._tasks)} tasks are done, sorting by runtime:'
                 )
                 self._tasks.sort(
-                    reverse=True, key=lambda task:
-                    (task.end_time - task.start_time).seconds)
-                for task in self._tasks[:5]:
+                    key=lambda task: (task.end_time - task.start_time).seconds)
+                for task in self._tasks:
                     logging.info(
-                        f'  - {_runtime(task)} for {task.description} on {_device_info(task)}'
+                        f'  - {_runtime(task)} on {_device_info(task)} for {task.description}'
                     )
 
         def _status():
@@ -161,7 +160,7 @@ class Scheduler():
             for task in self._tasks:
                 if task.process:
                     logging.info(
-                        f'    - Task "{task.description}" is running on {_device_info(task)} is for {_runtime(task)}'
+                        f'    - Task "{task.description}" on {_device_info(task)} is running for {_runtime(task)}'
                     )
 
         # try large gpu workloads first
