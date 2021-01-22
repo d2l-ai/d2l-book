@@ -487,6 +487,7 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
         # replace alias
         if tab in config.library:
             nb = library.replace_alias(nb, config.library[tab])
+    nb = library.format_code_nb(nb)
 
     def _job(nb, output_fn, run_cells, timeout, lang):
         # evaluate

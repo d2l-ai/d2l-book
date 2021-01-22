@@ -44,7 +44,7 @@ class TestLibrary(unittest.TestCase):
             ('float(d2l.reduce_sum(d2l.abs(Y1 - Y2))) < 1e-6',
              'float(torch.abs(Y1 - Y2).sum()) < 1e-6'),
             ('d2l.plt.scatter(d2l.numpy(features[:, a + b]), d2l.numpy(labels), 1);',
-             'd2l.plt.scatter(features[:, a + b].detach().numpy(),\n                labels.detach().numpy(), 1)'),
+             'd2l.plt.scatter(features[:, a + b].detach().numpy(),labels.detach().numpy(), 1);'),
             ('d2l.reshape(multistep_preds[i - tau: i], (1, -1))',
              'multistep_preds[i - tau:i].reshape((1, -1))'),
             ('X = d2l.reshape(d2l.arange(16, dtype=d2l.float32), (1, 1, 4, 4))',
@@ -57,6 +57,7 @@ class TestLibrary(unittest.TestCase):
         for a, b in pairs:
             self.nb.cells[0].source = a
             nb = library.replace_alias(self.nb, self.tab_lib)
-            self.assertEqual(nb.cells[0].source, b)
+            compact = lambda x: x.replace('\n','').replace(' ','')
+            self.assertEqual(compact(nb.cells[0].source), compact(b))
 
 

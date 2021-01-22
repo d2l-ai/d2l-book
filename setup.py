@@ -20,6 +20,7 @@ requirements = [
     'astor',
     'yapf',
     'fasteners',
+    'isort'
 ]
 
 setup(
