@@ -135,30 +135,47 @@ class Scheduler():
             )
             return utils.get_time_diff(task.start_time, end_time)
 
-        # try large gpu workloads first
-        self._tasks.sort(reverse=True, key=lambda task:
-                         (task.num_gpus, task.num_cpus))
+        def _summary_heavy_tasks():
+            if self._tasks:
+                logging.info(
+                    f'All {len(self._tasks)} tasks are done, here are the most time consuming ones:'
+                )
+                self._tasks.sort(
+                    reverse=True, key=lambda task:
+                    (task.end_time - task.start_time).seconds)
+                for task in self._tasks[:5]:
+                    logging.info(
+                        f'  - {_runtime(task)} for {task.description} on {_device_info(task)}'
+                    )
 
-        for t in range(24 * 60 * 60):  # run at most 24 hours
-            # check if all done
+        def _status():
             num_done, num_not_started, num_running = 0, 0, 0
             for task in self._tasks:
                 if task.done: num_done += 1
                 if task.process: num_running += 1
                 if not task.process and not task.done: num_not_started += 1
 
-            if num_done == len(self._tasks):
+            logging.info(
+                f'  Status: {num_running} running tasks, {num_done} done, {num_not_started} not started'
+            )
+            for task in self._tasks:
+                if task.process:
+                    logging.info(
+                        f'    - Task "{task.description}" is running on {_device_info(task)} is for {_runtime(task)}'
+                    )
+
+        # try large gpu workloads first
+        self._tasks.sort(reverse=True, key=lambda task:
+                         (task.num_gpus, task.num_cpus))
+
+        last_status_t = 0
+        for t in range(24 * 60 * 60):  # run at most 24 hours
+            if all([task.done for task in self._tasks]):
                 break
 
-            if (t+1) % 60 == 0:
-                logging.info(
-                    f'Status: {num_running} running tasks, {num_done} done, {num_not_started} not started'
-                )
-                for task in self._tasks:
-                    if task.process:
-                        logging.info(
-                            f'  - Task "{task.description}" is running on {_device_info(task)} is for {_runtime(task)}'
-                        )
+            if t > last_status_t + 60:
+                last_status_t = t
+                _status()
 
             for task in self._tasks:
                 if task.process or task.done:
@@ -176,6 +193,8 @@ class Scheduler():
                 task.process = Process(target=_target,
                                        args=(gpus, task.target, *task.args))
                 task.process.start()
+                _status()
+                last_status_t = t
                 break
 
             # check if any one is finished
@@ -185,32 +204,23 @@ class Scheduler():
                     for lock in task.locks:
                         self._locks[lock] = False
                         self._inter_locks[lock].release()
+                    task.end_time = datetime.datetime.now()
                     if task.process.exception:
                         error, traceback = task.process.exception
                         self._failed_tasks.append((task, error, traceback))
                         logging.error(
-                            f'Task "{task.description}" exited with error: {error}\n{traceback}'
+                            f'Task "{task.description}" on {_device_info(task)} exited with error: {error}\n{traceback}'
+                        )
+                    else:
+                        logging.info(
+                            f'Task "{task.description}" on {_device_info(task)} is finished in {_runtime(task)}'
                         )
                     task.process = None
                     task.done = True
-                    task.end_time = datetime.datetime.now()
-                    logging.info(
-                        f'Task "{task.description}" is finished in {_runtime(task)}'
-                    )
 
             time.sleep(1)
 
-        if self._tasks:
-            logging.info(
-                f'All {len(self._tasks)} tasks are done, here are the most time consuming ones:'
-            )
-            self._tasks.sort(
-                reverse=True, key=lambda task:
-                (task.end_time - task.start_time).seconds)
-            for task in self._tasks[:5]:
-                logging.info(
-                    f'  - {_runtime(task)} for {task.description} on {_device_info(task)}'
-                )
+        _summary_heavy_tasks()
 
     def _lock(self, start, end, n):
         ids = list(range(start, end))
