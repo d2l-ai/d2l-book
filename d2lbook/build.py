@@ -144,17 +144,19 @@ class Builder(object):
         for i, nb in enumerate(updated_notebooks):
             logging.info('[%d] %s', i + 1, nb[0])
         self._copy_resources(self.config.src_dir, self.config.eval_dir)
-
-        scheduler = resource.Scheduler(num_cpu_workers=6)
+        gpus = resource.get_available_gpus()
+        num_cpu_workers = len(gpus) if gpus else 2
+        logging.info(
+            f'Evaluating notebooks in parallel with {num_cpu_workers} CPU workers and {len(gpus)} GPU workers'
+        )
+        scheduler = resource.Scheduler(num_cpu_workers, len(gpus))
         run_cells = self.config.build['eval_notebook'].lower() == 'true'
         for i, (src, tgt) in enumerate(updated_notebooks):
             mkdir(os.path.dirname(tgt))
             _process_and_eval_notebook(scheduler, src, tgt, run_cells,
                                        self.config)
-
         scheduler.run()
-        if len(scheduler.failed_jobs):
-            raise RuntimeError('Some notebooks are failed to evaluate')
+        assert not scheduler.failed_tasks, scheduler.error_message
 
         for src, tgt in updated_markdowns:
             logging.info('Copying %s to %s', src, tgt)

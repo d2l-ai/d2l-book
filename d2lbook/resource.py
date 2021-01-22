@@ -50,7 +50,7 @@ class _Task():
     num_gpus: int
     target: Any
     args: Sequence[Any]
-    message: str
+    description: str
     process: Optional[Any] = None
     locks: Sequence[int] = dataclasses.field(default_factory=list)
     done: bool = False
@@ -80,13 +80,9 @@ class Process(mp.Process):
 
 class Scheduler():
     """A schedule run multiple jobs in parallel under the resource constraint."""
-    def __init__(self, num_cpu_workers, num_gpu_workers=-1):
+    def __init__(self, num_cpu_workers, num_gpu_workers):
         self._num_cpus = num_cpu_workers
-        self._num_gpus = len(get_available_gpus())
-        if num_gpu_workers >= 0 and self._num_gpus < num_gpu_workers:
-            raise ValueError(
-                f'# of available GPUs {self._num_gpus} is less than requested {num_gpu_workers}'
-            )
+        self._num_gpus = num_gpu_workers
         self._locks = [False] * (self._num_cpus + self._num_gpus)
         user = getpass.getuser()
         self._inter_locks = [
@@ -95,47 +91,53 @@ class Scheduler():
                 fasteners.InterProcessLock(f'/tmp/d2lbook_{user}_gpu_{i}')
                 for i in range(self._num_gpus)]
         self._tasks = []
-        self._failed_jobs = []
+        self._failed_tasks = []
 
-    def add(self, num_cpus, num_gpus, target, args, message=''):
+    def add(self, num_cpus, num_gpus, target, args, description=''):
         """Add tasks into the queue."""
-        if num_cpus == 0 and num_gpus == 0:
-            raise ValueError('Need at least one CPU or GPU')
-        if num_cpus > self._num_cpus or num_gpus > self._num_gpus:
-            raise ValueError('Not enough resources to run the task')
-        self._tasks.append(_Task(num_cpus, num_gpus, target, args, message))
+        assert not (num_cpus == 0 and num_gpus == 0), \
+                'Need at least one CPU or GPU'
+        assert num_cpus <= self._num_cpus and num_gpus <= self._num_gpus, \
+            f'Not enough resources (CPU {self._num_cpus}, GPU {self._num_gpus} ) to run the task (CPU {num_cpus}, GPU {num_gpus})'
+
+        if not description:
+            description = f'Target {target} with args {args}'
+        self._tasks.append(_Task(num_cpus, num_gpus, target, args,
+                                 description))
 
     @property
-    def failed_jobs(self):
-        return self._failed_jobs
+    def failed_tasks(self):
+        return [(task.description, err, trace)
+                for task, err, trace in self._failed_tasks]
+
+    @property
+    def error_message(self):
+        if not self.failed_tasks:
+            return ''
+        errors = [
+            f'{len(self.failed_tasks)} notebooks are failed to evaluate:']
+        for task, err, trace in self.failed_tasks:
+            errors += [f'Task {task} exited with error: {err}', trace]
+        return '\n\n'.join(errors)
 
     def run(self):
         """Run the tasks and block until they are done."""
-        def _target(gpus, target, *args):
-            if not gpus:
-                # it will triggler an runtime error if target actually uses a gpu
-                gpus = [self._num_gpus + 1]
-            os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([
-                str(g) for g in gpus])
-            return target(*args)
-
         def _device_info(task):
             cpus = task.locks[:task.num_cpus]
             gpus = [i - self._num_cpus for i in task.locks[task.num_cpus:]]
-            info = ''
-            if cpus: info += f'CPU {cpus} '
-            if gpus: info += f'GPU {gpus} '
-            return info
-
-        def _task_message(task):
-            if task.message:
-                return task.message
-            return 'Target {task.target} with args {task.args}'
+            info = []
+            if cpus: info.append(f'CPU {cpus}')
+            if gpus: info.append(f'GPU {gpus}')
+            return ','.join(info)
 
         def _runtime(task):
             end_time = task.end_time if task.end_time else datetime.datetime.now(
             )
             return utils.get_time_diff(task.start_time, end_time)
+
+        # try large gpu workloads first
+        self._tasks.sort(reverse=True, key=lambda task:
+                         (task.num_gpus, task.num_cpus))
 
         for t in range(24 * 60 * 60):  # run at most 24 hours
             # check if all done
@@ -152,13 +154,13 @@ class Scheduler():
                 logging.info(
                     f'Status: {num_running} running tasks, {num_done} done, {num_not_started} not started'
                 )
-                for i, task in enumerate(self._tasks):
+                for task in self._tasks:
                     if task.process:
                         logging.info(
-                            f'  - Task {i} on {_device_info(task)}is running for {_runtime(task)}  '
+                            f'  - Task "{task.description}" is running on {_device_info(task)} is for {_runtime(task)}'
                         )
 
-            for i, task in enumerate(self._tasks):
+            for task in self._tasks:
                 if task.process or task.done:
                     continue
                 locks = self._lock(0, self._num_cpus, task.num_cpus) + \
@@ -167,7 +169,7 @@ class Scheduler():
                     self._unlock(locks)
                     continue
                 task.locks = locks
-                message = f'Starting task {i} on {_device_info(task)}{_task_message(task)}'
+                message = f'Starting task "{task.description}" on {_device_info(task)}'
                 logging.info(message)
                 task.start_time = datetime.datetime.now()
                 gpus = [i - self._num_cpus for i in locks[task.num_cpus:]]
@@ -177,7 +179,7 @@ class Scheduler():
                 break
 
             # check if any one is finished
-            for i, task in enumerate(self._tasks):
+            for task in self._tasks:
                 if task.done or not task.process: continue
                 if not task.process.is_alive():
                     for lock in task.locks:
@@ -185,14 +187,16 @@ class Scheduler():
                         self._inter_locks[lock].release()
                     if task.process.exception:
                         error, traceback = task.process.exception
-                        self._failed_jobs.append(i)
+                        self._failed_tasks.append((task, error, traceback))
                         logging.error(
-                            f'Task {i} exited with error: {error}\n{traceback}'
+                            f'Task "{task.description}" exited with error: {error}\n{traceback}'
                         )
                     task.process = None
                     task.done = True
                     task.end_time = datetime.datetime.now()
-                    logging.info(f'Task {i} is finished in {_runtime(task)}')
+                    logging.info(
+                        f'Task "{task.description}" is finished in {_runtime(task)}'
+                    )
 
             time.sleep(1)
 
@@ -204,7 +208,9 @@ class Scheduler():
                 reverse=True, key=lambda task:
                 (task.end_time - task.start_time).seconds)
             for task in self._tasks[:5]:
-                logging.info(f'  - {_runtime(task)} {_task_message(task)}')
+                logging.info(
+                    f'  - {_runtime(task)} for {task.description} on {_device_info(task)}'
+                )
 
     def _lock(self, start, end, n):
         ids = list(range(start, end))
@@ -223,3 +229,10 @@ class Scheduler():
         for i in locks:
             self._inter_locks[i].release()
             self._locks[i] = False
+
+def _target(gpus, target, *args):
+    if not gpus:
+        # it will triggler an runtime error if target actually uses a gpu
+        gpus = [-1]
+    os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([str(g) for g in gpus])
+    return target(*args)

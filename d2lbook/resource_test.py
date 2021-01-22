@@ -17,26 +17,28 @@ def _runtime_error():
     return 1 / 0
 
 class TestResource(unittest.TestCase):
+    def test_get_available_gpus(self):
+        self.assertGreaterEqual(len(resource.get_available_gpus()), 0)
+
     def test_gpus(self):
         def _job():
             self.assertEqual(len(os.environ['CUDA_VISIBLE_DEVICES']), 1)
             time.sleep(1)
 
-        if len(resource.get_available_gpus()) < 0:
-            return
-        scheduler = resource.Scheduler(num_cpu_workers=2)
+        scheduler = resource.Scheduler(num_cpu_workers=2, num_gpu_workers=2)
         scheduler.add(1, 1, _job, ())
         scheduler.add(1, 1, _job, ())
         scheduler.run()
 
     def test_scheduler(self):
-        scheduler = resource.Scheduler(num_cpu_workers=2)
-        scheduler.add(1, 0, _incorrect_code, ())
-        scheduler.add(1, 0, _runtime_error, ())
+        scheduler = resource.Scheduler(num_cpu_workers=2, num_gpu_workers=2)
         for _ in range(3):
-            scheduler.add(1, 0, time.sleep, (3,))
+            scheduler.add(1, 0, time.sleep, (2,))
+        scheduler.add(1, 1, _incorrect_code, ())
+        scheduler.add(1, 2, _runtime_error, ())
         scheduler.run()
-        self.assertEqual(len(scheduler.failed_jobs), 2)
+        self.assertEqual(len(scheduler.failed_tasks), 2)
+        logging.info(scheduler.error_message)
 
 if __name__ == '__main__':
     logging.basicConfig(
