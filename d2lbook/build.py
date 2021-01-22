@@ -522,7 +522,7 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
         num_gpus = resource.get_notebook_gpus(nb, 2)
         scheduler.add(1, num_gpus, target=_job,
                       args=(nb, output_fn, run_cells, timeout, lang),
-                      message=f'Evaluating {input_fn}, save as {output_fn}')
+                      description=f'Evaluating {input_fn}')
 
 def ipynb2rst(input_fn, output_fn):
     with open(input_fn, 'r') as f:
