@@ -67,7 +67,7 @@ class Config():
 
         if not self.project['title']:
             # Infer the book title from the index page
-            with open(index_fname, 'r') as f:
+            with open(index_fname, 'r', encoding = 'UTF-8') as f:
                 for line in f:
                     line = line.strip()
                     if line:
