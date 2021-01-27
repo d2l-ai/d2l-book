@@ -95,7 +95,7 @@ class Builder(object):
         notebooks, _, _ = self._find_md_files()
         error = False
         for fn in notebooks:
-            with open(fn, 'r') as f:
+            with open(fn, 'r', encoding='UTF-8') as f:
                 nb = notebook.read_markdown(f.read())
             nb = notebook.split_markdown_cell(nb)
             for c in nb.cells:
@@ -113,7 +113,7 @@ class Builder(object):
         reader = notedown.MarkdownReader()
         error = False
         for fn in notebooks:
-            with open(fn, 'r') as f:
+            with open(fn, 'r', encoding='UTF-8') as f:
                 notebook = reader.read(f)
             for c in notebook.cells:
                 if 'outputs' in c and len(c['outputs']):
@@ -245,7 +245,7 @@ class Builder(object):
                     src_notebooks.append(fname)
             logging.info(f'merge {src_notebooks} into {merged}')
             src_nbs = [
-                nbformat.read(open(fn, 'r'), as_version=4)
+                nbformat.read(open(fn, 'r', encoding='UTF-8'), as_version=4)
                 for fn in src_notebooks]
             if len(src_nbs) > 1:
                 dst_nb = notebook.merge_tab_notebooks(src_nbs)
@@ -253,7 +253,7 @@ class Builder(object):
             else:
                 dst_nb = src_nbs[0]
             mkdir(os.path.dirname(merged))
-            with open(merged, 'w') as f:
+            with open(merged, 'w', encoding='UTF-8') as f:
                 nbformat.write(dst_nb, f)
         self._copy_resources(default_eval_dir, self.config.eval_dir)
 
@@ -441,7 +441,7 @@ def update_ipynb_toc(root):
                         c['source'] = '\n'.join(toc)
                         c['type'] = 'markdown'
                 cell.source = markdown.join_markdown_cells(md_cells)
-        with open(fn, 'w') as f:
+        with open(fn, 'w', encoding='UTF-8') as f:
             f.write(nbformat.writes(nb))
 
 def get_toc(root):
@@ -471,7 +471,7 @@ def get_subpages(input_fn):
 
 def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
                                config, timeout=20 * 60, lang='python'):
-    with open(input_fn, 'r') as f:
+    with open(input_fn, 'r', encoding='UTF-8') as f:
         md = f.read()
     nb = notebook.read_markdown(md)
     tab = config.tab
@@ -482,7 +482,7 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
         if not nb:
             logging.info(f"Skip to eval tab {tab} for {input_fn}")
             # write an empty file to track the dependencies
-            open(output_fn, 'w')
+            open(output_fn, 'w', encoding='UTF-8')
             return
         # replace alias
         if tab in config.library:
@@ -512,7 +512,7 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
                 cell['outputs'] = outputs
         # write
         nb['metadata'].update({'language_info': {'name': lang}})
-        with open(output_fn, 'w') as f:
+        with open(output_fn, 'w', encoding='UTF-8') as f:
             f.write(nbformat.writes(nb))
 
     if not run_cells:
@@ -526,7 +526,7 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
                       description=f'Evaluating {input_fn}')
 
 def ipynb2rst(input_fn, output_fn):
-    with open(input_fn, 'r') as f:
+    with open(input_fn, 'r', encoding='UTF-8') as f:
         nb = nbformat.read(f, as_version=4)
     nb = notebook.remove_slides(nb)
     sig = hashlib.sha1(input_fn.encode()).hexdigest()[:6]
@@ -534,23 +534,23 @@ def ipynb2rst(input_fn, output_fn):
         'unique_key':
         'output_' + rm_ext(os.path.basename(output_fn)) + '_' + sig}
     body, resources = rst_lib.convert_notebook(nb, resources)
-    with open(output_fn, 'w') as f:
+    with open(output_fn, 'w', encoding='UTF-8') as f:
         f.write(body)
     outputs = resources['outputs']
     base_dir = os.path.dirname(output_fn)
     for fn in outputs:
         full_fn = os.path.join(base_dir, fn)
-        with open(full_fn, 'wb') as f:
+        with open(full_fn, 'wb', encoding='UTF-8') as f:
             f.write(outputs[fn])
 
 def process_latex(fname, script):
-    with open(fname, 'r') as f:
+    with open(fname, 'r', encoding='UTF-8') as f:
         lines = f.read().split('\n')
 
     _combine_citations(lines)
     _center_graphics(lines)
 
-    with open(fname, 'w') as f:
+    with open(fname, 'w', encoding='UTF-8') as f:
         f.write('\n'.join(lines))
     # Execute custom process_latex script
     if script:
