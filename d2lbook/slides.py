@@ -132,13 +132,7 @@ def _generate_slides(
             new_cells.append(cell)
         else:
             slide_type = '-'
-            src = ''
-            # find level-1 head
-            lines = cell.source.splitlines()
-            for l in lines:
-                if l.strip().startswith('# '):
-                    src += l + '\n'
-                    break
+            src = []
             matches = _match_slide_marks(cell.source)
             if matches:
                 has_slides = True
@@ -148,8 +142,19 @@ def _generate_slides(
                 if pair[0] in ('[[[', '((('):
                     src += '\n\n' + text.strip('\n') + '\n\n'
                 else:
-                    src += text
+                    src.append(text)
             if not src: continue
+            src = '\n'.join(src)
+            # cannot simply use . as it could be in code such as `a.text()`
+            for m in ('.\n', '. '):
+                sentences = [s.strip() for s in src.split(m)]
+                src = m.join([s[0].upper() + s[1:] for s in sentences])
+            src = src.rstrip(',. \n:')
+            # find level-1 head
+            for l in cell.source.splitlines():
+                if l.strip().startswith('# '):
+                    src = l + '\n\n' + src
+                    break
             new_cells.append(
                 nbformat.v4.new_markdown_cell(
                     src, metadata={"slideshow": {
