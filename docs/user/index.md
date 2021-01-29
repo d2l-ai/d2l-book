@@ -17,5 +17,6 @@ deploy
 markdown
 code
 code_tabs
+slides
 colab
 ```

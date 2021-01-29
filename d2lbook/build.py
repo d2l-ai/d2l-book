@@ -489,32 +489,6 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
             nb = library.replace_alias(nb, config.library[tab])
     nb = library.format_code_nb(nb)
 
-    def _job(nb, output_fn, run_cells, timeout, lang):
-        # evaluate
-        if run_cells:
-            # change to the notebook directory to resolve the relpaths properly
-            cwd = os.getcwd()
-            os.chdir(os.path.join(cwd, os.path.dirname(output_fn)))
-            notedown.run(nb, timeout)
-            os.chdir(cwd)
-        # change stderr output to stdout output
-        for cell in nb.cells:
-            if cell.cell_type == 'code' and 'outputs' in cell:
-                outputs = []
-                for out in cell['outputs']:
-                    if ('data' in out and 'text/plain' in out['data'] and
-                            out['data']['text/plain'].startswith('HBox')):
-                        # that's tqdm progress bar cannot displayed properly.
-                        continue
-                    if 'name' in out and out['name'] == 'stderr':
-                        out['name'] = 'stdout'
-                    outputs.append(out)
-                cell['outputs'] = outputs
-        # write
-        nb['metadata'].update({'language_info': {'name': lang}})
-        with open(output_fn, 'w') as f:
-            f.write(nbformat.writes(nb))
-
     if not run_cells:
         logging.info(f'Converting {input_fn} to {output_fn}')
         _job(nb, output_fn, run_cells, timeout, lang)
@@ -542,6 +516,32 @@ def ipynb2rst(input_fn, output_fn):
         full_fn = os.path.join(base_dir, fn)
         with open(full_fn, 'wb') as f:
             f.write(outputs[fn])
+
+def _job(nb, output_fn, run_cells, timeout, lang):
+    # evaluate
+    if run_cells:
+        # change to the notebook directory to resolve the relpaths properly
+        cwd = os.getcwd()
+        os.chdir(os.path.join(cwd, os.path.dirname(output_fn)))
+        notedown.run(nb, timeout)
+        os.chdir(cwd)
+    # change stderr output to stdout output
+    for cell in nb.cells:
+        if cell.cell_type == 'code' and 'outputs' in cell:
+            outputs = []
+            for out in cell['outputs']:
+                if ('data' in out and 'text/plain' in out['data'] and
+                        out['data']['text/plain'].startswith('HBox')):
+                    # that's tqdm progress bar cannot displayed properly.
+                    continue
+                if 'name' in out and out['name'] == 'stderr':
+                    out['name'] = 'stdout'
+                outputs.append(out)
+            cell['outputs'] = outputs
+    # write
+    nb['metadata'].update({'language_info': {'name': lang}})
+    with open(output_fn, 'w') as f:
+        f.write(nbformat.writes(nb))
 
 def process_latex(fname, script):
     with open(fname, 'r') as f:
