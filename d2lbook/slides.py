@@ -149,6 +149,7 @@ def _generate_slides(
             for m in ('.\n', '. '):
                 sentences = [s.strip() for s in src.split(m)]
                 src = m.join([s[0].upper() + s[1:] for s in sentences])
+            src = src.replace('.$$', '$$').replace(',$$', '$$')
             src = src.rstrip(',. \n:')
             # find level-1 head
             for l in cell.source.splitlines():

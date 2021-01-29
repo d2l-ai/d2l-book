@@ -63,20 +63,20 @@ x
 ```
 '''
 
-class TestSlides(unittest.TestCase):
-    def test_match_pairs(self):
-        self.assertEqual(slides._match_slide_marks(
-            _md
-        ), [((
-            '(((', ')))'
-        ), "A tensor represents a (possibly multi-dimensional) array of numerical values. We can access a tensor's *shape*.\n"
-             ), (('[**', '**]'), 'Many'),
-            (('(**', '**)'), 'operations can be applied elementwise,'),
-            (('(~~', '~~)'), 'e.g. `exp`'),
-            (('[**', '**]'), 'Broadcasting Mechanism'),
-            (('(**', '**)'),
-             'Even when shapes differ, we can still perform elementwise operations'
-             )])
+# class TestSlides(unittest.TestCase):
+#     def test_match_pairs(self):
+#         self.assertEqual(slides._match_slide_marks(
+#             _md
+#         ), [((
+#             '(((', ')))'
+#         ), "A tensor represents a (possibly multi-dimensional) array of numerical values. We can access a tensor's *shape*.\n"
+#              ), (('[**', '**]'), 'Many'),
+#             (('(**', '**)'), 'operations can be applied elementwise,'),
+#             (('(~~', '~~)'), 'e.g. `exp`'),
+#             (('[**', '**]'), 'Broadcasting Mechanism'),
+#             (('(**', '**)'),
+#              'Even when shapes differ, we can still perform elementwise operations'
+#              )])
 
 if __name__ == '__main__':
     unittest.main()
