@@ -17,7 +17,7 @@ from d2lbook import colab, library, markdown, notebook
 from d2lbook import rst as rst_lib
 from d2lbook import sagemaker
 from d2lbook.config import Config
-from d2lbook.slides import Slides
+from d2lbook.slides import Slides, remove_slide_marks
 from d2lbook.sphinx import prepare_sphinx_env
 from d2lbook.utils import *  # TODO(mli), don't import *
 from d2lbook import resource
@@ -502,7 +502,7 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
 def ipynb2rst(input_fn, output_fn):
     with open(input_fn, 'r') as f:
         nb = nbformat.read(f, as_version=4)
-    nb = notebook.remove_slides(nb)
+    nb = remove_slide_marks(nb)
     sig = hashlib.sha1(input_fn.encode()).hexdigest()[:6]
     resources = {
         'unique_key':

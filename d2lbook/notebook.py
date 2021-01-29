@@ -12,10 +12,9 @@ from d2lbook import markdown
 from d2lbook import common
 from d2lbook import config
 
-
-def create_new_notebook(nb: notebooknode.NotebookNode,
-                         cells: List[notebooknode.NotebookNode]
-                         ) -> notebooknode.NotebookNode:
+def create_new_notebook(
+        nb: notebooknode.NotebookNode,
+        cells: List[notebooknode.NotebookNode]) -> notebooknode.NotebookNode:
     """create an empty notebook by copying metadata from nb"""
     new_nb = copy.deepcopy(nb)
     new_nb.cells = cells
@@ -27,7 +26,6 @@ def read(fname: str):
     with open(fname, 'r') as f:
         return nbformat.read(f, as_version=4)
 
-
 def read_markdown(source: Union[str, List[str]]) -> notebooknode.NotebookNode:
     """Returns a notebook from markdown source"""
     if not isinstance(source, str):
@@ -35,14 +33,15 @@ def read_markdown(source: Union[str, List[str]]) -> notebooknode.NotebookNode:
     reader = notedown.MarkdownReader(match='strict')
     return reader.reads(source)
 
-def split_markdown_cell(nb: notebooknode.NotebookNode) -> notebooknode.NotebookNode:
+def split_markdown_cell(
+        nb: notebooknode.NotebookNode) -> notebooknode.NotebookNode:
     """split a markdown cell if it contains tab block.
 
     a new property `class` is added to the metadata for a tab cell.
     """
     # merge continous markdown cells
-    grouped_cells = common.group_list(nb.cells,
-                                      lambda cell, _: cell.cell_type=='markdown')
+    grouped_cells = common.group_list(
+        nb.cells, lambda cell, _: cell.cell_type == 'markdown')
     new_cells = []
     for is_md, group in grouped_cells:
         if not is_md:
@@ -50,8 +49,8 @@ def split_markdown_cell(nb: notebooknode.NotebookNode) -> notebooknode.NotebookN
         else:
             src = '\n\n'.join(cell.source for cell in group)
             md_cells = markdown.split_markdown(src)
-            is_tab_cell = lambda cell, _: cell['class'] if (
-                cell['type']=='markdown' and 'class' in cell) else 'not_tab_cell'
+            is_tab_cell = lambda cell, _: cell['class'] if (cell[
+                'type'] == 'markdown' and 'class' in cell) else 'not_tab_cell'
             grouped_md_cells = common.group_list(md_cells, is_tab_cell)
             for tab, md_group in grouped_md_cells:
                 new_cell = nbformat.v4.new_markdown_cell(
@@ -64,7 +63,8 @@ def split_markdown_cell(nb: notebooknode.NotebookNode) -> notebooknode.NotebookN
     new_cells = [cell for cell in new_cells if cell.source]
     return create_new_notebook(nb, new_cells)
 
-def get_cell_tab(cell: notebooknode.NotebookNode, default_tab: str='') -> List[str]:
+def get_cell_tab(cell: notebooknode.NotebookNode,
+                 default_tab: str = '') -> List[str]:
     """Get the cell tab"""
     if 'tab' in cell.metadata:
         tab = cell.metadata['tab']
@@ -76,8 +76,8 @@ def get_cell_tab(cell: notebooknode.NotebookNode, default_tab: str='') -> List[s
         return [tab.strip() for tab in match[1].split(',')]
     return [default_tab,]
 
-def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
-                     ) -> notebooknode.NotebookNode:
+def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str,
+                     default_tab: str) -> notebooknode.NotebookNode:
     """Returns a notebook with code/markdown cells that doesn't match tab
     removed.
 
@@ -112,12 +112,13 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str, default_tab: str
                 for j, line in enumerate(lines):
                     src_tab = common.source_tab_pattern.search(line)
                     text_tab = common.md_mark_pattern.search(line)
-                    if src_tab or (text_tab and (
-                            text_tab[1]=='begin_tab' or text_tab[1]=='end_tab')):
+                    if src_tab or (text_tab and (text_tab[1] == 'begin_tab' or
+                                                 text_tab[1] == 'end_tab')):
                         del lines[j]
                     new_cell.source = '\n'.join(lines)
                 new_cells.append(new_cell)
-    if not matched_tab and any([cell.cell_type=='code' for cell in nb.cells]):
+    if not matched_tab and any([cell.cell_type == 'code'
+                                for cell in nb.cells]):
         return None
     return create_new_notebook(nb, new_cells)
 
@@ -125,15 +126,17 @@ def _has_output(cell):
     """Return if a cell has output"""
     return 'outputs' in cell and len(cell['outputs'])
 
-def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
-                        ) -> notebooknode.NotebookNode:
+def merge_tab_notebooks(
+    src_notebooks: List[notebooknode.NotebookNode]
+) -> notebooknode.NotebookNode:
     """Merge the tab notebooks into a single one.
 
     The reserved function of get_tab_notebook.
     """
-    n = max([max([cell.metadata['origin_pos'] for cell in nb.cells])
-             for nb in src_notebooks])
-    new_cells = [[] for _ in range(n+1)]  # type: ignore
+    n = max([
+        max([cell.metadata['origin_pos'] for cell in nb.cells])
+        for nb in src_notebooks])
+    new_cells = [[] for _ in range(n + 1)]  # type: ignore
 
     # for compatability
     tab_list = lambda tab: [tab] if type(tab) == str else tab
@@ -142,7 +145,8 @@ def merge_tab_notebooks(src_notebooks: List[notebooknode.NotebookNode]
             cell = copy.deepcopy(cell)
             p = cell.metadata['origin_pos']
             if len(new_cells[p]):
-                if _has_output(new_cells[p][-1]) or _has_output(cell) or new_cells[p][-1].source != cell.source:
+                if _has_output(new_cells[p][-1]) or _has_output(
+                        cell) or new_cells[p][-1].source != cell.source:
                     new_cells[p].append(cell)
                 else:
                     if 'tab' in cell.metadata:
@@ -160,18 +164,18 @@ def _get_tab_bar(tabs, tab_id, default_tab, div_class=''):
     code = f"```eval_rst\n\n.. raw:: html\n\n    <div class=\"mdl-tabs mdl-js-tabs mdl-js-ripple-effect\"><div class=\"mdl-tabs__tab-bar {div_class}\">"
     for i, tab in enumerate(tabs):
         active = 'is-active' if tab == default_tab else ''
-        code +=f'<a href="#{tab}-{tab_id}-{i}" onclick="tagClick(\'{tab}\'); return false;" class="mdl-tabs__tab {active}">{tab}</a>'
+        code += f'<a href="#{tab}-{tab_id}-{i}" onclick="tagClick(\'{tab}\'); return false;" class="mdl-tabs__tab {active}">{tab}</a>'
     code += "</div>\n```"
     return nbformat.v4.new_markdown_cell(code)
 
 def _get_tab_panel(cells, tab, tab_id, default_tab):
     active = 'is-active' if tab == default_tab else ''
     tab_panel_begin = nbformat.v4.new_markdown_cell(
-        f"```eval_rst\n.. raw:: html\n\n    <div class=\"mdl-tabs__panel {active}\" id=\"{tab}-{tab_id}\">\n```")
+        f"```eval_rst\n.. raw:: html\n\n    <div class=\"mdl-tabs__panel {active}\" id=\"{tab}-{tab_id}\">\n```"
+    )
     tab_panel_end = nbformat.v4.new_markdown_cell(
         "```eval_rst\n.. raw:: html\n\n    </div>\n```")
     return [tab_panel_begin, *cells, tab_panel_end]
-
 
 def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
     """merge side-by-side tabs into a single one.
@@ -196,11 +200,12 @@ def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
             new_groups.append((False, cells))
             continue
         # the general case
-        group_dict = {tab:[] for tab in tabs}  # type: ignore
+        group_dict = {tab: [] for tab in tabs}  # type: ignore
         for cell in cells:
             for tab in cell.metadata['tab']:
                 group_dict[tab].append(cell)
-        group = [(tab, group_dict[tab]) for tab in tabs if len(group_dict[tab])]
+        group = [
+            (tab, group_dict[tab]) for tab in tabs if len(group_dict[tab])]
         new_groups.append((True, group))
     # merge two consecutive code blocks. The first
     # code should not contain output
@@ -211,9 +216,9 @@ def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
             new_tab_cell = []
             for cell in tab_cell:
                 if (len(new_tab_cell) > 0 and
-                    new_tab_cell[-1].cell_type == 'code' and
-                    cell.cell_type == 'code' and
-                    not _has_output(new_tab_cell[-1])):
+                        new_tab_cell[-1].cell_type == 'code' and
+                        cell.cell_type == 'code' and
+                        not _has_output(new_tab_cell[-1])):
                     cell = copy.deepcopy(cell)
                     cell.source = new_tab_cell[-1].source + '\n\n' + cell.source
                     new_tab_cell[-1] = cell
@@ -222,11 +227,12 @@ def _merge_tabs(nb: notebooknode.NotebookNode, tabs: List[str]):
             group[i] = (tab, new_tab_cell)
     return new_groups
 
-def add_html_tab(nb: notebooknode.NotebookNode, tabs: List[str]) -> notebooknode.NotebookNode:
+def add_html_tab(nb: notebooknode.NotebookNode,
+                 tabs: List[str]) -> notebooknode.NotebookNode:
     """Add html codes for the tabs"""
     cell_groups = _merge_tabs(nb, tabs)
     all_tabs = common.flatten([[tab for tab, _ in group]
-        for in_tab, group in cell_groups if in_tab])
+                               for in_tab, group in cell_groups if in_tab])
     # If there is only one tab, assume it's the default tab.
     if len(set(all_tabs)) <= 1:
         return nb
@@ -242,33 +248,9 @@ def add_html_tab(nb: notebooknode.NotebookNode, tabs: List[str]) -> notebooknode
                     div_class = "text"
             new_cells.append(_get_tab_bar(cur_tabs, i, tabs[0], div_class))
             for j, (tab, cells) in enumerate(group):
-                new_cells.extend(_get_tab_panel(cells, tab, f'{i}-{j}', tabs[0]))
-            new_cells.append(nbformat.v4.new_markdown_cell(
-                "```eval_rst\n.. raw:: html\n\n    </div>\n```"))
+                new_cells.extend(
+                    _get_tab_panel(cells, tab, f'{i}-{j}', tabs[0]))
+            new_cells.append(
+                nbformat.v4.new_markdown_cell(
+                    "```eval_rst\n.. raw:: html\n\n    </div>\n```"))
     return create_new_notebook(nb, new_cells)
-
-def remove_slides(nb: notebooknode.NotebookNode) -> notebooknode.NotebookNode:
-    """Remove all slide blocks and return."""
-    new_cells = []
-    for cell in nb.cells:
-        if cell.cell_type=='markdown':
-            lines = cell.source.splitlines()
-            blk = []
-            in_blk = False
-            for l in lines:
-                mark = common.md_mark_pattern.match(l)
-                begin = mark and mark.groups()[0] == 'begin_slide'
-                end = mark and mark.groups()[0] == 'end_slide'
-                if begin:
-                    in_blk = True
-                    keep = 'keep' in (mark.groups()[1] if mark.groups()[1] else '')
-                elif end:
-                    in_blk = False
-                else:
-                    if not in_blk or keep:
-                        blk.append(l)
-            new_cells.append(nbformat.v4.new_markdown_cell('\n'.join(blk)))
-        else:
-            new_cells.append(cell)
-    return create_new_notebook(nb, new_cells)
-
