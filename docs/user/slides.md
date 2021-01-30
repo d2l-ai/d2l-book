@@ -5,7 +5,6 @@ Let explain how to do it by the following example. It's a markdown file with mar
 generate slides.
 
 ````md
-
 # Data Manipulation
 
 ## Getting Started
@@ -14,8 +13,8 @@ To start, we can use `arange` to create a row vector `x`
 containing the first 12 integers starting with 0,
 though they are created as floats by default.
 
-(((A tensor represents a (possibly multi-dimensional) array of numerical values. We can access a tensor's *shape*.
-)))
+(**A tensor represents a (possibly multi-dimensional) array of numerical values. We can access a tensor's *shape*.**)
+
 
 ```{.python .input}
 import numpy as np
@@ -32,8 +31,6 @@ including unary operators like exponentiation.
 np.exp(x)
 ```
 
-## [**Broadcasting Mechanism**]
-
 (**Even when shapes differ, we can still perform elementwise operations**)
 by invoking the *broadcasting mechanism*.
 
@@ -46,7 +43,7 @@ a, b
 
 ````
 
-The above code block will generate 3 slides. The first slide contains the following contents:
+The above code block will generate 2 slides. The first slide contains the following contents:
 
 ````md
 # Data Manipulation
@@ -62,7 +59,7 @@ x
 ````
 
 You can see that we automatically copied the level-1 heading and the code block.
-In addition, we copied the sentence between `(((` and `)))`, while dropped all other texts.
+In addition, we copied the text between `(**` and `**)`, while dropped all others.
 
 The second slide contains the following:
 
@@ -73,25 +70,6 @@ e.g. `exp`
 ```{.python .input}
 np.exp(x)
 ```
-````
-
-
-Besides the code block, it copied the contents between these three paris
-(`[**`, `**]`),
-(`(**`, `**)`), and
-(`(~~`, `~~)`).
-Here `[` means starting a new slide, while `(` means continuing the current slide.
-(Level-1 heading will start a new slide, so we used `(` in the previous block).
-And `**` slices a part from a line, why by repeating `[` or `(` three times means
-copying multiple lines.  In addition, `~~` means the text will only appear in slides,
-why not in the normal notebooks, htmls or pdfs.
-
-One noticeable thing in the third slide is that, if we want to keep a non level-1
-heading, we don't need to put `##` within the mark, as markdown reader will not
-recognize it.
-
-````
-## Broadcasting Mechanism
 
 Even when shapes differ, we can still perform elementwise operations
 
@@ -101,3 +79,16 @@ b = np.arange(2).reshape(1, 2)
 a, b
 ```
 ````
+
+First you can see is that all text between these three paris
+(`[**`, `**]`),
+(`(**`, `**)`), and
+(`(~~`, `~~)`) are kept.
+Here `[` means starting a new slide, while `(` means continuing the current slide.
+(Level-1 heading will start a new slide, so we used `(` in the previous block).
+In addition, `~~` means the text will only appear in slides,
+why not in the normal notebooks, htmls or pdfs.
+
+Second, we didn't start a new slide before the last code block, i.e. there is no
+level-1 heading and no (`[**`, `**]`) pair, so the last two code blocks are merged
+into the same slide.

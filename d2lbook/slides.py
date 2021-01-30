@@ -117,8 +117,6 @@ def remove_slide_marks(
             for pair, text in matches:
                 old = pair[0] + text + pair[1]
                 new = '' if pair[0].endswith('~~') else text
-                if pair[0] in ('[[[', '((('):
-                    new = new.strip('\n')
                 src = src.replace(old, new)
             new_cells.append(nbformat.v4.new_markdown_cell(src))
     return notebook.create_new_notebook(nb, new_cells)
@@ -139,10 +137,7 @@ def _generate_slides(
             for pair, text in matches:
                 if pair[0].startswith('['):
                     slide_type = 'slide'
-                if pair[0] in ('[[[', '((('):
-                    src += '\n\n' + text.strip('\n') + '\n\n'
-                else:
-                    src.append(text)
+                src.append(text)
             if not src: continue
             src = '\n'.join(src)
             # cannot simply use . as it could be in code such as `a.text()`
@@ -189,9 +184,7 @@ def _generate_slides(
 def _match_slide_marks(text: str):
     """return the texts in a pair. cannot be recursive"""
     # the pair marks to generate slides
-    pairs = (('[**', '**]'), ('(**', '**)'),
-             # ('[[[', ']]]'), ('(((', ')))'),
-             ('[~~', '~~]'), ('(~~', '~~)'))
+    pairs = (('[**', '**]'), ('(**', '**)'), ('[~~', '~~]'), ('(~~', '~~)'))
     matches = []
     for p in pairs:
         assert len(p) == 2, f'not a valid pair: {p}'
