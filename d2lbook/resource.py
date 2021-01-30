@@ -70,7 +70,6 @@ class Process(mp.Process):
         except Exception as e:
             tb = traceback.format_exc()
             self._cconn.send((e, tb))
-            # raise e  # You can still rise this exception if you need to
 
     @property
     def exception(self):
@@ -92,6 +91,8 @@ class Scheduler():
                 for i in range(self._num_gpus)]
         self._tasks = []
         self._failed_tasks = []
+        self._start_job_lock = fasteners.InterProcessLock(
+            f'/tmp/d2lbook_{user}_start_job')
 
     def add(self, num_cpus, num_gpus, target, args, description=''):
         """Add tasks into the queue."""
@@ -185,6 +186,11 @@ class Scheduler():
                     self._unlock(locks)
                     continue
                 task.locks = locks
+                # a brutal fix to https://github.com/jupyter/nbconvert/issues/1066
+                # if two ci jobs start to eval notebook at the same time, it may
+                # cause the port bind conflict. here i require the ci job to acquire
+                # a global lock for 1 sec.
+                self._start_job_lock.acquire()
                 message = f'Starting task "{task.description}" on {_device_info(task)}'
                 logging.info(message)
                 task.start_time = datetime.datetime.now()
@@ -194,6 +200,8 @@ class Scheduler():
                 task.process.start()
                 _status()
                 last_status_t = t
+                time.sleep(1)
+                self._start_job_lock.release()
                 break
 
             # check if any one is finished
