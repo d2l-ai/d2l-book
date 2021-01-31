@@ -138,19 +138,20 @@ def _generate_slides(
                 if pair[0].startswith('['):
                     slide_type = 'slide'
                 src.append(text)
-            if not src: continue
             src = '\n'.join(src)
-            # cannot simply use . as it could be in code such as `a.text()`
-            for m in ('.\n', '. '):
-                sentences = [s.strip() for s in src.split(m)]
-                src = m.join([s[0].upper() + s[1:] for s in sentences])
-            src = src.replace('.$$', '$$').replace(',$$', '$$')
-            src = src.rstrip(',. \n:')
+            if src:
+                # cannot simply use . as it could be in code such as `a.text()`
+                for m in ('.\n', '. '):
+                    sentences = [s.strip() for s in src.split(m)]
+                    src = m.join([s[0].upper() + s[1:] for s in sentences])
+                src = src.replace('.$$', '$$').replace(',$$', '$$')
+                src = src.rstrip(',. \n:')
             # find level-1 head
             for l in cell.source.splitlines():
                 if l.strip().startswith('# '):
                     src = l + '\n\n' + src
                     break
+            if not src: continue
             new_cells.append(
                 nbformat.v4.new_markdown_cell(
                     src, metadata={"slideshow": {
