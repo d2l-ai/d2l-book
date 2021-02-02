@@ -178,8 +178,8 @@ def _generate_slides(
     # clean #@save
     for cell in merged_code_cell:
         if cell.cell_type == 'code':
-            cell.source = cell.source.replace('\n#@save\n',
-                                              '\n').replace('#@save', '')
+            cell.source = cell.source.replace( \
+                '\n#@save\n', '\n').replace('#@save', '').strip()
     return notebook.create_new_notebook(nb, merged_code_cell)
 
 def _match_slide_marks(text: str):

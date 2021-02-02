@@ -215,7 +215,11 @@ def replace_alias(nb, tab_lib):
 
 def format_code(source: str):
     if 'import ' in source:
-        source = isort.code(source)
+        config = isort.settings.Config(no_lines_before=[
+            isort.settings.FUTURE, isort.settings.STDLIB, isort.settings.
+            THIRDPARTY, isort.settings.FIRSTPARTY, isort.settings.LOCALFOLDER])
+
+        source = isort.code(source, config=config)
 
     # fix bug yapf cannot handle jupyter magic
     for l in source.splitlines():
