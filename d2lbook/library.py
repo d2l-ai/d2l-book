@@ -221,10 +221,14 @@ def format_code(source: str):
 
         source = isort.code(source, config=config)
 
-    # fix bug yapf cannot handle jupyter magic
+    # fix the bug that yapf cannot handle jupyter magic
     for l in source.splitlines():
         if l.startswith('%') or l.startswith('!'):
             return source
+
+    # fix the bug that yapf remove the tailling ;
+    has_tailling_semicolon = source.rstrip().endswith(';')
+
     style = {
         'DISABLE_ENDING_COMMA_HEURISTIC': True,
         'SPACE_BETWEEN_ENDING_COMMA_AND_CLOSING_BRACKET': False,
@@ -234,7 +238,9 @@ def format_code(source: str):
         'SPLIT_BEFORE_NAMED_ASSIGNS': False,
         'COLUMN_LIMIT': 78,
         'BLANK_LINES_AROUND_TOP_LEVEL_DEFINITION': 1,}
-    return FormatCode(source, style_config=style)[0].strip()
+    source = FormatCode(source, style_config=style)[0].strip()
+    if has_tailling_semicolon: source += ';'
+    return source
 
 def format_code_nb(nb):
     for cell in nb.cells:
