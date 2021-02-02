@@ -56,6 +56,31 @@ class Slides():
             'bash', bash_fname, self.config.slides_dir, repo,
             self.config.project['release']])
 
+    def generate_readme(self):
+        repo = self._repo.get(self.config.tab, '')
+        if not self._valid or not repo: return
+
+        root = os.path.join(self.config.src_dir,
+                            self.config.build['index'] + '.md')
+        notebooks = notebook.get_toc(root)
+        items = []
+        for nb in notebooks:
+            p = (self.config.slides_dir /
+                 pathlib.Path(nb)).with_suffix('.ipynb')
+            if p.exists():
+                p = str(p.relative_to(self.config.slides_dir))
+                base = 'https://nbviewer.jupyter.org/format/slides/github'
+                items.append(f' - [{p}]({base}/{repo}/blob/main/{p})')
+
+        with open(os.path.join(self.config.slides_dir, 'README.md'), 'w') as f:
+            f.write(f'# {repo}\n')
+            f.write('''
+This repo contains generated notebook slides. To open it locally, we suggest you to install the [rise](https://rise.readthedocs.io/en/stable/) extension.
+
+You can also preview them in nbviwer:
+''')
+            f.write('\n'.join(items))
+
     def generate(self, nb: notebooknode.NotebookNode, output_fn: str):
         """Get all slide blocks and write to file."""
         nb = _generate_slides(nb)

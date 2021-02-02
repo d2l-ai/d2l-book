@@ -271,6 +271,7 @@ class Builder(object):
             if not nb:
                 continue
             sd.generate(nb, tgt)
+        sd.generate_readme()
 
     @_once
     def rst(self):
@@ -384,7 +385,7 @@ class Builder(object):
     def lib(self):
         root = os.path.join(self.config.src_dir,
                             self.config.build['index'] + '.md')
-        notebooks = get_toc(root)
+        notebooks = notebook.get_toc(root)
         notebooks_enabled, _, _ = self._find_md_files()
         notebooks = [nb for nb in notebooks if nb in notebooks_enabled]
         root_dir = self.config.library['root_dir']
@@ -443,31 +444,6 @@ def update_ipynb_toc(root):
                 cell.source = markdown.join_markdown_cells(md_cells)
         with open(fn, 'w') as f:
             f.write(nbformat.writes(nb))
-
-def get_toc(root):
-    """return a list of files in the order defined by TOC"""
-    subpages = get_subpages(root)
-    res = [root]
-    for fn in subpages:
-        res.extend(get_toc(fn))
-    return res
-
-def get_subpages(input_fn):
-    """read toc in input_fn, returns what it contains"""
-    subpages = []
-    reader = notedown.MarkdownReader()
-    with open(input_fn, 'r', encoding='UTF-8') as f:
-        nb = reader.read(f)
-    for cell in nb.cells:
-        if (cell.cell_type == 'code' and 'attributes' in cell.metadata and
-                'toc' in cell.metadata.attributes['classes']):
-            for l in cell.source.split('\n'):
-                l = l.strip()
-                if not l.startswith(':'):
-                    fn = os.path.join(os.path.dirname(input_fn), l + '.md')
-                    if os.path.exists(fn):
-                        subpages.append(fn)
-    return subpages
 
 def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
                                config, timeout=20 * 60, lang='python'):

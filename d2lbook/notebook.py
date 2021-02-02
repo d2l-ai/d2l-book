@@ -254,3 +254,31 @@ def add_html_tab(nb: notebooknode.NotebookNode,
                 nbformat.v4.new_markdown_cell(
                     "```eval_rst\n.. raw:: html\n\n    </div>\n```"))
     return create_new_notebook(nb, new_cells)
+
+def get_toc(root, flat=True):
+    """return a list of files in the order defined by TOC"""
+    subpages = _get_subpages(root)
+    res = [root]
+    for fn in subpages:
+        if flat:
+            res.extend(get_toc(fn))
+        else:
+            res.append(get_toc(fn))
+    return res
+
+def _get_subpages(input_fn):
+    """read toc in input_fn, returns what it contains"""
+    subpages = []
+    reader = notedown.MarkdownReader()
+    with open(input_fn, 'r', encoding='UTF-8') as f:
+        nb = reader.read(f)
+    for cell in nb.cells:
+        if (cell.cell_type == 'code' and 'attributes' in cell.metadata and
+                'toc' in cell.metadata.attributes['classes']):
+            for l in cell.source.split('\n'):
+                l = l.strip()
+                if not l.startswith(':'):
+                    fn = os.path.join(os.path.dirname(input_fn), l + '.md')
+                    if os.path.exists(fn):
+                        subpages.append(fn)
+    return subpages
