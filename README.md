@@ -1,6 +1,5 @@
-# d2l-book
+# D2L-Book: A Toolkit for Hands-on Books
 
-`d2lbook` let you publish a book written in Jupyter notebooks. It has used for
-all projects in [d2l-ai](https://github.com/d2l-ai).
-
-The document site is available at https://book.d2l.ai
+This package helps you build and publish **a book with Python code**, or
+**Python package documents with tutorials**. The document site is available at
+https://book.d2l.ai

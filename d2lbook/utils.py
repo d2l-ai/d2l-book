@@ -51,7 +51,7 @@ def get_updated_files(src_fnames, src_dir, tgt_dir,
             or get_mtimes(src_fn) > get_mtimes(tgt_fn) # target is old
             or get_mtimes(tgt_fn) < deps_mtime): # deps is updated
             updated_fnames.append((src_fn, tgt_fn))
-    return updated_fnames
+    return list(set(updated_fnames))
 
 
 def get_tgt_files_from_src_pattern(pattern, tgt_dir, src_ext, tgt_ext):
@@ -86,7 +86,7 @@ def get_files_to_rm(pattern, src_dir, tgt_dir, src_ext=None, tgt_ext=None):
     return to_removes
 
 
-def rm_empty_dir(path):
+def rm_empty_dir(path, rmed_empty_dirs):
     """Recursively remove empty directories under and including path."""
     if not os.path.isdir(path):
         return
@@ -96,12 +96,36 @@ def rm_empty_dir(path):
         for fn in fnames:
             fpath = os.path.join(path, fn)
             if os.path.isdir(fpath):
-                rm_empty_dir(fpath)
+                rm_empty_dir(fpath, rmed_empty_dirs)
 
     if len(os.listdir(path)) == 0:
-        logging.info('Cleaning empty directory: %s', str(path))
+        rmed_empty_dirs.append(str(path))
         os.rmdir(path)
 
+def hide_individual_data_files(fns):
+    """To display concisely: _build/eval/data/A/B/C/D -> _build/eval/data/A."""
+    concise_fns = set()
+    for fn in fns:
+        concise_fn = []
+        fn_components = fn.split('/')
+        i = 0
+        seen_data = False
+        while i < len(fn_components) and not seen_data:
+            component = fn_components[i]
+            concise_fn.append(component)
+            if component == 'data':
+                seen_data = True
+            i += 1
+        if i < len(fn_components) - 1:
+            next_component = fn_components[i + 1]
+            if next_component.isdigit():
+                concise_fn.append('<some digit>')
+            else:
+                concise_fn.append(next_component)
+            if i < len(fn_components) - 2:
+                concise_fn.append('')  # For indicating dir instead of file
+        concise_fns.add('/'.join(concise_fn))
+    return concise_fns
 
 def mkdir(dirname):
     os.makedirs(dirname, exist_ok=True)
@@ -117,15 +141,20 @@ def get_time_diff(tik, tok):
     m, s = divmod(remainder, 60)
     return "%02d:%02d:%02d" % (h, m, s)
 
-def run_cmd(cmd):
+def run_cmd(cmd, verbose=False):
     if isinstance(cmd, str):
         cmd = [cmd]
-    ret = os.system(' '.join(cmd))
+    cmd = ' '.join(cmd)
+    if verbose:
+        logging.info('Run "%s"', cmd)
+    ret = os.system(cmd)
     if ret != 0:
         exit(-1)
 
 def split_config_str(config_str, num_items_per_line=None):
     items = []
+    if not config_str:
+        return items
     lines = config_str.split('\n')
     for i, line in enumerate(lines):
         items.append([tk.strip() for tk in line.split(',') if tk.strip()])

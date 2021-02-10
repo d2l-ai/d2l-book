@@ -3,6 +3,9 @@ import sys
 from d2lbook.build import build
 from d2lbook.deploy import deploy
 from d2lbook.clear import clear
+from d2lbook.activate import activate
+from d2lbook.translate import translate
+from d2lbook.slides import slides
 import logging
 
 logging.basicConfig(format='[d2lbook:%(filename)s:L%(lineno)d] %(levelname)-6s %(message)s')
@@ -10,7 +13,8 @@ logging.getLogger().setLevel(logging.INFO)
 
 
 def main():
-    commands = {'build': build, 'deploy':deploy, 'clear':clear}
+    commands = {'build': build, 'deploy':deploy, 'clear':clear,
+                'activate':activate, 'translate':translate, 'slides':slides}
     parser = argparse.ArgumentParser(description='''
 D2L Book: Publish a book based on Jupyter notebooks.
 

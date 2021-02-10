@@ -1,17 +1,12 @@
 # Code Cells
 :label:`sec_code`
 
-```{.python .input}
+## Maximum Line Length
 
-1+2
-```
-
-```{.python .input}
-!ls .
-```
+We recommend you to set the maximum line length to be 78 to avoid automatic line break in PDF. You can enable the Ruler extension in [nbextensions](https://github.com/ipython-contrib/jupyter_contrib_nbextensions) to add visual vertical line in Jupyter when writing codes. 
 
 ```{.python .input}
-'A code line with 78 chars should not be wrappered =========================='
+'-' * 78
 ```
 
 ## Hide Source and Outputs
@@ -26,18 +21,22 @@ For example, here is the normal code cell:
 ```
 
 Let's hide the source codes
+
 ```{.python .input}
 # Hide code
 1+2+3
 ```
 
 Also try hiding the outputs
+
 ```{.python .input}
 # Hide outputs
 1+2+3
 ```
 
-## Plot
+## Plotting
+
+We recommend you to use the `svg` format to plot a figure. For example, the following code configures `matplotlib`
 
 ```{.python .input  n=3}
 %matplotlib inline
