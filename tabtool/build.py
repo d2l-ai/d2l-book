@@ -13,14 +13,14 @@ import nbformat
 import notedown
 import regex
 
-from d2lbook import colab, library, markdown, notebook
-from d2lbook import rst as rst_lib
-from d2lbook import sagemaker
-from d2lbook.config import Config
-from d2lbook.slides import Slides, remove_slide_marks
-from d2lbook.sphinx import prepare_sphinx_env
-from d2lbook.utils import *  # TODO(mli), don't import *
-from d2lbook import resource
+from tabtool import colab, library, markdown, notebook
+from tabtool import rst as rst_lib
+from tabtool import sagemaker
+from tabtool.config import Config
+from tabtool.slides import Slides, remove_slide_marks
+from tabtool.sphinx import prepare_sphinx_env
+from tabtool.utils import *  # TODO(mli), don't import *
+from tabtool import resource
 
 __all__ = ['build']
 
@@ -47,7 +47,7 @@ def _once(func):
             name += '_' + self.config.tab
         if name in self.done and self.done[name]:
             return
-        full_name = 'd2lbook build ' + name
+        full_name = 'tabtool build ' + name
         tik = datetime.datetime.now()
         func(self)
         logging.info('=== Finished "%s" in %s', full_name,

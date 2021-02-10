@@ -1,6 +1,6 @@
 import logging
 import shutil
-from d2lbook.config import Config
+from tabtool.config import Config
 
 __all__  = ['clear']
 

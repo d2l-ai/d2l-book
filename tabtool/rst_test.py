@@ -1,5 +1,5 @@
-from d2lbook import notebook
-from d2lbook import rst
+from tabtool import notebook
+from tabtool import rst
 import unittest
 import nbconvert
 

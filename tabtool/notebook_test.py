@@ -1,6 +1,6 @@
-from d2lbook import notebook
-from d2lbook import build
-from d2lbook import common
+from tabtool import notebook
+from tabtool import build
+from tabtool import common
 import unittest
 import nbconvert
 

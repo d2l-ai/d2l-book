@@ -15,7 +15,7 @@ import getpass
 
 import fasteners
 
-from d2lbook import utils
+from tabtool import utils
 
 def get_available_gpus():
     """Return a list of available GPUs with their names"""
@@ -85,14 +85,14 @@ class Scheduler():
         self._locks = [False] * (self._num_cpus + self._num_gpus)
         user = getpass.getuser()
         self._inter_locks = [
-            fasteners.InterProcessLock(f'/tmp/d2lbook_{user}_cpu_{i}')
+            fasteners.InterProcessLock(f'/tmp/tabtool_{user}_cpu_{i}')
             for i in range(self._num_cpus)] + [
-                fasteners.InterProcessLock(f'/tmp/d2lbook_{user}_gpu_{i}')
+                fasteners.InterProcessLock(f'/tmp/tabtool_{user}_gpu_{i}')
                 for i in range(self._num_gpus)]
         self._tasks = []
         self._failed_tasks = []
         self._start_job_lock = fasteners.InterProcessLock(
-            f'/tmp/d2lbook_{user}_start_job')
+            f'/tmp/tabtool_{user}_start_job')
 
     def add(self, num_cpus, num_gpus, target, args, description=''):
         """Add tasks into the queue."""

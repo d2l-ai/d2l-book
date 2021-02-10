@@ -1,4 +1,4 @@
-from d2lbook import slides, notebook, common
+from tabtool import slides, notebook, common
 import unittest
 import time
 import logging

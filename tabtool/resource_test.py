@@ -1,9 +1,9 @@
 """
 Run multiple instances from terminal to test
 
-python d2lbook/resource_test.py
+python tabtool/resource_test.py
 """
-from d2lbook import resource
+from tabtool import resource
 import unittest
 import time
 import logging
@@ -42,7 +42,7 @@ class TestResource(unittest.TestCase):
 
 if __name__ == '__main__':
     logging.basicConfig(
-        format='[d2lbook:%(filename)s:L%(lineno)d] %(levelname)-6s %(message)s'
+        format='[tabtool:%(filename)s:L%(lineno)d] %(levelname)-6s %(message)s'
     )
     logging.getLogger().setLevel(logging.INFO)
     unittest.main()

@@ -1,7 +1,7 @@
 import argparse
 import glob
 import sys
-from d2lbook import config, notebook, common, utils
+from tabtool import config, notebook, common, utils
 import logging
 import glob
 import nbformat

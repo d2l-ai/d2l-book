@@ -2,7 +2,7 @@ import argparse
 import glob
 import sys
 import os
-from d2lbook import config, markdown, utils, common
+from tabtool import config, markdown, utils, common
 import logging
 import re
 import glob
@@ -162,7 +162,7 @@ class AWS(Translator):
         return resp['TranslatedText']
 
 if __name__ == "__main__":
-    logging.basicConfig(format='[d2lbook:%(filename)s:L%(lineno)d] %(levelname)-6s %(message)s')
+    logging.basicConfig(format='[tabtool:%(filename)s:L%(lineno)d] %(levelname)-6s %(message)s')
     logging.getLogger().setLevel(logging.INFO)
 
     if len(sys.argv) == 5:

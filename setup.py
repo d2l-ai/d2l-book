@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from d2lbook import __version__
+from tabtool import __version__
 
 requirements = [
     'jupyter',
@@ -24,7 +24,7 @@ requirements = [
 ]
 
 setup(
-    name='d2lbook',
+    name='tabtool',
     version=__version__,
     install_requires=requirements,
     python_requires='>=3.8',
@@ -35,10 +35,10 @@ setup(
     license='Apache-2.0',
     packages=find_packages(),
     include_package_data=True,
-    package_data={'d2lbook':['config_default.ini', 'upload_doc_s3.sh', 'upload_github.sh']},
+    package_data={'tabtool':['config_default.ini', 'upload_doc_s3.sh', 'upload_github.sh']},
     entry_points={
         'console_scripts': [
-            'd2lbook = d2lbook.main:main',
+            'tabtool = tabtool.main:main',
         ]
     },
 )

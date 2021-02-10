@@ -1,4 +1,4 @@
-from d2lbook import markdown, common
+from tabtool import markdown, common
 import unittest
 
 _markdown_src = r'''# Test

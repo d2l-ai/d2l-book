@@ -5,9 +5,9 @@ from typing import Dict
 import nbconvert
 import nbformat
 from nbformat import notebooknode
-from d2lbook import notebook
-from d2lbook import common
-from d2lbook import markdown
+from tabtool import notebook
+from tabtool import common
+from tabtool import markdown
 
 def convert_notebook(nb: notebooknode.NotebookNode, resources: Dict[str, str]):
     nb = _process_nb(nb)

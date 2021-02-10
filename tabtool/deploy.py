@@ -3,11 +3,11 @@ import sys
 import logging
 import argparse
 import shutil
-from d2lbook.utils import *
-from d2lbook.config import Config
-from d2lbook import colab
-from d2lbook import sagemaker
-from d2lbook import slides
+from tabtool.utils import *
+from tabtool.config import Config
+from tabtool import colab
+from tabtool import sagemaker
+from tabtool import slides
 
 __all__  = ['deploy']
 
