@@ -348,7 +348,7 @@ const addCopyButtonToCodeCells = () => {
 
     const clipboardButton = id =>
     `<a class="copybtn o-tooltip--left" data-tooltip="${messages[locale]['copy']}" data-clipboard-target="#${id}">
-      <img src="https://gitcdn.xyz/repo/choldgraf/sphinx-copybutton/master/sphinx_copybutton/_static/copy-button.svg" alt="${messages[locale]['copy_to_clipboard']}">
+      <img src="https://raw.githubusercontent.com/choldgraf/sphinx-copybutton/master/sphinx_copybutton/_static/copy-button.svg" alt="${messages[locale]['copy_to_clipboard']}">
     </a>`
     codeCell.insertAdjacentHTML('afterend', clipboardButton(id))
   })
