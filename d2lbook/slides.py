@@ -9,6 +9,7 @@ import pathlib
 import os
 from nbformat import notebooknode
 from typing import Optional
+import re
 
 def slides():
     parser = argparse.ArgumentParser(
@@ -152,6 +153,15 @@ def _generate_slides(
     has_slides = False
     for cell in nb.cells:
         if cell.cell_type != 'markdown':
+            # remove comments
+            lines = cell.source.splitlines()
+            new_lines = []
+            for l in lines:
+                new_l = re.sub(r'\#\ .*', '', l)
+                if new_l != l and not new_l.rstrip(): 
+                    continue
+                new_lines.append(new_l.rstrip())
+            cell.source = '\n'.join(new_lines)
             new_cells.append(cell)
         else:
             slide_type = '-'
@@ -170,7 +180,7 @@ def _generate_slides(
                     sentences = [s.strip() for s in src.split(m)]
                     src = m.join([s[0].upper() + s[1:] for s in sentences])
                 src = src.replace('.$$', '$$').replace(',$$', '$$')
-                src = src.rstrip(',. \n:')
+                src = src.rstrip(',. \n:，。：')
             # find level-1 head
             for l in cell.source.splitlines():
                 if l.strip().startswith('# '):
