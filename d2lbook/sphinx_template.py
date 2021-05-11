@@ -101,9 +101,9 @@ MONO_FONT
 SPHINX_CONFIGS
 
 def setup(app):
-    # app.add_javascript('https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js')
-    app.add_javascript('d2l.js')
-    app.add_stylesheet('d2l.css')
+    # app.add_js_file('https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js')
+    app.add_js_file('d2l.js')
+    app.add_css_file('d2l.css')
     import mxtheme
     app.add_directive('card', mxtheme.CardDirective)
 """
