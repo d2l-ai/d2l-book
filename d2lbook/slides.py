@@ -97,7 +97,9 @@ You can also preview them in nbviwer:
                 "enable_chalkboard":
                 True,
                 "overlay":
-                f"<div class='my-top-right'>{self.config.slides['top_right']}</div><div class='my-top-left'>{self.config.slides['top_left']}</div>"
+                f"<div class='my-top-right'>{self.config.slides['top_right']}</div><div class='my-top-left'>{self.config.slides['top_left']}</div>",
+                "scroll": 
+                True
             }})
         dirname = os.path.dirname(output_fn)
         utils.mkdir(dirname)
