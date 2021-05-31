@@ -461,7 +461,7 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
         if not nb:
             logging.info(f"Skip to eval tab {tab} for {input_fn}")
             # write an empty file to track the dependencies
-            # open(output_fn, 'w')
+            open(output_fn, 'w')
             return
         # replace alias
         if tab in config.library:
