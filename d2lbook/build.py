@@ -360,7 +360,10 @@ class Builder(object):
 
         script = self.config.pdf['post_latex']
         process_latex(self.config.tex_fname, script)
-        run_cmd(['cd', self.config.pdf_dir, '&& make'])
+        run_cmd(['cd', self.config.pdf_dir, '&& make'])        
+        if self.config.tab != self.config.default_tab:
+            p = self.config.project['name']
+            run_cmd(['cd', self.config.pdf_dir, '&& cp ', p+'.pdf', p+'-'+self.config.tab+'.pdf' ])        
 
     @_once
     def pkg(self):

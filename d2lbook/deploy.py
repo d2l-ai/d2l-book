@@ -1,4 +1,5 @@
 import os
+import pathlib
 import sys
 import logging
 import argparse
@@ -8,6 +9,7 @@ from d2lbook.config import Config
 from d2lbook import colab
 from d2lbook import sagemaker
 from d2lbook import slides
+import glob
 
 __all__  = ['deploy']
 
@@ -68,6 +70,20 @@ class Deployer(object):
         self.config.iter_tab(lambda: slides.Slides(self.config).deploy())
         self.config.set_tab(tab)
 
+    def _get_pdfs(self):        
+        # get all generated pdfs
+        pdfs = list(glob.glob(self.config.tgt_dir+'/pdf*/'+self.config.project['name']+'*.pdf'))
+        rets = []
+        for p in pdfs:
+            p = pathlib.Path(p)
+            tks = p.parent.name.split('_')
+            if len(tks) > 1:
+                tab = tks[1]
+                if p.with_suffix('').name.split('-')[-1] != tab:
+                    continue
+            rets.append(str(p))
+        return rets
+        
 class GithubDeployer(Deployer):
     def __init__(self, config):
         super(GithubDeployer, self).__init__(config)
@@ -79,7 +95,8 @@ class GithubDeployer(Deployer):
         run_cmd(['cp -r', os.path.join(self.config.html_dir, '*'), self.git_dir])
 
     def pdf(self):
-        shutil.copy(self.config.pdf_fname, self.git_dir)
+        for pdf in self._get_pdfs():
+            shutil.copy(pdf, self.git_dir)
 
     def pkg(self):
         shutil.copy(self.config.pkg_fname, self.git_dir)
@@ -100,8 +117,9 @@ class S3Deployer(Deployer):
         url = self.config.deploy['s3_bucket']
         if not url.endswith('/'):
             url += '/'
-        logging.info('cp %s to %s', self.config.pdf_fname, url)
-        run_cmd(['aws s3 cp', self.config.pdf_fname, url, "--acl 'public-read' --quiet"])
+        for pdf in self._get_pdfs():
+            logging.info('cp %s to %s', pdf, url)
+            run_cmd(['aws s3 cp', pdf, url, "--acl 'public-read' --quiet"])
 
     def _deploy_other_files(self, tgt_url):
         other_urls = self.config.deploy['other_file_s3urls'].split()
