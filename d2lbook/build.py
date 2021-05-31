@@ -367,7 +367,7 @@ class Builder(object):
         zip_fname = 'out.zip'
         if not self.config.tabs:
             self.ipynb()
-            run_cmd(['cd', self.config.ipynb_dir, '&& zip -r', zip_fname, '*'])
+            run_cmd(['cd', self.config.ipynb_dir, '&& find . -size 0 -delete && zip -r', zip_fname, '*'])
             shutil.move(os.path.join(self.config.ipynb_dir, zip_fname),
                         self.config.pkg_fname)
         else:
@@ -458,7 +458,7 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
         if not nb:
             logging.info(f"Skip to eval tab {tab} for {input_fn}")
             # write an empty file to track the dependencies
-            open(output_fn, 'w')
+            # open(output_fn, 'w')
             return
         # replace alias
         if tab in config.library:
@@ -476,6 +476,8 @@ def _process_and_eval_notebook(scheduler, input_fn, output_fn, run_cells,
                       description=f'Evaluating {input_fn}')
 
 def ipynb2rst(input_fn, output_fn):
+    if pathlib.Path(input_fn).stat().st_size == 0:
+        return
     with open(input_fn, 'r') as f:
         nb = nbformat.read(f, as_version=4)
     nb = remove_slide_marks(nb)

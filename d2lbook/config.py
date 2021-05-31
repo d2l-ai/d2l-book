@@ -50,10 +50,7 @@ class Config():
         self.linkcheck_dir = os.path.join(self.tgt_dir, 'linkcheck')
         self.slides_dir = os.path.join(self.tgt_dir, 'slides')
 
-        # Some targets names.
-        self.pdf_fname = os.path.join(self.pdf_dir, self.project['name']+'.pdf')
-        self.tex_fname = os.path.join(self.pdf_dir, self.project['name']+'.tex')
-        self.pkg_fname = os.path.join(self.tgt_dir, self.project['name']+'.zip')
+        self._set_target()
 
         # The project must have an index page
         index_fname, ext = os.path.splitext(self.build['index'])
@@ -79,6 +76,12 @@ class Config():
         self.set_tab(self.tab)
         # Sanity checks.
         self.sanity_check()
+
+    def _set_target(self):
+        # Some targets names.
+        self.pdf_fname = os.path.join(self.pdf_dir, self.project['name']+'.pdf')
+        self.tex_fname = os.path.join(self.pdf_dir, self.project['name']+'.tex')
+        self.pkg_fname = os.path.join(self.tgt_dir, self.project['name']+'.zip')
 
     def sanity_check(self):
         notebook_patterns = self.build['notebooks'].split()
@@ -113,6 +116,7 @@ class Config():
         self.colab_dir = self._set_tab_dir(self.colab_dir, tab)
         self.sagemaker_dir = self._set_tab_dir(self.sagemaker_dir, tab)
         self.slides_dir = self._set_tab_dir(self.slides_dir, tab)
+        self._set_target()
 
 
     def _default_tab_dir(self, dirname):

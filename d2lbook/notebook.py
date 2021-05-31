@@ -86,14 +86,15 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str,
     A `origin_pos` property is added to the metadata for each cell, which
     records its position in the original notebook `nb`.
     """
-    if tab != default_tab:
-        has_tab = False
-        for cell in nb.cells:
-            if tab in get_cell_tab(cell):
-                has_tab = True
-                break
-        if not has_tab:
-            return None
+    # disabled as it skips generating index.md for other tabs. 
+    # if tab != default_tab:
+    #     has_tab = False
+    #     for cell in nb.cells:
+    #         if tab in get_cell_tab(cell):
+    #             has_tab = True
+    #             break
+    #     if not has_tab:
+    #         return None
 
     matched_tab = False
     new_cells = []
