@@ -27,6 +27,7 @@ setup(
     name='d2lbook',
     version=__version__,
     install_requires=requirements,
+    setup_requires=['sphinx>=2.2.1'],
     python_requires='>=3.8',
     author='D2L Developers',
     author_email='d2l.devs@gmail.com',
