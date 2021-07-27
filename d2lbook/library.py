@@ -143,6 +143,11 @@ def _parse_mapping_config(config: str, split_line=True):
             mapping.append((term, term))
     return mapping
 
+def node_to_source(node):
+    if isinstance(node, ast.Constant):
+        return str(node.value)
+    return astor.to_source(node).rstrip()
+
 def save_alias(tab_lib):
     """Save alias into the library file"""
     alias = ''
@@ -202,7 +207,7 @@ def replace_call(source: str, mapping, replace_fn):
                 if new_node:
                     new_src = new_src.replace(
                         ast.get_source_segment(new_src, node),
-                        new_node if isinstance(new_node, str) else astor.to_source(new_node).rstrip())
+                        new_node if isinstance(new_node, str) else node_to_source(new_node))
                     replaced = True
                     break
         if not replaced:
@@ -222,7 +227,7 @@ def replace_args_alias(source, args_mapping):
         if len(node.args) != num_alias_args(b):
             return None
         for i, arg in enumerate(node.args):
-            b = b.replace(f'\{i+1}', astor.to_source(arg).rstrip())
+            b = b.replace(f'\{i+1}', node_to_source(arg))
         return b
     return replace_call(source, dict(args_mapping), _replace)
 
