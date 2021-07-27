@@ -121,21 +121,26 @@ def _save_code(input_fn, output_fp, save_mark='@save', tab=None,
             code = '# Defined in file: %s\n%s\n\n\n' % (input_fn, block)
             output_fp.write(code)
 
-def _parse_mapping_config(config: str):
+def _parse_mapping_config(config: str, split_line=True):
     """Parse config such as: numpy -> asnumpy, reshape, ...
     Return a list of string pairs
     """
-    mapping = []
+    terms = []
     for line in config.splitlines():
-        for term in line.split(','):
-            term = term.strip()
-            if not term:
-                continue
-            if len(term.split('->')) == 2:
-                a, b = term.split('->')
-                mapping.append((a.strip(), b.strip()))
-            else:
-                mapping.append((term, term))
+        if split_line:
+            terms.extend(line.split(','))
+        else:
+            terms.append(line)        
+    mapping = []
+    for term in terms:
+        term = term.strip()
+        if not term:
+            continue
+        if len(term.split('->')) == 2:
+            a, b = term.split('->')
+            mapping.append((a.strip(), b.strip()))
+        else:
+            mapping.append((term, term))
     return mapping
 
 def save_alias(tab_lib):
@@ -154,6 +159,14 @@ def save_alias(tab_lib):
             alias += '\n' + '\n'.join([
                 f'{a} = lambda x, *args, **kwargs: x.{b}(*args, **kwargs)'
                 for a, b in mapping])
+        if 'args_alias' in tab_lib:
+            mapping = _parse_mapping_config(tab_lib['args_alias'], split_line=False)            
+            for a, b in mapping:
+                n = num_alias_args(b)                
+                args = [f'x_{i+1}' for i in range(n)]
+                for i in range(n):
+                    b = b.replace(f'\{i+1}', args[i])
+                alias += f'\n{a} = lambda {", ".join(args)}: {b}'
     if alias:
         lib_file = tab_lib['lib_file']
         with open(lib_file, 'a') as f:
@@ -162,37 +175,64 @@ def save_alias(tab_lib):
             f.write('# Alias defined in config.ini\n')
             f.write(alias + '\n\n')
 
-def replace_fluent_alias(source, fluent_mapping):
-    fluent_mapping = {a: b for a, b in fluent_mapping}
+def num_alias_args(alias):
+    for i in range(1, 100):
+        if f'\{i}' not in alias:
+            return i - 1 
+    return 0 
+
+def replace_call(source: str, mapping, replace_fn):
+    matched = False 
+    for a in mapping:
+        if 'd2l.'+a in source:
+            matched = True 
+    if not matched:
+        return source 
     new_src = source
     for _ in range(100):  # 100 is a (random) big enough number
         replaced = False
         tree = ast.parse(new_src)
         for node in ast.walk(tree):
             if (isinstance(node, ast.Call) and
-                    isinstance(node.func, ast.Attribute) and
-                    isinstance(node.func.value, ast.Name) and
-                    node.func.value.id == 'd2l' and
-                    node.func.attr in fluent_mapping):
-                new_node = ast.Call(
-                    ast.Attribute(value=node.args[0],
-                                  attr=fluent_mapping[node.func.attr]),
-                    node.args[1:], node.keywords)
-                new_src = new_src.replace(
-                    ast.get_source_segment(new_src, node),
-                    astor.to_source(new_node).rstrip())
-                replaced = True
-                break
+                isinstance(node.func, ast.Attribute) and
+                isinstance(node.func.value, ast.Name) and                
+                node.func.value.id == 'd2l' and 
+                node.func.attr in mapping):
+                new_node = replace_fn(node, mapping[node.func.attr])
+                if new_node:
+                    new_src = new_src.replace(
+                        ast.get_source_segment(new_src, node),
+                        new_node if isinstance(new_node, str) else astor.to_source(new_node).rstrip())
+                    replaced = True
+                    break
         if not replaced:
             break
-    return new_src
+    return new_src 
+
+
+def replace_fluent_alias(source, fluent_mapping):    
+    def _replace(node, b):
+        return ast.Call(
+            ast.Attribute(value=node.args[0], attr=b),
+            node.args[1:], node.keywords)
+    return replace_call(source, dict(fluent_mapping), _replace)
+
+def replace_args_alias(source, args_mapping):
+    def _replace(node, b):
+        if len(node.args) != num_alias_args(b):
+            return None
+        for i, arg in enumerate(node.args):
+            b = b.replace(f'\{i+1}', astor.to_source(arg).rstrip())
+        return b
+    return replace_call(source, dict(args_mapping), _replace)
 
 def replace_alias(nb, tab_lib):
     nb = copy.deepcopy(nb)
     patterns = []
     fluent_mapping = []
+    args_mapping = []
     if 'reverse_alias' in tab_lib:
-        patterns += _parse_mapping_config(tab_lib['reverse_alias'])
+        patterns += _parse_mapping_config(tab_lib['reverse_alias'], split_line=False)
     if 'lib_name' in tab_lib:
         lib_name = tab_lib["lib_name"]
         if 'simple_alias' in tab_lib:
@@ -200,17 +240,17 @@ def replace_alias(nb, tab_lib):
             patterns += [(f'd2l.{a}', f'{lib_name}.{b}') for a, b in mapping]
         if 'fluent_alias' in tab_lib:
             fluent_mapping = _parse_mapping_config(tab_lib['fluent_alias'])
+        if 'args_alias' in tab_lib:
+            args_mapping = _parse_mapping_config(tab_lib['args_alias'], split_line=False) 
 
     for cell in nb.cells:
         if cell.cell_type == 'code':
             for p, r in patterns:
                 cell.source = re.sub(p, r, cell.source)
             if fluent_mapping:
-                for a, _ in fluent_mapping:
-                    if 'd2l.' + a in cell.source:
-                        cell.source = replace_fluent_alias(
-                            cell.source, fluent_mapping)
-                        break
+                cell.source = replace_fluent_alias(cell.source, fluent_mapping)
+            if args_mapping: 
+                cell.source = replace_args_alias(cell.source, args_mapping)
     return nb
 
 def format_code(source: str):
