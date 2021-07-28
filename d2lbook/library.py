@@ -167,11 +167,7 @@ def save_alias(tab_lib):
         if 'args_alias' in tab_lib:
             mapping = _parse_mapping_config(tab_lib['args_alias'], split_line=False)            
             for a, b in mapping:
-                n = num_alias_args(b)                
-                args = [f'x_{i+1}' for i in range(n)]
-                for i in range(n):
-                    b = b.replace(f'\{i+1}', args[i])
-                alias += f'\n{a} = lambda {", ".join(args)}: {b}'
+                alias += f'\ndef {a}:\n    return {b}'
     if alias:
         lib_file = tab_lib['lib_file']
         with open(lib_file, 'a') as f:
@@ -180,23 +176,20 @@ def save_alias(tab_lib):
             f.write('# Alias defined in config.ini\n')
             f.write(alias + '\n\n')
 
-def num_alias_args(alias):
-    for i in range(1, 100):
-        if f'\{i}' not in alias:
-            return i - 1 
-    return 0 
-
 def replace_call(source: str, mapping, replace_fn):
+
     matched = False 
     for a in mapping:
         if 'd2l.'+a in source:
             matched = True 
     if not matched:
         return source 
-    new_src = source
+    lines = source.splitlines()
+    if lines[0].startswith('%'):
+        source = '\n'.join(lines[1:])
     for _ in range(100):  # 100 is a (random) big enough number
         replaced = False
-        tree = ast.parse(new_src)
+        tree = ast.parse(source)
         for node in ast.walk(tree):
             if (isinstance(node, ast.Call) and
                 isinstance(node.func, ast.Attribute) and
@@ -205,14 +198,16 @@ def replace_call(source: str, mapping, replace_fn):
                 node.func.attr in mapping):
                 new_node = replace_fn(node, mapping[node.func.attr])
                 if new_node:
-                    new_src = new_src.replace(
-                        ast.get_source_segment(new_src, node),
+                    source = source.replace(
+                        ast.get_source_segment(source, node),
                         new_node if isinstance(new_node, str) else node_to_source(new_node))
                     replaced = True
                     break
         if not replaced:
             break
-    return new_src 
+    if lines[0].startswith('%'):
+        source = lines[0] + '\n' + source
+    return source
 
 
 def replace_fluent_alias(source, fluent_mapping):    
@@ -220,22 +215,42 @@ def replace_fluent_alias(source, fluent_mapping):
         return ast.Call(
             ast.Attribute(value=node.args[0], attr=b),
             node.args[1:], node.keywords)
-    return replace_call(source, dict(fluent_mapping), _replace)
+    return replace_call(source, fluent_mapping, _replace)
 
 def replace_args_alias(source, args_mapping):
     def _replace(node, b):
-        if len(node.args) != num_alias_args(b):
+        a_args, b = b 
+        a_kwargs = {a: b for a, b in a_args if not a.startswith('a_')}
+        a_args = [a for a, _  in a_args if a.startswith('a_')]
+        if len(node.args) != len(a_args):
             return None
-        for i, arg in enumerate(node.args):
-            b = b.replace(f'\{i+1}', node_to_source(arg))
+        key_value = {a : node_to_source(arg) for arg, a in zip(node.args, a_args)}
+        for kw in node.keywords:
+            assert kw.arg in a_kwargs, (kw.arg, a_kwargs)
+            key_value['='+kw.arg] = '='+node_to_source(kw.value)
+        # remove not appeared keywords
+        b_call = ast.parse(b).body[0].value
+        if isinstance(b_call, ast.Call):
+            new_keywords = [kw for kw in b_call.keywords if '='+kw.value.id in key_value]
+            b_call.keywords = new_keywords 
+            b = node_to_source(b_call)
+        for k, v in key_value.items():
+            b = b.replace(k, v)
         return b
     return replace_call(source, dict(args_mapping), _replace)
+
+def call_args(call_str):
+    call = ast.parse(call_str).body[0].value
+    assert isinstance(call, ast.Call), call_str
+    name = call.func.id
+    args = [(a.id,None) for a in call.args] + [(k.arg, k.value) for k in call.keywords]
+    return name, args 
 
 def replace_alias(nb, tab_lib):
     nb = copy.deepcopy(nb)
     patterns = []
-    fluent_mapping = []
-    args_mapping = []
+    fluent_mapping = {}
+    args_mapping = {}
     if 'reverse_alias' in tab_lib:
         patterns += _parse_mapping_config(tab_lib['reverse_alias'], split_line=False)
     if 'lib_name' in tab_lib:
@@ -244,14 +259,16 @@ def replace_alias(nb, tab_lib):
             mapping = _parse_mapping_config(tab_lib['simple_alias'])
             patterns += [(f'd2l.{a}', f'{lib_name}.{b}') for a, b in mapping]
         if 'fluent_alias' in tab_lib:
-            fluent_mapping = _parse_mapping_config(tab_lib['fluent_alias'])
+            fluent_mapping = dict(_parse_mapping_config(tab_lib['fluent_alias']))
         if 'args_alias' in tab_lib:
-            args_mapping = _parse_mapping_config(tab_lib['args_alias'], split_line=False) 
+            for a, b in _parse_mapping_config(tab_lib['args_alias'], split_line=False):
+                name, args = call_args(a)
+                args_mapping[name] = (args, b)
 
     for cell in nb.cells:
         if cell.cell_type == 'code':
-            for p, r in patterns:
-                cell.source = re.sub(p, r, cell.source)
+            for p, r in patterns:                
+                cell.source = cell.source.replace(p, r)
             if fluent_mapping:
                 cell.source = replace_fluent_alias(cell.source, fluent_mapping)
             if args_mapping: 

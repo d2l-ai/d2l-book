@@ -18,11 +18,13 @@ class TestLibrary(unittest.TestCase):
         self.tab_lib = {
             'lib_name': 'torch',
             'simple_alias':
-            'ones, zeros, tensor, arange, meshgrid, sin, sinh, cos, cosh, tanh, linspace, exp, log, normal, rand, matmul, int32, float32, concat -> cat, stack, abs, eye',
+            'ones, zeros, tensor, arange, meshgrid, sin, sinh, cos, cosh, tanh, linspace, exp, log, normal, rand(, matmul, int32, float32, concat -> cat, stack, abs, eye',
             'fluent_alias':
             'numpy -> detach().numpy, reshape, size -> numel, to, reduce_sum -> sum, argmax, astype -> type, transpose -> t',
             'alias': '',
-            'reverse_alias': '',}
+            'reverse_alias': '',
+            'args_alias': 'randn(size, device=None) -> np.random.randn(size=size, ctx=device)'
+            }
 
     def test_replace_alias(self):
         # Test https://github.com/d2l-ai/d2l-book/issues/14
@@ -48,7 +50,7 @@ class TestLibrary(unittest.TestCase):
             ('float(d2l.reduce_sum(d2l.abs(Y1 - Y2))) < 1e-6',
              'float(torch.abs(Y1 - Y2).sum()) < 1e-6'),
             ('d2l.plt.scatter(d2l.numpy(features[:, a + b]), d2l.numpy(labels), 1);',
-             'd2l.plt.scatter(features[:, a + b].detach().numpy(),labels.detach().numpy(), 1);'
+             'd2l.plt.scatter(features[:, (a + b)].detach().numpy(),labels.detach().numpy(), 1);'
              ),
             ('d2l.reshape(multistep_preds[i - tau: i], (1, -1))',
              'multistep_preds[i - tau:i].reshape((1, -1))'),
@@ -58,7 +60,15 @@ class TestLibrary(unittest.TestCase):
             ('# comments\nX = d2l.reshape(a)', '# comments\nX = a.reshape()'),
             ('X = d2l.reshape(a)  # comments', 'X = a.reshape()  # comments'),
             ('Y[i, j] = d2l.reduce_sum((X[i: i + h, j: j + w] * K))',
-             'Y[i, j] = (X[i:i + h, j:j + w] * K).sum()'),]
+             'Y[i, j] = (X[i:i + h, j:j + w] * K).sum()'),
+            ('d2l.randn(size=(1,2)) * 0.01',
+             'np.random.randn(size=(1,2)) * 0.01'),
+             ('d2l.randn(size=(1,2), device=d2l.try_gpu()) * 0.01',
+             'np.random.randn(size=(1,2), ctx=d2l.try_gpu()) * 0.01'
+             ),
+             
+             ]
+
         for a, b in pairs:
             self.nb.cells[0].source = a
             nb = library.replace_alias(self.nb, self.tab_lib)
