@@ -11,8 +11,10 @@ import astor
 from yapf.yapflib.yapf_api import FormatCode
 import isort
 
+HEADER = '#################   WARNING   ################\n'
 def _write_header(f):
-    f.write('# This file is generated automatically through:\n')
+    f.write(HEADER)
+    f.write('# The below part is generated automatically through:\n')
     f.write('#    d2lbook build lib\n')
     f.write('# Don\'t edit it directly\n\n')
 
@@ -62,7 +64,18 @@ def save_mark(notebooks: List[str], lib_fname: str, save_mark: str):
 def save_tab(notebooks: List[str], lib_fname: str, tab: str, default_tab: str):
     logging.info(
         f'Matching with the pattern: "#@save", seaching for tab {tab}')
+    custom_header = []
+    if os.path.exists(lib_fname):
+        with open(lib_fname, 'r') as f:
+            lines = f.readlines()
+        for i, l in enumerate(lines):
+            if l.strip() == HEADER.strip():
+                custom_header = lines[:i]
+                break
+
     with open(lib_fname, 'w') as f:
+        if custom_header:
+            f.write(''.join(custom_header))            
         _write_header(f)
         for nb in notebooks:
             _save_code(nb, f, tab=tab, default_tab=default_tab)
