@@ -75,7 +75,7 @@ def save_tab(notebooks: List[str], lib_fname: str, tab: str, default_tab: str):
 
     with open(lib_fname, 'w') as f:
         if custom_header:
-            f.write(''.join(custom_header))            
+            f.write(''.join(custom_header))
         _write_header(f)
         for nb in notebooks:
             _save_code(nb, f, tab=tab, default_tab=default_tab)
@@ -297,6 +297,10 @@ def format_code(source: str):
             THIRDPARTY, isort.settings.FIRSTPARTY, isort.settings.LOCALFOLDER])
 
         source = isort.code(source, config=config)
+
+    # Disable yapf, as it doesn't work well for long sentences
+    return source
+
 
     # fix the bug that yapf cannot handle jupyter magic
     for l in source.splitlines():
