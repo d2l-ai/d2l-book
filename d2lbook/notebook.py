@@ -116,12 +116,49 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str,
                     if src_tab or (text_tab and (text_tab[1] == 'begin_tab' or
                                                  text_tab[1] == 'end_tab')):
                         del lines[j]
+
+                    # TODO, also remove the tailing #@save
+                    lines = _clean_if_branches(lines, tab)
                     new_cell.source = '\n'.join(lines)
                 new_cells.append(new_cell)
     if not matched_tab and any([cell.cell_type == 'code'
                                 for cell in nb.cells]):
         return None
     return create_new_notebook(nb, new_cells)
+
+def _clean_if_branches(lines, tab):
+    """Handle speciall if branchs
+    """
+    #TODO make it more general purpose
+    mark = 'd2l.USE_'
+    matched = False
+    for l in lines:
+        if mark in l:
+            matched = True
+            break
+    if not matched:
+        return lines
+    # 1 means in a matched if branch,
+    # 2 means in a not matched if branch
+    # 0 means others
+    mode = 0
+    indent = 0
+    _leading_spaces = lambda l: len(l) - len(l.lstrip())
+    new_lines = []
+    for i, l in enumerate(lines):
+        assert '\t' not in l, 'please use space in ' + l
+        if 'if' in l and mark in l:
+            mode = 1 if mark+tab.upper() in l else 2
+            indent = _leading_spaces(l)
+            continue
+        if mode != 0 and l.strip() != '' and _leading_spaces(l) <= indent:
+            # out of the if branch
+            mode = 0
+        if mode == 0:
+            new_lines.append(l)
+        if mode == 1:
+            new_lines.append(l[4:])
+    return new_lines
 
 def _has_output(cell):
     """Return if a cell has output"""
