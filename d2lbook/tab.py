@@ -33,7 +33,7 @@ def selected(tabs):
 class Tab(Magics):
     @cell_magic
     def tab(self, line, cell):
-        tabs = line.strip().split(',')
+        tabs = [tab.strip() for tab in line.strip().split(',')]
         if _TAB in tabs or 'all' in tabs:
             self.shell.run_cell(cell)
         else:
