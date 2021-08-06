@@ -71,7 +71,8 @@ def get_cell_tab(cell: notebooknode.NotebookNode,
         return [tab] if type(tab) == str else tab
     if cell.cell_type != 'code':
         return []
-    match = common.source_tab_pattern.search(cell.source)
+    match = (common.source_tab_pattern.search(cell.source) or
+             common.source_tab_pattern_2.search(cell.source))
     if match:
         return [tab.strip() for tab in match[1].split(',')]
     return [default_tab,]
@@ -106,12 +107,16 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str,
             new_cells.append(new_cell)
         else:
             if cell_tab == ['all'] or tab in cell_tab:
+                # drop the cell contains `%load_ext d2lbook.tab`
+                if '%load_ext d2lbook.tab' in new_cell.source:
+                    continue
                 new_cell.metadata['tab'] = [tab]
                 matched_tab = True
                 # remove the tab from source
                 lines = new_cell.source.split('\n')
                 for j, line in enumerate(lines):
-                    src_tab = common.source_tab_pattern.search(line)
+                    src_tab = (common.source_tab_pattern.search(line) or
+                               common.source_tab_pattern_2.search(line))
                     text_tab = common.md_mark_pattern.search(line)
                     if src_tab or (text_tab and (text_tab[1] == 'begin_tab' or
                                                  text_tab[1] == 'end_tab')):
@@ -127,6 +132,35 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str,
     return create_new_notebook(nb, new_cells)
 
 def _clean_if_branches(lines, tab):
+    """Handle special if branchs
+    """
+    #TODO make it more general purpose
+    mark = 'tab.selected'
+    if not any([mark in l for l in lines]):
+        return _clean_if_branches_old(lines, tab)
+    # 1 means in a matched if branch,
+    # 2 means in a not matched if branch
+    # 0 means others
+    mode = 0
+    indent = 0
+    _leading_spaces = lambda l: len(l) - len(l.lstrip())
+    new_lines = []
+    for i, l in enumerate(lines):
+        assert '\t' not in l, 'please use space in ' + l
+        if 'if' in l and mark in l:
+            mode = 1 if (f'"{tab}"' in l or f"'{tab}'" in l) else 2
+            indent = _leading_spaces(l)
+            continue
+        if mode != 0 and l.strip() != '' and _leading_spaces(l) <= indent:
+            # out of the if branch
+            mode = 0
+        if mode == 0:
+            new_lines.append(l)
+        if mode == 1:
+            new_lines.append(l[4:])
+    return new_lines
+
+def _clean_if_branches_old(lines, tab):
     """Handle speciall if branchs
     """
     #TODO make it more general purpose

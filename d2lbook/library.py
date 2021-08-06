@@ -272,7 +272,7 @@ def replace_alias(nb, tab_lib):
         lib_name = tab_lib["lib_name"]
         if 'simple_alias' in tab_lib:
             mapping = _parse_mapping_config(tab_lib['simple_alias'])
-            patterns += [(f'd2l.{a}', f'{lib_name}.{b}') for a, b in mapping]
+            patterns += [(f'd2l.{a}(', f'{lib_name}.{b}(') for a, b in mapping]
         if 'fluent_alias' in tab_lib:
             fluent_mapping = dict(_parse_mapping_config(tab_lib['fluent_alias']))
         if 'args_alias' in tab_lib:

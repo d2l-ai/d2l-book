@@ -7,6 +7,7 @@ md_mark_pattern = re.compile(':([-\/\\._\w]+):(`[\ \*-\/\\\._\w]+`)?')
 rst_mark_pattern = re.compile(':([-\/\\._\w]+):(``[\ \*-\/\\\._\w]+``)?')
 # The source code tab mark
 source_tab_pattern = re.compile('# *@tab +([\w\,\ ]+)')
+source_tab_pattern_2 = re.compile('%%tab +([\w\,\ ]+)')
 
 # Markdown code fence
 md_code_fence = re.compile('(```+) *(.*)')
