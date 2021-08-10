@@ -32,9 +32,10 @@ def get_notebook_gpus(notebook, max_gpus):
     # several heuristics, not necessary accurate
     # TODO(mli) support a special mark in notebook to hint the #gpus
     single_gpu_patterns = ('gpu()', 'gpu(0)', 'device(\'cuda\')',
-                           'device(\'/GPU:0\')', 'try_gpu()', 'try_gpu(0)')
+                           'device(\'/GPU:0\')', 'try_gpu()', 'try_gpu(0)', 'num_gpus=1')
     all_gpus_patterns = ('gpu(1)', 'device(\'cuda:1\')', 'device(\'/GPU:1\')',
-                         'try_all_gpus', 'try_gpu(1)')
+                         'try_all_gpus', 'try_gpu(1)', 'num_gpus=2',
+                         'num_gpus=3', 'num_gpus=4')
     n_gpus = 0
     for cell in notebook.cells:
         if cell.cell_type == 'code':
