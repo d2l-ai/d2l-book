@@ -20,13 +20,15 @@ def select_tab(tab=_LAST_TAB):
         with open(_LAST_TAB_FILE, 'w') as f:
             f.write(tab+'\n')
 
-def interact_select(tabs):
+def interact_select(*tabs):
+    if len(tabs) == 1 and isinstance(tabs[0], (list, tuple)):
+        tabs = tabs[0]
     from ipywidgets import interact
-    interact(select_tab, tab=tabs)
+    interact(select_tab, tab=list(tabs))
 
-def selected(tabs):
-    if isinstance(tabs, str):
-        tabs = [tabs]
+def selected(*tabs):
+    if len(tabs) == 1 and isinstance(tabs[0], (list, tuple)):
+        tabs = tabs[0]
     return _TAB in tabs
 
 @magics_class
