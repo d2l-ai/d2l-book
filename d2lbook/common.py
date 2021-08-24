@@ -12,10 +12,21 @@ source_tab_pattern_2 = re.compile('%%tab +([\w\,\ ]+)')
 # Markdown code fence
 md_code_fence = re.compile('(```+) *(.*)')
 
+def split_list(list_obj: List[Any], split_fn: Callable[[Any], Any]) -> List[List[Any]]:
+    """Cut a list into multiple parts when fn returns True"""
+    prev_pos = 0
+    ret = []
+    for i, item in enumerate(list_obj):
+        if split_fn(item):
+            ret.append(list_obj[prev_pos:i])
+            prev_pos = i
+    ret.append(list_obj[prev_pos:])
+    return ret
+
 def group_list(
         list_obj: List[Any],
         status_fn: Callable[[Any, Any], Any]) -> List[Tuple[Any, List[Any]]]:
-    """Cut a list into multiple parts when fn returns True"""
+    """Cut a list into multiple parts when based on the value returned by status_fn"""
     prev_status = None
     prev_pos = 0
     ret = []
@@ -27,6 +38,10 @@ def group_list(
         prev_status = cur_status
     ret.append((cur_status, list_obj[prev_pos:]))
     return ret
+
+def head_spaces(line: str):
+    """"Return the head spaces."""
+    return line[: len(line)-len(line.lstrip())]
 
 def flatten(x):
     """flatten a list of lists into a list."""

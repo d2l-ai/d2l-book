@@ -1,6 +1,7 @@
 """Save codes into library"""
 from typing import List
 from d2lbook import notebook
+from d2lbook import common
 import logging
 import os
 import copy
@@ -18,49 +19,6 @@ def _write_header(f):
     f.write('#    d2lbook build lib\n')
     f.write('# Don\'t edit it directly\n\n')
 
-def save_file(root_dir: str, nbfile: str):
-    nbfile = pathlib.Path(nbfile)
-    pyfile = root_dir / nbfile.with_suffix('.py')
-
-    with nbfile.open('r') as f:
-        nb = notebook.read_markdown(f.read())
-
-    saved = []
-    save_all = False
-    for cell in nb.cells:
-        if cell.cell_type == 'code':
-            src = cell.source.lstrip()
-            if re.search('# *@save_all', src):
-                save_all = True
-            if save_all or re.search('# *@save_cell', src):
-                saved.append(src)
-            else:
-                blk = _save_block(src, '@save')
-                if blk:
-                    saved.append(blk)
-    if saved:
-        with pyfile.open('w') as f:
-            f.write(
-                f'# This file is generated from {str(nbfile)} automatically through:\n'
-            )
-            f.write('#    d2lbook build lib\n')
-            f.write('# Don\'t edit it directly\n\n')
-            for blk in saved:
-                f.write(blk + '\n\n')
-            logging.info(f'Found {len(saved)} blocks in {str(nbfile)}')
-
-def save_mark(notebooks: List[str], lib_fname: str, save_mark: str):
-    logging.info('Matching with the pattern: "%s"', save_mark)
-    with open(lib_fname, 'w') as f:
-        _write_header(f)
-        lib_name = os.path.dirname(lib_fname)
-        lib_name = lib_name.split('/')[-1]
-        f.write('import sys\n' + lib_name + ' = sys.modules[__name__]\n\n')
-
-        for nb in notebooks:
-            _save_code(nb, f, save_mark=save_mark)
-        logging.info('Saved into %s', lib_fname)
-
 def save_tab(notebooks: List[str], lib_fname: str, tab: str, default_tab: str):
     logging.info(
         f'Matching with the pattern: "#@save", seaching for tab {tab}')
@@ -77,9 +35,11 @@ def save_tab(notebooks: List[str], lib_fname: str, tab: str, default_tab: str):
         if custom_header:
             f.write(''.join(custom_header))
         _write_header(f)
+        saved = []
         for nb in notebooks:
-            _save_code(nb, f, tab=tab, default_tab=default_tab)
-        logging.info('Saved into %s', lib_fname)
+            saved.extend(_save_code(nb, tab=tab, default_tab=default_tab))
+        f.write(_refactor_blocks(saved))
+        logging.info('Saved %d blocks into %s', len(saved), lib_fname)
 
 def save_version(version: str, version_fn: str):
     if version and version_fn:
@@ -114,7 +74,7 @@ def _save_block(source: str, save_mark: str):
                     break
     return format_code('\n'.join(block))
 
-def _save_code(input_fn, output_fp, save_mark='@save', tab=None,
+def _save_code(input_fn, save_mark='@save', tab=None,
                default_tab=None):
     """get the code blocks (import, class, def) that will be saved"""
     with open(input_fn, 'r', encoding='UTF-8') as f:
@@ -122,17 +82,72 @@ def _save_code(input_fn, output_fp, save_mark='@save', tab=None,
     if tab:
         nb = notebook.get_tab_notebook(nb, tab, default_tab)
         if not nb:
-            return
+            return []
     saved = []
-    for cell in nb.cells:
+    for i, cell in enumerate(nb.cells):
         if cell.cell_type == 'code':
             block = _save_block(cell.source, save_mark)
-            if block: saved.append(block)
-    if saved:
-        logging.info('Found %d blocks in %s', len(saved), input_fn)
-        for block in saved:
-            code = '# Defined in file: %s\n%s\n\n\n' % (input_fn, block)
-            output_fp.write(code)
+            if block:
+                label = _find_latest_label(nb.cells[:i-1])
+                saved.append([block, label, input_fn])
+    return saved
+
+def _find_latest_label(cells):
+    for cell in reversed(cells):
+        if cell.cell_type == 'markdown':
+            matches = re.findall(common.md_mark_pattern, cell.source)
+            for m in reversed(matches):
+                if m[0] == 'label' and 'sec_' in m[1]:
+                    return m[1]
+    return ''
+
+def _refactor_blocks(saved_blocks):
+    # add label into docstring
+    for i, (block, label, _) in enumerate(saved_blocks):
+        if not label: continue        
+        modules = common.split_list(block.split('\n'), lambda l: l.startswith('def') or l.startswith('class'))
+        new_block = []
+        if modules[0]: new_block.append('\n'.join(modules[0]))
+        for m in modules[1:]:
+            parts = common.split_list(m, lambda l: '):' in l)
+            # find the docstring 
+            if len(parts) > 1:
+                docstr = parts[1][1] if len(parts[1]) > 1 else common.head_spaces(m[0]) + '    '
+                loc = f'Defined in :numref:{label}"""'
+                if docstr.lstrip().startswith('"""') and docstr.endswith('"""'):
+                    parts[1][1] = docstr[:-3] + f'\n\n{common.head_spaces(docstr)}{loc}'
+                else:
+                    parts[1].insert(1, f'{common.head_spaces(docstr)}"""{loc}')
+            new_block.append('\n'.join(common.flatten(parts)))                
+        saved_blocks[i][0] = '\n'.join(new_block)
+
+    # merge @d2l.save_to_class
+    new_blocks = []
+    class_blocks = {}
+    for i, (block, _, _) in enumerate(saved_blocks):
+        lines = block.split('\n')
+        if lines[0].startswith('class'):
+            new_blocks.append(block)
+            m = re.search('class +([\w\_]+)', lines[0])
+            if m:                 
+                class_blocks[m.groups()[0]] = len(new_blocks) - 1
+            continue
+        register = '@d2l.add_to_class'
+        if register in block:
+            parts = common.split_list(lines, lambda x: x.startswith(register))
+            if parts[0]:
+                new_blocks.append(parts[0])
+            if len(parts) > 1:
+                for p in parts[1:]:
+                    m = re.search('\@d2l\.add_to_class\(([\.\w\_]+)\)', p[0])
+                    if m:
+                        cls = m.groups()[0].split('.')[-1]
+                        new_blocks[class_blocks[cls]] += '\n\n' + '\n'.join(['    '+l for l in p[1:]])
+                continue            
+        new_blocks.append(block)
+
+    return '\n\n'.join(new_blocks)
+
 
 def _parse_mapping_config(config: str, split_line=True):
     """Parse config such as: numpy -> asnumpy, reshape, ...
@@ -298,9 +313,11 @@ def format_code(source: str):
 
         source = isort.code(source, config=config)
 
+    # remove tailing spaces
+    source = '\n'.join([l.rstrip() for l in source.split('\n')]).strip()
+
     # Disable yapf, as it doesn't work well for long sentences
     return source
-
 
     # fix the bug that yapf cannot handle jupyter magic
     for l in source.splitlines():
@@ -328,3 +345,49 @@ def format_code_nb(nb):
         if cell.cell_type == 'code':
             cell.source = format_code(cell.source)
     return nb
+
+
+# DEPRECATED
+# def save_file(root_dir: str, nbfile: str):
+#     nbfile = pathlib.Path(nbfile)
+#     pyfile = root_dir / nbfile.with_suffix('.py')
+
+#     with nbfile.open('r') as f:
+#         nb = notebook.read_markdown(f.read())
+
+#     saved = []
+#     save_all = False
+#     for cell in nb.cells:
+#         if cell.cell_type == 'code':
+#             src = cell.source.lstrip()
+#             if re.search('# *@save_all', src):
+#                 save_all = True
+#             if save_all or re.search('# *@save_cell', src):
+#                 saved.append(src)
+#             else:
+#                 blk = _save_block(src, '@save')
+#                 if blk:
+#                     saved.append(blk)
+#     if saved:
+#         with pyfile.open('w') as f:
+#             f.write(
+#                 f'# This file is generated from {str(nbfile)} automatically through:\n'
+#             )
+#             f.write('#    d2lbook build lib\n')
+#             f.write('# Don\'t edit it directly\n\n')
+#             for blk in saved:
+#                 f.write(blk + '\n\n')
+#             logging.info(f'Found {len(saved)} blocks in {str(nbfile)}')
+
+# DEPRECATED
+# def save_mark(notebooks: List[str], lib_fname: str, save_mark: str):
+#     logging.info('Matching with the pattern: "%s"', save_mark)
+#     with open(lib_fname, 'w') as f:
+#         _write_header(f)
+#         lib_name = os.path.dirname(lib_fname)
+#         lib_name = lib_name.split('/')[-1]
+#         f.write('import sys\n' + lib_name + ' = sys.modules[__name__]\n\n')
+
+#         for nb in notebooks:
+#             _save_code(nb, f, save_mark=save_mark)
+#         logging.info('Saved into %s', lib_fname)
