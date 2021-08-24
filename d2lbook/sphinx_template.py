@@ -24,6 +24,12 @@ linkcheck_ignore = [r'.*localhost.*']
 linkcheck_timeout = 5
 linkcheck_workers = 20
 
+autodoc_default_options = {
+    'undoc-members': True,
+    'show-inheritance': True,
+}
+
+
 html_theme = 'mxtheme'
 html_theme_options = {
     'primary_color': 'blue',
