@@ -1,3 +1,4 @@
+.eggs/
 /d2lbook.egg-info/
 /dist/
 *.pyc
