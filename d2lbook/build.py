@@ -25,7 +25,7 @@ from d2lbook import resource
 __all__ = ['build']
 
 commands = [
-    'eval', 'rst', 'html', 'epub', 'pdf', 'pkg', 'linkcheck', 'ipynb', 'slides',
+    'eval', 'rst', 'html', 'pdf', 'pkg', 'linkcheck', 'ipynb', 'slides',
     'outputcheck', 'tabcheck', 'lib', 'colab', 'sagemaker', 'all', 'merge']
 
 def build():
@@ -352,13 +352,6 @@ class Builder(object):
             '-b linkcheck -c', self.config.rst_dir, self.sphinx_opts])
 
     @_once
-    def epub(self):
-        self.rst()
-        run_cmd([
-            'sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
-            '-b epub -c', self.config.rst_dir, self.sphinx_opts, '-D extensions=sphinx.ext.imgmath'])
-
-    @_once
     def pdf(self):
         self.rst()
         run_cmd([
@@ -430,7 +423,6 @@ class Builder(object):
         self.eval()
         self.rst()
         self.html()
-        self.epub()
         self.pdf()
         self.pkg()
 
