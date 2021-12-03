@@ -6,8 +6,8 @@ requirements = [
     'regex',
     'sphinx>=2.2.1',
     'recommonmark',
-    'nbformat<=5.0.7',  # there is an issue with 5.1.2
-    'nbconvert<=5.6.1',  # there is an issue with the newest 6.0.0a1
+    'nbformat>5.1.2',  # there is an issue with 5.1.2
+    'nbconvert>6.0.0a1',  # there is an issue with the newest 6.0.0a1
     'sphinxcontrib-bibtex<2.0.0',
     'pybtex-apa-style',
     'mu-notedown',
