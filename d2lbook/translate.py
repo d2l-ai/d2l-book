@@ -16,7 +16,18 @@ def translate():
     cf = config.Config()
     trans = Translate(cf, args.commit)
     for fn in args.filename:
-        trans.translate(fn)
+        if not fn.endswith(".md"):
+            chapter_dir = os.path.join(trans.repo_dir, fn)
+            if os.path.isdir(chapter_dir):
+                logging.info(f'Translating all sections of {fn}')
+                all_ch_sections = os.listdir(chapter_dir)
+                for file in all_ch_sections:
+                    if file.endswith(".md"):
+                        trans.translate(os.path.join(fn, file))
+            else:
+                logging.error(f'Invalid Directory {fn}: Please provide a valid chapter name for translation')
+        else:
+            trans.translate(fn)
 
 class Translate(object):
     def __init__(self, cf: config.Config, commit: str):
