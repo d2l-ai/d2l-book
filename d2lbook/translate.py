@@ -9,25 +9,29 @@ import glob
 
 def translate():
     parser = argparse.ArgumentParser(description='Translate to another language')
-    parser.add_argument('filename', nargs='+', help='the markdown files to activate')
+    # d2lbook translate --commit 35a64ab chapter_optimization chapter_computer-vision/anchor.md
+    parser.add_argument('name', nargs='+', help='chapter dirs or markdown files to activate')
     parser.add_argument('--commit', default='latest', help='the commit of the base repo')
     args = parser.parse_args(sys.argv[2:])
 
     cf = config.Config()
     trans = Translate(cf, args.commit)
-    for fn in args.filename:
-        if not fn.endswith(".md"):
-            chapter_dir = os.path.join(trans.repo_dir, fn)
-            if os.path.isdir(chapter_dir):
-                logging.info(f'Translating all sections of {fn}')
-                all_ch_sections = os.listdir(chapter_dir)
-                for file in all_ch_sections:
-                    if file.endswith(".md"):
-                        trans.translate(os.path.join(fn, file))
+    for name in args.name:
+        # check if name is a file or a chapter dir
+        if not name.endswith(".md"):
+            chap_name = name
+            chap_dir = os.path.join(trans.repo_dir, chap_name)
+            if os.path.isdir(chap_dir):
+                logging.info(f'Translating all sections of {chap_name}')
+                all_chap_sec = os.listdir(chap_dir)
+                for sec_name in all_chap_sec:
+                    if sec_name.endswith(".md"):
+                        trans.translate(os.path.join(chap_name, sec_name))
             else:
-                logging.error(f'Invalid Directory {fn}: Please provide a valid chapter name for translation')
+                logging.error(f'Invalid Directory {chap_name}: Please provide'
+                              'a valid chapter name for translation')
         else:
-            trans.translate(fn)
+            trans.translate(name)
 
 class Translate(object):
     def __init__(self, cf: config.Config, commit: str):
