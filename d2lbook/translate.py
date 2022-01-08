@@ -17,7 +17,7 @@ def translate():
     cf = config.Config()
     trans = Translate(cf, args.commit)
     for name in args.name:
-        # check if name is a file or a chapter dir
+        # Check if name is a file or a chapter dir
         if not name.endswith(".md"):
             chap_name = name
             chap_dir = os.path.join(trans.repo_dir, chap_name)
