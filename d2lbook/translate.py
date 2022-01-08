@@ -29,6 +29,8 @@ class Translate(object):
         if os.path.exists(self.repo_dir):
             self.repo = git.Repo(self.repo_dir)
             logging.info(f'Pulling from {self.url} into {self.repo_dir}')
+            # Reset to origin/master before pulling updates
+            self.repo.git.reset('--hard', self.repo.remotes.origin.name + '/' + self.repo.active_branch.name)
             self.repo.remotes.origin.pull()
         else:
             logging.info(f'Clone {self.url} into {self.repo_dir}')
