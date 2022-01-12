@@ -10,7 +10,7 @@ import glob
 def translate():
     parser = argparse.ArgumentParser(description='Translate to another language')
     # Example usage: d2lbook translate --commit 35a64ab chapter_optimization chapter_computer-vision/anchor.md
-    parser.add_argument('source', nargs='+', help='chapter dirs or markdown files to activate')
+    parser.add_argument('source', nargs='+', help='chapter directories or markdown files to activate')
     parser.add_argument('--commit', default='latest', help='the commit of the base repo')
     args = parser.parse_args(sys.argv[2:])
 
@@ -27,7 +27,7 @@ def translate():
                     if sec_name.endswith(".md"):
                         trans.translate(os.path.join(source, sec_name))
             else:
-                logging.error(f'Invalid Directory {source}: Please provide'
+                logging.error(f'Invalid directory {source}: Please provide'
                               'a valid chapter name for translation')
         else:
             trans.translate(source)
