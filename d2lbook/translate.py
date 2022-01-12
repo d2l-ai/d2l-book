@@ -9,14 +9,28 @@ import glob
 
 def translate():
     parser = argparse.ArgumentParser(description='Translate to another language')
-    parser.add_argument('filename', nargs='+', help='the markdown files to activate')
+    # Example usage: d2lbook translate --commit 35a64ab chapter_optimization chapter_computer-vision/anchor.md
+    parser.add_argument('source', nargs='+', help='chapter dirs or markdown files to activate')
     parser.add_argument('--commit', default='latest', help='the commit of the base repo')
     args = parser.parse_args(sys.argv[2:])
 
     cf = config.Config()
     trans = Translate(cf, args.commit)
-    for fn in args.filename:
-        trans.translate(fn)
+    for source in args.source:
+        # Check if source is a file or a chapter dir
+        if not source.endswith(".md"):
+            chap_dir = os.path.join(trans.repo_dir, source)
+            if os.path.isdir(chap_dir):
+                logging.info(f'Translating all sections of {source}')
+                all_chap_secs = os.listdir(chap_dir)
+                for sec_name in all_chap_secs:
+                    if sec_name.endswith(".md"):
+                        trans.translate(os.path.join(source, sec_name))
+            else:
+                logging.error(f'Invalid Directory {source}: Please provide'
+                              'a valid chapter name for translation')
+        else:
+            trans.translate(source)
 
 class Translate(object):
     def __init__(self, cf: config.Config, commit: str):
