@@ -3,12 +3,11 @@ from d2lbook import __version__
 
 requirements = [
     'jupyter',
-    'jupyter-client<=6.1.11', # needed until nbformat and nbconvert can be upgraded
     'regex',
     'sphinx>=2.2.1',
     'recommonmark',
-    'nbformat<=5.0.7',  # there is an issue with 5.1.2
-    'nbconvert<=5.6.1',  # there is an issue with the newest 6.0.0a1
+    'nbformat',
+    'nbconvert',
     'sphinxcontrib-bibtex<2.0.0',
     'pybtex-apa-style',
     'mu-notedown',
