@@ -251,6 +251,6 @@ class Scheduler():
 def _target(gpus, target, *args):
     if not gpus:
         # it will triggler an runtime error if target actually uses a gpu
-        gpus = [-1]
+        gpus = [""]
     os.environ['CUDA_VISIBLE_DEVICES'] = ','.join([str(g) for g in gpus])
     return target(*args)
