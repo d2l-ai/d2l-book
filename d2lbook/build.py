@@ -234,10 +234,12 @@ class Builder(object):
         updated_notebooks = get_updated_files(notebooks, default_eval_dir,
                                               self.config.eval_dir, 'ipynb',
                                               'ipynb')
-        tab_dirs = [
-            default_eval_dir + '_' + tab for tab in self.config.tabs[1:]]
+        # All tab notebooks need to be verified with file size for skipping
+        tab_dirs = [default_eval_dir]
+        for tab in self.config.tabs[1:]:
+            tab_dirs.append(default_eval_dir + '_' + tab)
         for default, merged in updated_notebooks:
-            src_notebooks = [default]
+            src_notebooks = []
             for tab_dir in tab_dirs:
                 fname = os.path.join(
                     tab_dir, os.path.relpath(default, default_eval_dir))
