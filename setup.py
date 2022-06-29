@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
-from d2lbook import __version__
+
+with open('d2lbook/_version.py') as ver_file:
+    exec(ver_file.read())
 
 requirements = [
     'jupyter',
@@ -11,7 +13,7 @@ requirements = [
     'sphinxcontrib-bibtex<2.0.0',
     'pybtex-apa-style',
     'mu-notedown',
-    'mxtheme>=0.3.16',
+    'mxtheme>=0.3.17',
     'sphinxcontrib-svg2pdfconverter',
     'numpydoc',
     'awscli',
