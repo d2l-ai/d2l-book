@@ -13,7 +13,7 @@ requirements = [
     'sphinxcontrib-bibtex<2.0.0',
     'pybtex-apa-style',
     'mu-notedown',
-    'mxtheme==0.3.17',
+    'mxtheme>=0.3.17',
     'sphinxcontrib-svg2pdfconverter',
     'numpydoc',
     'awscli',
