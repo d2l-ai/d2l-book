@@ -114,6 +114,144 @@ def setup(app):
     app.add_directive('card', mxtheme.CardDirective)
 """
 
+sphinx_conf_cambridge = r"""
+import sys
+sys.path.insert(0, '..')
+sys.path.insert(0, '.')
+
+project = "TITLE"
+copyright = "COPYRIGHT"
+author = "AUTHOR"
+release = "RELEASE"
+
+extensions = [EXTENSIONS]
+
+templates_path = ['_templates']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+master_doc = 'INDEX'
+numfig = True
+numfig_secnum_depth = 2
+math_numfig = True
+math_number_all = True
+
+suppress_warnings = ['misc.highlighting_failure']
+linkcheck_ignore = [r'.*localhost.*']
+linkcheck_timeout = 5
+linkcheck_workers = 20
+
+autodoc_default_options = {
+    'undoc-members': True,
+    'show-inheritance': True,
+}
+
+
+html_theme = 'mxtheme'
+html_theme_options = {
+    'primary_color': 'blue',
+    'accent_color': 'deep_orange',
+    'header_links': [
+        HEADER_LINKS
+    ],
+    'show_footer': False
+}
+html_static_path = ['_static']
+
+html_favicon = 'FAVICON'
+
+html_logo = 'HTML_LOGO'
+
+latex_documents = [
+    (master_doc, "NAME.tex", "TITLE",
+     author, 'PT1'),
+]
+
+
+
+rsvg_converter_args = ['-z', '0.8']
+
+latex_engine = 'xelatex' # for utf-8 supports
+latex_show_pagerefs = True
+latex_show_urls = 'footnote'
+
+latex_logo = 'LATEX_LOGO'
+
+latex_elements = {
+'papersize':'a4paper,prodtf',
+'figure_align': 'htbp',
+
+'pointsize': '12pt',
+'preamble': r'''
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsthm}
+\usepackage{color}
+\usepackage[figuresright]{rotating}
+\usepackage{floatpag}
+\rotfloatpagestyle{empty}
+\usepackage{makeidx}
+\usepackage{subcaption}
+\usepackage{natbib}
+\usepackage[parfill]{parskip}
+\usepackage{titlesec}
+
+\makeatletter
+\let\ps@normal\ps@headings
+\let\sphinxthebibliography\thebibliography
+\let\sphinxtheindex\theindex
+
+% So some large pictures won't get the full page
+\renewcommand{\floatpagefraction}{.8}
+
+\protected\def\sphinxcite{\citep}
+\geometry{margin=1.65in}
+
+\titleformat{\section}{\LARGE\centering}{\thesection}%
+            {0.5em}{}[{\hspace{-1.65in}\raggedleft\includegraphics[width=35pc]{PT1secrule.eps}}]
+\titleformat{\subsection}{\Large\centering}%
+            {\thesubsection}{0.5em}{}[{\color{gray}\titlerule[0.8pt]}]
+
+\newcommand\cambridge{PT1}
+\theoremstyle{plain}% default
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem*{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{example-norules}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+\newtheorem*{case}{Case}
+
+\hyphenation{line-break line-breaks docu-ment triangle cambridge
+    amsthdoc cambridgemods baseline-skip author authors
+    cambridgestyle en-vir-on-ment polar astron-omers solu-tion}
+
+\setcounter{tocdepth}{2}  
+
+\hbadness=99999  % or any number >=10000
+\vfuzz=30pt
+\hfuzz=30pt
+''',
+'maketitle':'\\maketitle',
+'tableofcontents': '\\tableofcontents',
+'fncychap':'',
+'makeindex':'\\makeindex'
+}
+
+latex_additional_files = ["latex_style/PT1.cls","latex_style/PT1header.eps", "latex_style/PT1secrule.eps", "latex_style/PT1box.eps", "latex_style/PT1chrule.eps", "latex_style/multind.sty",  "latex_style/amsthm.sty", "latex_style/floatpag.sty","latex_style/rotating.sty", "latex_style/myriad-pt1.sty", "latex_style/natbib.sty", "latex_style/sphinx.sty",  "latex_style/sphinxlatexstyleheadings.sty", "latex_style/sphinxlatexstylepage.sty", "latex_style/sphinxlatexindbibtoc.sty", "latex_style/sphinxmessages.sty", "latex_style/sphinxlatexobjects.sty",
+"latex_style/natbib.dtx"]
+
+SPHINX_CONFIGS
+
+def setup(app):
+    # app.add_js_file('https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js')
+    app.add_js_file('d2l.js')
+    app.add_css_file('d2l.css')
+    import mxtheme
+    app.add_directive('card', mxtheme.CardDirective)
+"""
+
 
 google_tracker = """
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

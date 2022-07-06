@@ -33,15 +33,20 @@ def build():
     parser.add_argument('commands', nargs='+', choices=commands)
     parser.add_argument('--tab', default=None,
                         help='The tab to build, if multi-tab is enabled.')
+    parser.add_argument('--style', default=None,
+                        help='The pdf style. It supports cambridge style and sphinx default.')
     args = parser.parse_args(sys.argv[2:])
     config = Config(tab=args.tab)
     builder = Builder(config)
     for cmd in args.commands:
-        getattr(builder, cmd)()
+        if cmd == 'pdf':
+            getattr(builder, cmd)(args.style)
+        else:
+            getattr(builder, cmd)()
 
 def _once(func):
     # An decorator that run a method only once
-    def warp(self):
+    def warp(self, *args):
         name = func.__name__
         if self.config.tab:
             name += '_' + self.config.tab
@@ -49,7 +54,10 @@ def _once(func):
             return
         full_name = 'd2lbook build ' + name
         tik = datetime.datetime.now()
-        func(self)
+        if ("rst" in name or "pdf" in name) and len(args) > 0:
+            func(self, args[0])
+        else:
+            func(self)
         logging.info('=== Finished "%s" in %s', full_name,
                      get_time_diff(tik, datetime.datetime.now()))
         self.done[name] = True
@@ -276,7 +284,7 @@ class Builder(object):
         sd.generate_readme()
 
     @_once
-    def rst(self):
+    def rst(self, style=None):
         if self.config.tab == 'all':
             self.merge()
         else:
@@ -292,7 +300,7 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             ipynb2rst(src, tgt)
         # Generate conf.py under rst folder
-        prepare_sphinx_env(self.config)
+        prepare_sphinx_env(self.config, style)
         self._copy_rst()
         self._copy_resources(self.config.src_dir, self.config.rst_dir)
 
@@ -354,8 +362,8 @@ class Builder(object):
             '-b linkcheck -c', self.config.rst_dir, self.sphinx_opts])
 
     @_once
-    def pdf(self):
-        self.rst()
+    def pdf(self, style=None):
+        self.rst(style)
         run_cmd([
             'sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
             '-b latex -c', self.config.rst_dir, self.sphinx_opts])
@@ -537,7 +545,7 @@ def process_latex(fname, script):
         f.write('\n'.join(lines))
     # Execute custom process_latex script
     if script:
-        cmd = "python " + script + " " + fname
+        cmd = "python3.8 " + script + " " + fname
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
