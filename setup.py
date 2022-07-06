@@ -10,7 +10,7 @@ requirements = [
     'recommonmark',
     'nbformat',
     'nbconvert',
-    'sphinxcontrib-bibtex<2.0.0',
+    'sphinxcontrib-bibtex',
     'pybtex-apa-style',
     'mu-notedown',
     'mxtheme>=0.3.17',
