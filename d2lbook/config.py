@@ -76,9 +76,9 @@ class Config():
         self.set_tab(self.tab)
         # Sanity checks.
         self.sanity_check()
-        
+
     def _set_target(self):
-        # Some targets names.        
+        # Some targets names.
         self.tex_fname = os.path.join(self.pdf_dir, self.project['name']+'.tex')
         self.pkg_fname = os.path.join(self.tgt_dir, self.project['name']+'.zip')
 

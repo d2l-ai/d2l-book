@@ -29,6 +29,7 @@ class SphinxEnv(object):
                       'sphinx.ext.viewcode']
         extensions.extend(self.config.build['sphinx_extensions'].split())
         self._update_pyconf('extensions', ','.join('"'+ext+'"' for ext in extensions))
+        self._update_pyconf('bibfile', self.config.pdf['bibfile'])
         for font in ['main_font', 'sans_font', 'mono_font']:
             font_value = ''
             if self.config.pdf[font]:

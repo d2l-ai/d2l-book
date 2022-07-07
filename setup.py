@@ -10,7 +10,7 @@ requirements = [
     'recommonmark',
     'nbformat',
     'nbconvert',
-    'sphinxcontrib-bibtex',
+    'sphinxcontrib-bibtex==2.4.2', # >=2.2 to enable citet and citep
     'pybtex-apa-style',
     'mu-notedown',
     'mxtheme>=0.3.17',
