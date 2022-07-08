@@ -241,8 +241,8 @@ latex_elements = {
 'makeindex':'\\makeindex'
 }
 
-latex_additional_files = ["latex_style/PT1.cls","latex_style/PT1header.eps", "latex_style/PT1secrule.eps", "latex_style/PT1box.eps", "latex_style/PT1chrule.eps", "latex_style/multind.sty",  "latex_style/amsthm.sty", "latex_style/floatpag.sty","latex_style/rotating.sty", "latex_style/myriad-pt1.sty", "latex_style/natbib.sty", "latex_style/sphinx.sty",  "latex_style/sphinxlatexstyleheadings.sty", "latex_style/sphinxlatexstylepage.sty", "latex_style/sphinxlatexindbibtoc.sty", "latex_style/sphinxmessages.sty", "latex_style/sphinxlatexobjects.sty",
-"latex_style/natbib.dtx"]
+latex_additional_files = ["latex_style/PT1/PT1.cls","latex_style/PT1/PT1header.eps", "latex_style/PT1/PT1secrule.eps", "latex_style/PT1/PT1box.eps", "latex_style/PT1/PT1chrule.eps", "latex_style/PT1/multind.sty",  "latex_style/PT1/amsthm.sty", "latex_style/PT1/floatpag.sty","latex_style/PT1/rotating.sty", "latex_style/PT1/myriad-pt1.sty", "latex_style/PT1/natbib.sty", "latex_style/sphinx.sty",  "latex_style/sphinxlatexstyleheadings.sty", "latex_style/sphinxlatexstylepage.sty", "latex_style/sphinxlatexindbibtoc.sty", "latex_style/sphinxmessages.sty", "latex_style/sphinxlatexobjects.sty",
+"latex_style/PT1/natbib.dtx"]
 
 SPHINX_CONFIGS
 
