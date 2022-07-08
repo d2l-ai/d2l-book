@@ -187,11 +187,15 @@ def _process_rst(body):
             value = value[2:-2]
             new_line += line[pos:start]
             pos = end
-            # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height'], 'unknown key: ' + key
+            # assert key in ['label', 'eqlabel', 'ref', 'numref', 'eqref', 'width', 'height', 'citet', 'citep'], 'unknown key: ' + key
             if key == 'label':
                 new_line += '.. _' + value + ':'
             elif key in ['ref', 'numref', 'cite']:
                 new_line += ':'+key+':`'+value+'`'
+            elif key == 'citet':
+                new_line += ':cite:t:`'+value+'`'
+            elif key == 'citep':
+                new_line += ':cite:p:`'+value+'`'
             elif key == 'eqref':
                 new_line += ':eq:`'+value+'`'
             elif key in ['class', 'func', 'mod']:

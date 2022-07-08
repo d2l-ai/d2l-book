@@ -52,6 +52,8 @@ latex_documents = [
 
 rsvg_converter_args = ['-z', '0.8']
 
+bibtex_bibfiles = ["BIBFILE"]
+
 latex_engine = 'xelatex' # for utf-8 supports
 latex_show_pagerefs = True
 latex_show_urls = 'footnote'
@@ -545,7 +547,7 @@ div.mdl-tabs__tab-bar { justify-content: left; }
 }
 
 .mdl-tabs__tab.is-active {
-    background: rgb(0,0,0,.09);    
+    background: rgb(0,0,0,.09);
 }
 """
 

@@ -210,6 +210,19 @@ computer vision, there is a rich of following up works, such as
 Two keys together :cite:`he2016deep,devlin2018bert`. Single author
 :cite:`mitchell80`, two authors :cite:`Newell81`
 
+
+Note that :cite: is the same as `\citep` in LaTeX. To use `\citet` in LaTeX, just use :citet:.
+For example:
+
+```
+Two keys together :citet:`he2016deep,devlin2018bert`. Single author
+:citet:`mitchell80`, two authors :citet:`Newell81`
+```
+
+Two keys together :citet:`he2016deep,devlin2018bert`. Single author
+:citet:`mitchell80`, two authors :citet:`Newell81`
+
+
 ## References
 
 :bibliography:`../refs.bib`

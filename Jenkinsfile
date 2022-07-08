@@ -1,5 +1,5 @@
 stage("Build and Publish") {
-  node {
+  node('d2l-worker') {
     ws('workspace/d2l-book') {
       checkout scm
       sh '''set -ex
