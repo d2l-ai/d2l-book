@@ -52,8 +52,6 @@ latex_documents = [
 
 rsvg_converter_args = ['-z', '0.8']
 
-bibtex_bibfiles = ["BIBFILE"]
-
 latex_engine = 'xelatex' # for utf-8 supports
 latex_show_pagerefs = True
 latex_show_urls = 'footnote'
@@ -171,8 +169,6 @@ latex_documents = [
 
 rsvg_converter_args = ['-z', '0.8']
 
-bibtex_bibfiles = ["BIBFILE"]
-
 latex_engine = 'xelatex' # for utf-8 supports
 latex_show_pagerefs = True
 latex_show_urls = 'footnote'
@@ -180,10 +176,10 @@ latex_show_urls = 'footnote'
 latex_logo = 'LATEX_LOGO'
 
 latex_elements = {
-'papersize':'a4paper,prodtf',
-'figure_align': 'htbp',
-
-'pointsize': '12pt',
+'papersize':'a4paper,prodtf,twoside',
+'figure_align': 'htbp', 
+'pointsize': '11pt',
+'fvset':r'''\fvset{fontsize=\small}''',
 'preamble': r'''
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -193,26 +189,67 @@ latex_elements = {
 \usepackage{floatpag}
 \rotfloatpagestyle{empty}
 \usepackage{makeidx}
-\usepackage{subcaption}
 \usepackage{natbib}
 \usepackage[parfill]{parskip}
 \usepackage{titlesec}
+\usepackage{multicol}
+\protected\def\sphinxcite{\citep}
+
+% Add bib to TOC
+\usepackage[nottoc,numbib]{tocbibind}
+
+% QR code sidenotes for all footnotes
+% Make sure to replace special charactors URL Encoding: https://www.urlencoder.io/learn/
+\usepackage{sidenotes}
+\usepackage{marginfix}
+\setlength\marginparpush{20pt}
+\usepackage{qrcode}
+\newcommand{\qrsidenote}[1]{
+\sidenote{
+\qrcode[height=8mm]{#1}}
+}
+\newcommand{\relaxfootnote}[1][]{}
 
 \makeatletter
 \let\ps@normal\ps@headings
 \let\sphinxthebibliography\thebibliography
 \let\sphinxtheindex\theindex
+\let\sphinxAtStartFootnote\!
+\let\footnote\relaxfootnote
+\let\sphinxnolinkurl\qrsidenote
 
 % So some large pictures won't get the full page
 \renewcommand{\floatpagefraction}{.8}
 
-\protected\def\sphinxcite{\citep}
-\geometry{margin=1.65in}
+% Set the page margin size
+\geometry{left=1.9in, right=1.4in, includefoot, bottom=0.5in}
 
+% Section and subsection style
 \titleformat{\section}{\LARGE\centering}{\thesection}%
             {0.5em}{}[{\hspace{-1.65in}\raggedleft\includegraphics[width=35pc]{PT1secrule.eps}}]
 \titleformat{\subsection}{\Large\centering}%
             {\thesubsection}{0.5em}{}[{\color{gray}\titlerule[0.8pt]}]
+            
+% Code font style, for more font style, visit: https://tug.org/FontCatalogue/
+\setmonofont{Inconsolata}
+%\renewcommand\ttfamily{\sffamily} 
+
+% Resize all figures
+\let\ORIincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{\ORIincludegraphics[scale=0.75,#1]{#2}}
+% main text font style
+\usepackage{times} 
+
+% Rewrite table of contents
+\renewcommand\tableofcontents{\@restonecolfalse
+ \if@twocolumn\@restonecoltrue\onecolumn\fi
+ %\AJW@addtocfalse
+ \chapter*{\contentsname}
+ %\@starttoc{toc}
+ %\AJW@addtoctrue
+ \if@restonecol\twocolumn\fi
+  \@starttoc{toc}
+}
 
 \newcommand\cambridge{PT1}
 \theoremstyle{plain}% default
@@ -227,11 +264,12 @@ latex_elements = {
 \newtheorem*{remark}{Remark}
 \newtheorem*{case}{Case}
 
+
 \hyphenation{line-break line-breaks docu-ment triangle cambridge
     amsthdoc cambridgemods baseline-skip author authors
     cambridgestyle en-vir-on-ment polar astron-omers solu-tion}
 
-\setcounter{tocdepth}{2}  
+\setcounter{tocdepth}{1}
 
 \hbadness=99999  % or any number >=10000
 \vfuzz=30pt
@@ -243,8 +281,8 @@ latex_elements = {
 'makeindex':'\\makeindex'
 }
 
-latex_additional_files = ["latex_style/PT1/PT1.cls","latex_style/PT1/PT1header.eps", "latex_style/PT1/PT1secrule.eps", "latex_style/PT1/PT1box.eps", "latex_style/PT1/PT1chrule.eps", "latex_style/PT1/multind.sty",  "latex_style/PT1/amsthm.sty", "latex_style/PT1/floatpag.sty","latex_style/PT1/rotating.sty", "latex_style/PT1/myriad-pt1.sty", "latex_style/PT1/natbib.sty", "latex_style/sphinx.sty",  "latex_style/sphinxlatexstyleheadings.sty", "latex_style/sphinxlatexstylepage.sty", "latex_style/sphinxlatexindbibtoc.sty", "latex_style/sphinxmessages.sty", "latex_style/sphinxlatexobjects.sty",
-"latex_style/PT1/natbib.dtx"]
+latex_additional_files = ["latex_style/PT1/PT1.cls", "latex_style/PT1header.eps", "latex_style/PT1secrule.eps", "latex_style/PT1/PT1box.eps", "latex_style/PT1/PT1chrule.eps", "latex_style/PT1/multind.sty",  "latex_style/PT1/amsthm.sty", "latex_style/PT1/floatpag.sty","latex_style/PT1/rotating.sty", "latex_style/PT1/myriad-pt1.sty", "latex_style/PT1/natbib.sty", "latex_style/sphinx.sty",  "latex_style/sphinxlatexstyleheadings.sty", "latex_style/sphinxlatexstylepage.sty", "latex_style/sphinxlatexindbibtoc.sty", "latex_style/sphinxmessages.sty", "latex_style/sphinxlatexobjects.sty",
+"latex_style/PT1/natbib.dtx", "latex_style/sphinxpackagefootnote.sty", "latex_style/sphinxlatexlists.sty"]
 
 SPHINX_CONFIGS
 
@@ -549,7 +587,7 @@ div.mdl-tabs__tab-bar { justify-content: left; }
 }
 
 .mdl-tabs__tab.is-active {
-    background: rgb(0,0,0,.09);
+    background: rgb(0,0,0,.09);    
 }
 """
 
