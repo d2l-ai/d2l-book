@@ -578,7 +578,7 @@ def process_latex(fname, script):
         f.write('\n'.join(lines))
     # Execute custom process_latex script
     if script:
-        cmd = "python3.8 " + script + " " + fname
+        cmd = "python " + script + " " + fname
         process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
