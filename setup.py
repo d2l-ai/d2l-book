@@ -6,7 +6,7 @@ with open('d2lbook/_version.py') as ver_file:
 requirements = [
     'jupyter',
     'regex',
-    'sphinx>=2.2.1',
+    'sphinx<=5.0.2', # https://github.com/sphinx-doc/sphinx/issues/10719
     'recommonmark',
     'nbformat',
     'nbconvert',
