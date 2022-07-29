@@ -90,8 +90,6 @@ SANS_FONT
 MONO_FONT
 
 % Remove top header
-\usepackage[draft]{minted}
-\fvset{breaklines=true, breakanywhere=true}
 \setlength{\headheight}{13.6pt}
 \makeatletter
     \fancypagestyle{normal}{
