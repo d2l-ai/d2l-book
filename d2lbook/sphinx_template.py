@@ -101,12 +101,12 @@ MONO_FONT
      }
 \makeatother
 % Defines macros for code-blocks styling
-\definecolor{d2lbookOutputCellBackgroundColor}{RGB}{239,254,255}
-\definecolor{d2lbookOutputCellBorderColor}{RGB}{204,204,204}
+\definecolor{d2lbookOutputCellBackgroundColor}{RGB}{255,255,255}
+\definecolor{d2lbookOutputCellBorderColor}{RGB}{0,0,0}
 \def\diilbookstyleoutputcell
    {\sphinxcolorlet{VerbatimColor}{d2lbookOutputCellBackgroundColor}%
     \sphinxcolorlet{VerbatimBorderColor}{d2lbookOutputCellBorderColor}%
-    \sphinxsetup{verbatimwithframe,verbatimborder=3pt}%
+    \sphinxsetup{verbatimwithframe,verbatimborder=0.5pt}%
    }%
 %
 \definecolor{d2lbookInputCellBackgroundColor}{rgb}{.95,.95,.95}
