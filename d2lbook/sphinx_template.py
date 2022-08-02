@@ -51,7 +51,7 @@ latex_documents = [
 ]
 
 rsvg_converter_args = ['-z', '0.8']
-
+bibtex_bibfiles = ["BIBFILE"]
 latex_engine = 'xelatex' # for utf-8 supports
 latex_show_pagerefs = True
 latex_show_urls = 'footnote'
