@@ -37,7 +37,7 @@ def build():
     parser.add_argument('--tab', default=None,
                         help='The tab to build, if multi-tab is enabled.')
     parser.add_argument('--style', default=None,
-                        help='The pdf style. It supports cambridge style and sphinx default.')
+                        help='The pdf style. It supports cambridge style (cambridge) and sphinx default (None).')
     args = parser.parse_args(sys.argv[2:])
     config = Config(tab=args.tab)
     builder = Builder(config)
