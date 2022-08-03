@@ -12,7 +12,10 @@ def prepare_sphinx_env(config):
 class SphinxEnv(object):
     def __init__(self, config):
         self.config = config
-        self.pyconf = template.sphinx_conf
+        if self.config.pdf['style'] == 'cambridge':
+            self.pyconf = template.sphinx_conf_cambridge
+        else:
+            self.pyconf = template.sphinx_conf
 
     def prepare_env(self):
         self._copy_static_files()

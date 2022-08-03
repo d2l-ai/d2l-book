@@ -8,6 +8,9 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
+import zipfile
+import requests
 
 import nbformat
 import notedown
@@ -222,6 +225,35 @@ class Builder(object):
         for src, tgt in updated_rst:
             copy(src, tgt)
         return rst_files
+    
+    def _download_extract_latex(self, url, folder='latex_style', sha1_hash=None):
+        os.makedirs(folder, exist_ok=True)
+        fname = os.path.join(folder, url.split('/')[-1])
+        # Check if hit cache
+        if os.path.exists(fname) and sha1_hash:
+            sha1 = hashlib.sha1()
+            with open(fname, 'rb') as f:
+                while True:
+                    data = f.read(1048576)
+                    if not data:
+                        break
+                    sha1.update(data)
+            if sha1.hexdigest() == sha1_hash:
+                return fname
+        print(f'Downloading {fname} from {url}...')
+        r = requests.get(url, stream=True, verify=True)
+        with open(fname, 'wb') as f:
+            f.write(r.content)
+        base_dir = os.path.dirname(folder)
+        data_dir, ext = os.path.splitext(fname)
+        if ext == '.zip':
+            fp = zipfile.ZipFile(fname, 'r')
+        elif ext in ('.tar', '.gz'):
+            fp = tarfile.open(fname, 'r')
+        else:
+            assert False, 'Only zip/tar files can be extracted.'
+        fp.extractall(folder)
+
 
     @_once
     def merge(self):
@@ -356,6 +388,9 @@ class Builder(object):
     @_once
     def pdf(self):
         self.rst()
+        if self.config.pdf['style'] == 'cambridge':
+            self._download_extract_latex(self.config.pdf['latex_url'])
+
         run_cmd([
             'sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
             '-b latex -c', self.config.rst_dir, self.sphinx_opts])
