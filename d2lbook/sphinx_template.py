@@ -88,8 +88,6 @@ SANS_FONT
 MONO_FONT
 
 % Remove top header
-\usepackage[draft]{minted}
-\fvset{breaklines=true, breakanywhere=true}
 \setlength{\headheight}{13.6pt}
 \makeatletter
     \fancypagestyle{normal}{
@@ -100,9 +98,46 @@ MONO_FONT
         \fancyhead[LE,RO]{{\py@HeaderFamily }}
      }
 \makeatother
+% Defines macros for code-blocks styling
+\definecolor{d2lbookOutputCellBackgroundColor}{RGB}{255,255,255}
+\definecolor{d2lbookOutputCellBorderColor}{RGB}{0,0,0}
+\def\diilbookstyleoutputcell
+   {\sphinxcolorlet{VerbatimColor}{d2lbookOutputCellBackgroundColor}%
+    \sphinxcolorlet{VerbatimBorderColor}{d2lbookOutputCellBorderColor}%
+    \sphinxsetup{verbatimwithframe,verbatimborder=0.5pt}%
+   }%
+%
+\definecolor{d2lbookInputCellBackgroundColor}{rgb}{.95,.95,.95}
+\def\diilbookstyleinputcell
+   {\sphinxcolorlet{VerbatimColor}{d2lbookInputCellBackgroundColor}%
+    \sphinxsetup{verbatimwithframe=false,verbatimborder=0pt}%
+   }%
+% memo: as this mark-up uses macros not environments we have to reset all changed
+%       settings at each input cell to not inherit those or previous output cell
+% memo: Sphinx 5.1.0, 5.1.1 ignore verbatimwithframe Boolean, so for this
+%       reason we added an extra verbatimborder=0pt above.
+
 ''',
-'sphinxsetup': 'verbatimwithframe=false, verbatimsep=2mm, VerbatimColor={rgb}{.95,.95,.95}'
+
+'sphinxsetup': '''verbatimsep=2mm,
+                  VerbatimColor={rgb}{.95,.95,.95},
+                  VerbatimBorderColor={rgb}{.95,.95,.95},
+                  pre_border-radius=3pt,
+               ''',
 }
+# memo: Sphinx 5.1.0+ has a "feature" that if we don't set VerbatimColor to
+# some value via the sphinxsetup key or via \sphinxsetup raw macro, it
+# considers no colouring of background is required.  Above we by-passed usage
+# of \sphinxsetup, because \sphinxcolorlet was more convenient.  So we set
+# VerbatimColor in 'sphinxsetup' global key to work around that "feature".
+# The exact same applies with VerbatimBorderColor: it has to be set at least
+# once via 'sphinxsetup' or via \sphinxsetup raw macro else frame is black.
+#
+# memo: the Sphinx 5.1.0+ added pre_border-radius must be used in 'sphinxsetup'
+# (it can be modified later via extra  raw \sphinxsetup)
+# because at end of preamble Sphinx decides whether or not to load extra package
+# for rendering boxes with rounded corners.  N.B.: pre_border-radius is
+# unknown in Sphinx < 5.1.0 and will cause breakage.
 
 SPHINX_CONFIGS
 

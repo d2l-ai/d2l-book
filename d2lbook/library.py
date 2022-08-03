@@ -203,7 +203,7 @@ def save_alias(tab_lib):
         with open(lib_file, 'a') as f:
             logging.info(
                 f'Wrote {len(alias.splitlines())} alias into {lib_file}')
-            f.write('# Alias defined in config.ini\n')
+            f.write('\n\n\n# Alias defined in config.ini\n')
             f.write(alias + '\n\n')
 
 def replace_call(source: str, mapping, replace_fn):
