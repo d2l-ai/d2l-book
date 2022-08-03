@@ -388,7 +388,7 @@ class Builder(object):
     @_once
     def pdf(self):
         self.rst()
-        if self.config.pdf['style']  is not None:
+        if self.config.pdf['style'] == 'cambridge':
             self._download_extract_latex(self.config.pdf['latex_url'])
 
         run_cmd([
