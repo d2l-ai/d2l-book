@@ -255,6 +255,10 @@ latex_elements = {
 \let\footnote\relaxfootnote
 \let\sphinxnolinkurl\qrsidenote
 
+\sphinxDeclareColorOption{TitleColor}{{rgb}{0,0,0}}
+\sphinxDeclareColorOption{InnerLinkColor}{{rgb}{0,0,0}}
+\sphinxDeclareColorOption{OuterLinkColor}{{rgb}{0,0,0}}
+
 % So some large pictures won't get the full page
 \renewcommand{\floatpagefraction}{.8}
 
@@ -311,15 +315,35 @@ latex_elements = {
 \hbadness=99999  % or any number >=10000
 \vfuzz=30pt
 \hfuzz=30pt
+
+% Defines macros for code-blocks styling
+\definecolor{d2lbookOutputCellBackgroundColor}{RGB}{255,255,255}
+\definecolor{d2lbookOutputCellBorderColor}{RGB}{0,0,0}
+\def\diilbookstyleoutputcell
+   {\sphinxcolorlet{VerbatimColor}{d2lbookOutputCellBackgroundColor}%
+    \sphinxcolorlet{VerbatimBorderColor}{d2lbookOutputCellBorderColor}%
+    \sphinxsetup{verbatimwithframe,verbatimborder=0.5pt}%
+   }%
+%
+\definecolor{d2lbookInputCellBackgroundColor}{rgb}{.95,.95,.95}
+\def\diilbookstyleinputcell
+   {\sphinxcolorlet{VerbatimColor}{d2lbookInputCellBackgroundColor}%
+    \sphinxsetup{verbatimwithframe=false,verbatimborder=0pt}%
+   }%
+
 ''',
+'sphinxsetup': '''verbatimsep=2mm,
+                  VerbatimColor={rgb}{.95,.95,.95},
+                  VerbatimBorderColor={rgb}{.95,.95,.95},
+                  pre_border-radius=3pt,
+               ''',
 'maketitle':'\\maketitle',
 'tableofcontents': '\\tableofcontents',
 'fncychap':'',
 'makeindex':'\\makeindex'
 }
 
-latex_additional_files = ["latex_style/PT1/PT1.cls", "latex_style/PT1header.eps", "latex_style/PT1secrule.eps", "latex_style/PT1/PT1box.eps", "latex_style/PT1/PT1chrule.eps", "latex_style/PT1/multind.sty",  "latex_style/PT1/amsthm.sty", "latex_style/PT1/floatpag.sty","latex_style/PT1/rotating.sty", "latex_style/PT1/myriad-pt1.sty", "latex_style/PT1/natbib.sty", "latex_style/sphinx.sty",  "latex_style/sphinxlatexstyleheadings.sty", "latex_style/sphinxlatexstylepage.sty", "latex_style/sphinxlatexindbibtoc.sty", "latex_style/sphinxmessages.sty", "latex_style/sphinxlatexobjects.sty",
-"latex_style/PT1/natbib.dtx", "latex_style/sphinxpackagefootnote.sty", "latex_style/sphinxlatexlists.sty"]
+latex_additional_files = ["latex_style/PT1/PT1.cls", "latex_style/PT1header.eps", "latex_style/PT1secrule.eps", "latex_style/PT1/PT1box.eps", "latex_style/PT1/PT1chrule.eps", "latex_style/PT1/multind.sty",  "latex_style/PT1/amsthm.sty", "latex_style/PT1/floatpag.sty","latex_style/PT1/rotating.sty", "latex_style/PT1/myriad-pt1.sty", "latex_style/PT1/natbib.sty",  "latex_style/sphinxlatexstyleheadings.sty", "latex_style/sphinxlatexstylepage.sty", "latex_style/sphinxlatexindbibtoc.sty", "latex_style/sphinxmessages.sty", "latex_style/sphinxlatexobjects.sty", "latex_style/PT1/natbib.dtx", "latex_style/sphinxpackagefootnote.sty", "latex_style/sphinxlatexlists.sty"]
 
 SPHINX_CONFIGS
 

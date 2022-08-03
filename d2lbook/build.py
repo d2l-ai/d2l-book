@@ -36,20 +36,15 @@ def build():
     parser.add_argument('commands', nargs='+', choices=commands)
     parser.add_argument('--tab', default=None,
                         help='The tab to build, if multi-tab is enabled.')
-    parser.add_argument('--style', default=None,
-                        help='The pdf style. It supports cambridge style (cambridge) and sphinx default (None).')
     args = parser.parse_args(sys.argv[2:])
     config = Config(tab=args.tab)
     builder = Builder(config)
     for cmd in args.commands:
-        if cmd == 'pdf':
-            getattr(builder, cmd)(args.style)
-        else:
-            getattr(builder, cmd)()
+        getattr(builder, cmd)()
 
 def _once(func):
     # An decorator that run a method only once
-    def warp(self, *args):
+    def warp(self):
         name = func.__name__
         if self.config.tab:
             name += '_' + self.config.tab
@@ -57,10 +52,7 @@ def _once(func):
             return
         full_name = 'd2lbook build ' + name
         tik = datetime.datetime.now()
-        if ("rst" in name or "pdf" in name) and len(args) > 0:
-            func(self, args[0])
-        else:
-            func(self)
+        func(self)
         logging.info('=== Finished "%s" in %s', full_name,
                      get_time_diff(tik, datetime.datetime.now()))
         self.done[name] = True
@@ -262,6 +254,7 @@ class Builder(object):
             assert False, 'Only zip/tar files can be extracted.'
         fp.extractall(folder)
 
+
     @_once
     def merge(self):
         assert self.config.tab == 'all'
@@ -315,7 +308,7 @@ class Builder(object):
         sd.generate_readme()
 
     @_once
-    def rst(self, style=None):
+    def rst(self):
         if self.config.tab == 'all':
             self.merge()
         else:
@@ -331,7 +324,7 @@ class Builder(object):
             mkdir(os.path.dirname(tgt))
             ipynb2rst(src, tgt)
         # Generate conf.py under rst folder
-        prepare_sphinx_env(self.config, style)
+        prepare_sphinx_env(self.config)
         self._copy_rst()
         self._copy_resources(self.config.src_dir, self.config.rst_dir)
 
@@ -393,10 +386,11 @@ class Builder(object):
             '-b linkcheck -c', self.config.rst_dir, self.sphinx_opts])
 
     @_once
-    def pdf(self, style=None):
-        self.rst(style)
-        if style:
+    def pdf(self):
+        self.rst()
+        if self.config.pdf['style']  is not None:
             self._download_extract_latex(self.config.pdf['latex_url'])
+
         run_cmd([
             'sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
             '-b latex -c', self.config.rst_dir, self.sphinx_opts])
