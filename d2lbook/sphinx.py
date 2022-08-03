@@ -5,14 +5,14 @@ from d2lbook import utils
 
 __all__ = ['prepare_sphinx_env']
 
-def prepare_sphinx_env(config, style):
-    env = SphinxEnv(config, style)
+def prepare_sphinx_env(config):
+    env = SphinxEnv(config)
     env.prepare_env()
 
 class SphinxEnv(object):
-    def __init__(self, config, style=None):
+    def __init__(self, config):
         self.config = config
-        if style == "cambridge":
+        if self.config.pdf['style'] == 'cambridge':
             self.pyconf = template.sphinx_conf_cambridge
         else:
             self.pyconf = template.sphinx_conf
