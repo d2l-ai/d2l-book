@@ -6,3 +6,4 @@
 .DS_Store
 build/
 .mypy_cache
+.eggs
