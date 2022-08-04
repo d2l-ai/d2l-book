@@ -225,7 +225,7 @@ class Builder(object):
         for src, tgt in updated_rst:
             copy(src, tgt)
         return rst_files
-    
+
     def _download_extract_latex(self, url, folder='latex_style', sha1_hash=None):
         os.makedirs(folder, exist_ok=True)
         fname = os.path.join(folder, url.split('/')[-1])
@@ -326,6 +326,9 @@ class Builder(object):
         # Generate conf.py under rst folder
         prepare_sphinx_env(self.config)
         self._copy_rst()
+
+        if self.config.pdf['style'] == 'cambridge':
+            self._download_extract_latex(self.config.pdf['latex_url'])
         self._copy_resources(self.config.src_dir, self.config.rst_dir)
 
         must_incl_rst_files = get_tgt_files_from_src_pattern(
@@ -388,19 +391,16 @@ class Builder(object):
     @_once
     def pdf(self):
         self.rst()
-        if self.config.pdf['style'] == 'cambridge':
-            self._download_extract_latex(self.config.pdf['latex_url'])
-
         run_cmd([
             'sphinx-build ', self.config.rst_dir, self.config.pdf_dir,
             '-b latex -c', self.config.rst_dir, self.sphinx_opts])
 
         script = self.config.pdf['post_latex']
         process_latex(self.config.tex_fname, script)
-        run_cmd(['cd', self.config.pdf_dir, '&& make'])        
+        run_cmd(['cd', self.config.pdf_dir, '&& make'])
         if self.config.tab != self.config.default_tab:
             p = self.config.project['name']
-            run_cmd(['cd', self.config.pdf_dir, '&& cp ', p+'.pdf', p+'-'+self.config.tab+'.pdf' ])        
+            run_cmd(['cd', self.config.pdf_dir, '&& cp ', p+'.pdf', p+'-'+self.config.tab+'.pdf' ])
 
     @_once
     def pkg(self):
