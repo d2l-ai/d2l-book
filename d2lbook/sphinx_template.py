@@ -214,7 +214,7 @@ latex_logo = 'LATEX_LOGO'
 
 latex_elements = {
 'papersize':'a4paper,prodtf,twoside',
-'figure_align': 'htbp', 
+'figure_align': 'htbp',
 'pointsize': '11pt',
 'fvset':r'''\fvset{fontsize=\small}''',
 'preamble': r'''
@@ -270,16 +270,16 @@ latex_elements = {
             {0.5em}{}[{\hspace{-1.65in}\raggedleft\includegraphics[width=35pc]{PT1secrule.eps}}]
 \titleformat{\subsection}{\Large\centering}%
             {\thesubsection}{0.5em}{}[{\color{gray}\titlerule[0.8pt]}]
-            
+
 % Code font style, for more font style, visit: https://tug.org/FontCatalogue/
 \setmonofont{Inconsolata}
-%\renewcommand\ttfamily{\sffamily} 
+%\renewcommand\ttfamily{\sffamily}
 
 % Resize all figures
 \let\ORIincludegraphics\includegraphics
 \renewcommand{\includegraphics}[2][]{\ORIincludegraphics[scale=0.75,#1]{#2}}
 % main text font style
-\usepackage{times} 
+\usepackage{times}
 
 % Rewrite table of contents
 \renewcommand\tableofcontents{\@restonecolfalse
@@ -343,7 +343,10 @@ latex_elements = {
 'makeindex':'\\makeindex'
 }
 
-latex_additional_files = ["static/latex_style/PT1/PT1.cls", "static/latex_style/PT1header.eps", "static/latex_style/PT1secrule.eps", "static/latex_style/PT1/PT1box.eps", "static/latex_style/PT1/PT1chrule.eps", "static/latex_style/PT1/multind.sty",  "static/latex_style/PT1/amsthm.sty", "static/latex_style/PT1/floatpag.sty", "static/latex_style/PT1/rotating.sty", "static/latex_style/PT1/myriad-pt1.sty", "static/latex_style/PT1/natbib.sty",  "static/latex_style/sphinxlatexstyleheadings.sty", "static/latex_style/sphinxlatexstylepage.sty", "static/latex_style/sphinxlatexindbibtoc.sty", "static/latex_style/sphinxmessages.sty", "static/latex_style/sphinxlatexobjects.sty", "static/latex_style/PT1/natbib.dtx", "static/latex_style/sphinxpackagefootnote.sty", "static/latex_style/sphinxlatexlists.sty"]
+
+latex_style_loc = "static/latex_style/"
+latex_fnames = ["PT1/PT1.cls", "PT1header.eps", "PT1secrule.eps", "PT1/PT1box.eps", "PT1/PT1chrule.eps", "PT1/multind.sty",  "PT1/amsthm.sty", "PT1/floatpag.sty", "PT1/rotating.sty", "PT1/myriad-pt1.sty", "PT1/natbib.sty",  "sphinxlatexstyleheadings.sty", "sphinxlatexstylepage.sty", "sphinxlatexindbibtoc.sty", "sphinxmessages.sty", "sphinxlatexobjects.sty", "PT1/natbib.dtx", "sphinxpackagefootnote.sty", "sphinxlatexlists.sty"]
+latex_additional_files = [latex_style_loc + fname for fname in latex_fnames]
 
 SPHINX_CONFIGS
 
@@ -648,7 +651,7 @@ div.mdl-tabs__tab-bar { justify-content: left; }
 }
 
 .mdl-tabs__tab.is-active {
-    background: rgb(0,0,0,.09);    
+    background: rgb(0,0,0,.09);
 }
 """
 
