@@ -226,7 +226,7 @@ class Builder(object):
             copy(src, tgt)
         return rst_files
 
-    def _download_extract_latex(self, url, folder='latex_style', sha1_hash=None):
+    def _download_extract_latex(self, url, folder='static/latex_style', sha1_hash=None):
         os.makedirs(folder, exist_ok=True)
         fname = os.path.join(folder, url.split('/')[-1])
         # Check if hit cache
