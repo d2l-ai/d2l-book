@@ -8,6 +8,9 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
+import zipfile
+import requests
 
 import nbformat
 import notedown
@@ -223,6 +226,35 @@ class Builder(object):
             copy(src, tgt)
         return rst_files
 
+    def _download_extract_latex(self, url, folder='static/latex_style', sha1_hash=None):
+        os.makedirs(folder, exist_ok=True)
+        fname = os.path.join(folder, url.split('/')[-1])
+        # Check if hit cache
+        if os.path.exists(fname) and sha1_hash:
+            sha1 = hashlib.sha1()
+            with open(fname, 'rb') as f:
+                while True:
+                    data = f.read(1048576)
+                    if not data:
+                        break
+                    sha1.update(data)
+            if sha1.hexdigest() == sha1_hash:
+                return fname
+        print(f'Downloading {fname} from {url}...')
+        r = requests.get(url, stream=True, verify=True)
+        with open(fname, 'wb') as f:
+            f.write(r.content)
+        base_dir = os.path.dirname(folder)
+        data_dir, ext = os.path.splitext(fname)
+        if ext == '.zip':
+            fp = zipfile.ZipFile(fname, 'r')
+        elif ext in ('.tar', '.gz'):
+            fp = tarfile.open(fname, 'r')
+        else:
+            assert False, 'Only zip/tar files can be extracted.'
+        fp.extractall(folder)
+
+
     @_once
     def merge(self):
         assert self.config.tab == 'all'
@@ -294,6 +326,9 @@ class Builder(object):
         # Generate conf.py under rst folder
         prepare_sphinx_env(self.config)
         self._copy_rst()
+
+        if self.config.pdf['style'] == 'cambridge':
+            self._download_extract_latex(self.config.pdf['latex_url'])
         self._copy_resources(self.config.src_dir, self.config.rst_dir)
 
         must_incl_rst_files = get_tgt_files_from_src_pattern(
@@ -362,10 +397,10 @@ class Builder(object):
 
         script = self.config.pdf['post_latex']
         process_latex(self.config.tex_fname, script)
-        run_cmd(['cd', self.config.pdf_dir, '&& make'])        
+        run_cmd(['cd', self.config.pdf_dir, '&& make'])
         if self.config.tab != self.config.default_tab:
             p = self.config.project['name']
-            run_cmd(['cd', self.config.pdf_dir, '&& cp ', p+'.pdf', p+'-'+self.config.tab+'.pdf' ])        
+            run_cmd(['cd', self.config.pdf_dir, '&& cp ', p+'.pdf', p+'-'+self.config.tab+'.pdf' ])
 
     @_once
     def pkg(self):

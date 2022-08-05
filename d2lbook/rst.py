@@ -110,7 +110,12 @@ def _process_rst(body):
                     break
                 j += 1
             i = j
+        elif line.startswith('.. code::'):
+            # reset LaTeX code-block rendering parameters
+            lines[i] = '.. raw:: latex\n\n   \\diilbookstyleinputcell\n\n' + lines[i]
         elif line.startswith('.. parsed-literal::'):
+            # reset LaTeX code-block rendering parameters
+            lines[i] = '.. raw:: latex\n\n   \\diilbookstyleoutputcell\n\n' + lines[i]
             # add a output class so we can add customized css
             lines[i] += '\n    :class: output'
             i += 1

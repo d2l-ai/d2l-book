@@ -6,13 +6,11 @@ with open('d2lbook/_version.py') as ver_file:
 requirements = [
     'jupyter',
     'regex',
-    'sphinx>=2.2.1',
+    'sphinx',
     'recommonmark',
-    'nbformat',
-    'nbconvert',
     'sphinxcontrib-bibtex==2.4.2', # >=2.2 to enable citet and citep
     'pybtex-apa-style',
-    'mu-notedown',
+    'd2l-notedown',
     'mxtheme>=0.3.17',
     'sphinxcontrib-svg2pdfconverter',
     'numpydoc',

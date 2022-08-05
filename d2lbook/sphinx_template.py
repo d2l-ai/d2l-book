@@ -51,9 +51,7 @@ latex_documents = [
 ]
 
 rsvg_converter_args = ['-z', '0.8']
-
 bibtex_bibfiles = ["BIBFILE"]
-
 latex_engine = 'xelatex' # for utf-8 supports
 latex_show_pagerefs = True
 latex_show_urls = 'footnote'
@@ -90,8 +88,6 @@ SANS_FONT
 MONO_FONT
 
 % Remove top header
-\usepackage[draft]{minted}
-\fvset{breaklines=true, breakanywhere=true}
 \setlength{\headheight}{13.6pt}
 \makeatletter
     \fancypagestyle{normal}{
@@ -102,9 +98,255 @@ MONO_FONT
         \fancyhead[LE,RO]{{\py@HeaderFamily }}
      }
 \makeatother
+% Defines macros for code-blocks styling
+\definecolor{d2lbookOutputCellBackgroundColor}{RGB}{255,255,255}
+\definecolor{d2lbookOutputCellBorderColor}{RGB}{0,0,0}
+\def\diilbookstyleoutputcell
+   {\sphinxcolorlet{VerbatimColor}{d2lbookOutputCellBackgroundColor}%
+    \sphinxcolorlet{VerbatimBorderColor}{d2lbookOutputCellBorderColor}%
+    \sphinxsetup{verbatimwithframe,verbatimborder=0.5pt}%
+   }%
+%
+\definecolor{d2lbookInputCellBackgroundColor}{rgb}{.95,.95,.95}
+\def\diilbookstyleinputcell
+   {\sphinxcolorlet{VerbatimColor}{d2lbookInputCellBackgroundColor}%
+    \sphinxsetup{verbatimwithframe=false,verbatimborder=0pt}%
+   }%
+% memo: as this mark-up uses macros not environments we have to reset all changed
+%       settings at each input cell to not inherit those or previous output cell
+% memo: Sphinx 5.1.0, 5.1.1 ignore verbatimwithframe Boolean, so for this
+%       reason we added an extra verbatimborder=0pt above.
+
 ''',
-'sphinxsetup': 'verbatimwithframe=false, verbatimsep=2mm, VerbatimColor={rgb}{.95,.95,.95}'
+
+'sphinxsetup': '''verbatimsep=2mm,
+                  VerbatimColor={rgb}{.95,.95,.95},
+                  VerbatimBorderColor={rgb}{.95,.95,.95},
+                  pre_border-radius=3pt,
+               ''',
 }
+# memo: Sphinx 5.1.0+ has a "feature" that if we don't set VerbatimColor to
+# some value via the sphinxsetup key or via \sphinxsetup raw macro, it
+# considers no colouring of background is required.  Above we by-passed usage
+# of \sphinxsetup, because \sphinxcolorlet was more convenient.  So we set
+# VerbatimColor in 'sphinxsetup' global key to work around that "feature".
+# The exact same applies with VerbatimBorderColor: it has to be set at least
+# once via 'sphinxsetup' or via \sphinxsetup raw macro else frame is black.
+#
+# memo: the Sphinx 5.1.0+ added pre_border-radius must be used in 'sphinxsetup'
+# (it can be modified later via extra  raw \sphinxsetup)
+# because at end of preamble Sphinx decides whether or not to load extra package
+# for rendering boxes with rounded corners.  N.B.: pre_border-radius is
+# unknown in Sphinx < 5.1.0 and will cause breakage.
+
+SPHINX_CONFIGS
+
+def setup(app):
+    # app.add_js_file('https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js')
+    app.add_js_file('d2l.js')
+    app.add_css_file('d2l.css')
+    import mxtheme
+    app.add_directive('card', mxtheme.CardDirective)
+"""
+
+sphinx_conf_cambridge = r"""
+import sys
+sys.path.insert(0, '..')
+sys.path.insert(0, '.')
+
+project = "TITLE"
+copyright = "COPYRIGHT"
+author = "AUTHOR"
+release = "RELEASE"
+
+extensions = [EXTENSIONS]
+
+templates_path = ['_templates']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+master_doc = 'INDEX'
+numfig = True
+numfig_secnum_depth = 2
+math_numfig = True
+math_number_all = True
+
+suppress_warnings = ['misc.highlighting_failure']
+linkcheck_ignore = [r'.*localhost.*']
+linkcheck_timeout = 5
+linkcheck_workers = 20
+
+autodoc_default_options = {
+    'undoc-members': True,
+    'show-inheritance': True,
+}
+
+
+html_theme = 'mxtheme'
+html_theme_options = {
+    'primary_color': 'blue',
+    'accent_color': 'deep_orange',
+    'header_links': [
+        HEADER_LINKS
+    ],
+    'show_footer': False
+}
+html_static_path = ['_static']
+
+html_favicon = 'FAVICON'
+
+html_logo = 'HTML_LOGO'
+
+latex_documents = [
+    (master_doc, "NAME.tex", "TITLE",
+     author, 'PT1'),
+]
+
+
+
+rsvg_converter_args = ['-z', '0.8']
+
+bibtex_bibfiles = ["BIBFILE"]
+
+latex_engine = 'xelatex' # for utf-8 supports
+latex_show_pagerefs = True
+latex_show_urls = 'footnote'
+
+latex_logo = 'LATEX_LOGO'
+
+latex_elements = {
+'papersize':'a4paper,prodtf,twoside',
+'figure_align': 'htbp',
+'pointsize': '11pt',
+'fvset':r'''\fvset{fontsize=\small}''',
+'preamble': r'''
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsthm}
+\usepackage{color}
+\usepackage[figuresright]{rotating}
+\usepackage{floatpag}
+\rotfloatpagestyle{empty}
+\usepackage{makeidx}
+\usepackage{natbib}
+\usepackage[parfill]{parskip}
+\usepackage{titlesec}
+\usepackage{multicol}
+\protected\def\sphinxcite{\citep}
+
+% Add bib to TOC
+\usepackage[nottoc,numbib]{tocbibind}
+
+% QR code sidenotes for all footnotes
+% Make sure to replace special charactors URL Encoding: https://www.urlencoder.io/learn/
+\usepackage{sidenotes}
+\usepackage{marginfix}
+\setlength\marginparpush{20pt}
+\usepackage{qrcode}
+\newcommand{\qrsidenote}[1]{
+\sidenote{
+\qrcode[height=8mm]{#1}}
+}
+\newcommand{\relaxfootnote}[1][]{}
+
+\makeatletter
+\let\ps@normal\ps@headings
+\let\sphinxthebibliography\thebibliography
+\let\sphinxtheindex\theindex
+\let\sphinxAtStartFootnote\!
+\let\footnote\relaxfootnote
+\let\sphinxnolinkurl\qrsidenote
+
+\sphinxDeclareColorOption{TitleColor}{{rgb}{0,0,0}}
+\sphinxDeclareColorOption{InnerLinkColor}{{rgb}{0,0,0}}
+\sphinxDeclareColorOption{OuterLinkColor}{{rgb}{0,0,0}}
+
+% So some large pictures won't get the full page
+\renewcommand{\floatpagefraction}{.8}
+
+% Set the page margin size
+\geometry{left=1.9in, right=1.4in, includefoot, bottom=0.5in}
+
+% Section and subsection style
+\titleformat{\section}{\LARGE\centering}{\thesection}%
+            {0.5em}{}[{\hspace{-1.65in}\raggedleft\includegraphics[width=35pc]{PT1secrule.eps}}]
+\titleformat{\subsection}{\Large\centering}%
+            {\thesubsection}{0.5em}{}[{\color{gray}\titlerule[0.8pt]}]
+
+% Code font style, for more font style, visit: https://tug.org/FontCatalogue/
+\setmonofont{Inconsolata}
+%\renewcommand\ttfamily{\sffamily}
+
+% Resize all figures
+\let\ORIincludegraphics\includegraphics
+\renewcommand{\includegraphics}[2][]{\ORIincludegraphics[scale=0.75,#1]{#2}}
+% main text font style
+\usepackage{times}
+
+% Rewrite table of contents
+\renewcommand\tableofcontents{\@restonecolfalse
+ \if@twocolumn\@restonecoltrue\onecolumn\fi
+ %\AJW@addtocfalse
+ \chapter*{\contentsname}
+ %\@starttoc{toc}
+ %\AJW@addtoctrue
+ \if@restonecol\twocolumn\fi
+  \@starttoc{toc}
+}
+
+\newcommand\cambridge{PT1}
+\theoremstyle{plain}% default
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem*{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{example-norules}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+\newtheorem*{case}{Case}
+
+
+\hyphenation{line-break line-breaks docu-ment triangle cambridge
+    amsthdoc cambridgemods baseline-skip author authors
+    cambridgestyle en-vir-on-ment polar astron-omers solu-tion}
+
+\setcounter{tocdepth}{1}
+
+\hbadness=99999  % or any number >=10000
+\vfuzz=30pt
+\hfuzz=30pt
+
+% Defines macros for code-blocks styling
+\definecolor{d2lbookOutputCellBackgroundColor}{RGB}{255,255,255}
+\definecolor{d2lbookOutputCellBorderColor}{RGB}{0,0,0}
+\def\diilbookstyleoutputcell
+   {\sphinxcolorlet{VerbatimColor}{d2lbookOutputCellBackgroundColor}%
+    \sphinxcolorlet{VerbatimBorderColor}{d2lbookOutputCellBorderColor}%
+    \sphinxsetup{verbatimwithframe,verbatimborder=0.5pt}%
+   }%
+%
+\definecolor{d2lbookInputCellBackgroundColor}{rgb}{.95,.95,.95}
+\def\diilbookstyleinputcell
+   {\sphinxcolorlet{VerbatimColor}{d2lbookInputCellBackgroundColor}%
+    \sphinxsetup{verbatimwithframe=false,verbatimborder=0pt}%
+   }%
+
+''',
+'sphinxsetup': '''verbatimsep=2mm,
+                  VerbatimColor={rgb}{.95,.95,.95},
+                  VerbatimBorderColor={rgb}{.95,.95,.95},
+                  pre_border-radius=3pt,
+               ''',
+'maketitle':'\\maketitle',
+'tableofcontents': '\\tableofcontents',
+'fncychap':'',
+'makeindex':'\\makeindex'
+}
+
+
+latex_style_loc = "static/latex_style/"
+latex_fnames = ["PT1/PT1.cls", "PT1header.eps", "PT1secrule.eps", "PT1/PT1box.eps", "PT1/PT1chrule.eps", "PT1/multind.sty",  "PT1/amsthm.sty", "PT1/floatpag.sty", "PT1/rotating.sty", "PT1/myriad-pt1.sty", "PT1/natbib.sty",  "sphinxlatexstyleheadings.sty", "sphinxlatexstylepage.sty", "sphinxlatexindbibtoc.sty", "sphinxmessages.sty", "sphinxlatexobjects.sty", "PT1/natbib.dtx", "sphinxpackagefootnote.sty", "sphinxlatexlists.sty"]
+latex_additional_files = [latex_style_loc + fname for fname in latex_fnames]
 
 SPHINX_CONFIGS
 
