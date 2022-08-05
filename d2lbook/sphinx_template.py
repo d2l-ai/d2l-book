@@ -104,7 +104,7 @@ MONO_FONT
 \def\diilbookstyleoutputcell
    {\sphinxcolorlet{VerbatimColor}{d2lbookOutputCellBackgroundColor}%
     \sphinxcolorlet{VerbatimBorderColor}{d2lbookOutputCellBorderColor}%
-    \sphinxsetup{verbatimwithframe,verbatimborder=0.5pt}%
+    \sphinxsetup{verbatimwithframe,verbatimborder=0pt}%
    }%
 %
 \definecolor{d2lbookInputCellBackgroundColor}{rgb}{.95,.95,.95}
