@@ -318,7 +318,7 @@ latex_elements = {
 
 % Defines macros for code-blocks styling
 \definecolor{d2lbookOutputCellBackgroundColor}{RGB}{255,255,255}
-\definecolor{d2lbookOutputCellBorderColor}{RGB}{0,0,0}
+\definecolor{d2lbookOutputCellBorderColor}{rgb}{.85,.85,.85}
 \def\diilbookstyleoutputcell
    {\sphinxcolorlet{VerbatimColor}{d2lbookOutputCellBackgroundColor}%
     \sphinxcolorlet{VerbatimBorderColor}{d2lbookOutputCellBorderColor}%
