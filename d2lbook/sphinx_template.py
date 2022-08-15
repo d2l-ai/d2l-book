@@ -267,7 +267,7 @@ latex_elements = {
 
 % Section and subsection style
 \titleformat{\section}{\LARGE\centering}{\thesection}%
-            {0.5em}{}[{\hspace{-1.65in}\raggedleft\includegraphics[width=35pc]{PT1secrule.eps}}]
+            {0.5em}{}[{\hspace{-1.65in}\raggedleft\includegraphics[width=35pc]{PT1secrule.pdf}}]
 \titleformat{\subsection}{\Large\centering}%
             {\thesubsection}{0.5em}{}[{\color{gray}\titlerule[0.8pt]}]
 
@@ -345,7 +345,7 @@ latex_elements = {
 
 
 latex_style_loc = "static/latex_style/"
-latex_fnames = ["PT1/PT1.cls", "PT1header.eps", "PT1secrule.eps", "PT1/PT1box.eps", "PT1/PT1chrule.eps", "PT1/multind.sty",  "PT1/amsthm.sty", "PT1/floatpag.sty", "PT1/rotating.sty", "PT1/myriad-pt1.sty", "PT1/natbib.sty",  "sphinxlatexstyleheadings.sty", "sphinxlatexstylepage.sty", "sphinxlatexindbibtoc.sty", "sphinxmessages.sty", "sphinxlatexobjects.sty", "PT1/natbib.dtx", "sphinxpackagefootnote.sty", "sphinxlatexlists.sty"]
+latex_fnames = ["PT1/PT1.cls", "PT1header.eps", "PT1secrule.pdf", "PT1/PT1box.eps", "PT1/PT1chrule.eps", "PT1/multind.sty",  "PT1/amsthm.sty", "PT1/floatpag.sty", "PT1/rotating.sty", "PT1/myriad-pt1.sty", "PT1/natbib.sty",  "sphinxlatexstyleheadings.sty", "sphinxlatexstylepage.sty", "sphinxlatexindbibtoc.sty", "sphinxmessages.sty", "sphinxlatexobjects.sty", "PT1/natbib.dtx", "sphinxpackagefootnote.sty", "sphinxlatexlists.sty"]
 latex_additional_files = [latex_style_loc + fname for fname in latex_fnames]
 
 SPHINX_CONFIGS
