@@ -21,7 +21,7 @@ def _write_header(f):
 
 def save_tab(notebooks: List[str], lib_fname: str, tab: str, default_tab: str):
     logging.info(
-        f'Matching with the pattern: "#@save", seaching for tab {tab}')
+        f'Matching with the pattern: "#@save", searching for tab {tab}')
     custom_header = []
     if os.path.exists(lib_fname):
         with open(lib_fname, 'r') as f:
