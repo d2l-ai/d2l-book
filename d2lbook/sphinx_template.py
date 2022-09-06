@@ -288,6 +288,7 @@ latex_elements = {
 \usepackage[parfill]{parskip}
 \usepackage{titlesec}
 \usepackage{multicol}
+\usepackage{fixmath}
 \protected\def\sphinxcite{\citep}
 
 % Add bib to TOC
@@ -324,14 +325,19 @@ latex_elements = {
 \geometry{left=1.9in, right=1.4in, includefoot, bottom=0.5in}
 
 % Section and subsection style
-\titleformat{\section}{\LARGE\centering}{\thesection}%
+\titleformat{\section}{\LARGE\centering\bfseries}{\thesection}%
             {0.5em}{}[{\hspace{-1.65in}\raggedleft\includegraphics[width=35pc]{PT1secrule.pdf}}]
-\titleformat{\subsection}{\Large\centering}%
+\titleformat{\subsection}{\Large\centering\bfseries}%
             {\thesubsection}{0.5em}{}[{\color{gray}\titlerule[0.8pt]}]
+\titleformat{\subsubsection}{\large\centering\bfseries}%
+            {\thesubsubsection}{0.5em}{}[{\color{gray}}]
 
 % Code font style, for more font style, visit: https://tug.org/FontCatalogue/
 \setmonofont{Inconsolata}
 %\renewcommand\ttfamily{\sffamily}
+
+% Replace mathbf with mathbold
+\renewcommand{\mathbf}[1]{\mathbold{#1}}
 
 % Resize all figures
 \let\ORIincludegraphics\includegraphics
