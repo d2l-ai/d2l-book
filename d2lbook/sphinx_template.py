@@ -336,9 +336,15 @@ latex_elements = {
 \setmonofont{Inconsolata}
 %\renewcommand\ttfamily{\sffamily}
 
-% Replace mathbf with customized mathbf
+% Rewrite mathbf
+% There are four parameters here: the encoding (OT1, T1, U), 
+% the font family (cmss, Computer Modern Sans Serif, cmr: Roman), 
+% the shape (n, i, b for bold, x for extended, or sometimes something else like small caps or upright italic) and the series. 
 \DeclareMathAlphabet      {\newmathbf}{OT1}{cmr}{bx}{n}
 \renewcommand{\mathbf}[1]{\newmathbf{#1}}
+% Rewrite mathsf
+\DeclareMathAlphabet      {\newmathsf}{OT1}{cmss}{m}{n}
+\renewcommand{\mathsf}[1]{\newmathsf{#1}}
 
 % Resize all figures
 \let\ORIincludegraphics\includegraphics
