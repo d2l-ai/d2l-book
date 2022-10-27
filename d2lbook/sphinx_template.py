@@ -340,6 +340,10 @@ latex_elements = {
 \DeclareMathAlphabet      {\newmathbf}{OT1}{cmr}{bx}{n}
 \renewcommand{\mathbf}[1]{\newmathbf{#1}}
 
+% Rewrite mathsf
+\DeclareMathAlphabet      {\newmathsf}{OT1}{cmss}{m}{n}
+\renewcommand{\mathsf}[1]{\newmathsf{#1}}
+
 % Resize all figures
 \let\ORIincludegraphics\includegraphics
 \renewcommand{\includegraphics}[2][]{\ORIincludegraphics[scale=0.75,#1]{#2}}
