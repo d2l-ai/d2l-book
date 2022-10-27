@@ -336,8 +336,9 @@ latex_elements = {
 \setmonofont{Inconsolata}
 %\renewcommand\ttfamily{\sffamily}
 
-% Replace mathbf with mathbold
-\renewcommand{\mathbf}[1]{\mathbold{#1}}
+% Replace mathbf with customized mathbf
+\DeclareMathAlphabet      {\newmathbf}{OT1}{cmr}{bx}{n}
+\renewcommand{\mathbf}[1]{\newmathbf{#1}}
 
 % Resize all figures
 \let\ORIincludegraphics\includegraphics
