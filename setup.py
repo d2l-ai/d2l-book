@@ -6,7 +6,7 @@ with open('d2lbook/_version.py') as ver_file:
 requirements = [
     'jupyter',
     'regex',
-    'sphinx==5.1.1', # >=5.1.1 to enable pre_border-radius in code cells; 5.3.0: search bar not working under https
+    'sphinx>=5.1.1', # >=5.1.1 to enable pre_border-radius in code cells
     'recommonmark',
     'sphinxcontrib-bibtex==2.4.2', # >=2.2 to enable citet and citep
     'pybtex-apa-style',
