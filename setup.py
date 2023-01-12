@@ -6,7 +6,7 @@ with open('d2lbook/_version.py') as ver_file:
 requirements = [
     'jupyter',
     'regex',
-    'sphinx>=5.1.1', # >=5.1.1 to enable pre_border-radius in code cells
+    'sphinx==5.3.0', # >=5.1.1 to enable pre_border-radius in code cells, 6.1.3 shows blank webpages
     'recommonmark',
     'sphinxcontrib-bibtex==2.4.2', # >=2.2 to enable citet and citep
     'pybtex-apa-style',
