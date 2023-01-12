@@ -27,7 +27,10 @@ setup(
     name='d2lbook',
     version=__version__,
     install_requires=requirements,
-    setup_requires=['sphinx>=2.2.1'],
+    setup_requires=[
+        'sphinx>=2.2.1',
+        'sphinxcontrib-applehelp==1.0.2' # 1.0.3 has ContextualVersionConflict issues
+    ],
     python_requires='>=3.8',
     author='D2L Developers',
     author_email='d2l.devs@gmail.com',
