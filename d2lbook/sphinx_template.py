@@ -276,6 +276,7 @@ latex_elements = {
 'pointsize': '11pt',
 'fvset':r'''\fvset{fontsize=\small}''',
 'preamble': r'''
+\PassOptionsToPackage{asymmetric}{geometry} %%DAT added assymetric option
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{amsthm}
@@ -322,7 +323,7 @@ latex_elements = {
 \renewcommand{\floatpagefraction}{.8}
 
 % Set the page margin size
-\geometry{left=1.9in, right=1.4in, includefoot, bottom=0.5in}
+\geometry{left=1.9in, right=1.4in, includefoot, bottom=2.25in} %%DAT changed bottom from 0.5in
 
 % Section and subsection style
 \titleformat{\section}{\LARGE\centering\bfseries}{\thesection}%
@@ -350,7 +351,10 @@ latex_elements = {
 \let\ORIincludegraphics\includegraphics
 \renewcommand{\includegraphics}[2][]{\ORIincludegraphics[scale=0.75,#1]{#2}}
 % main text font style
-\usepackage{times}
+%\usepackage{times}  %%DAT comment out and replace with newtx 
+\PassOptionsToPackage{full}{textcomp}  %%Fixed by Aston - fix textcomp/newtxtext option clash issue
+\usepackage{newtxtext}
+\usepackage{newtxmath}
 
 % Rewrite table of contents
 \renewcommand\tableofcontents{\@restonecolfalse
