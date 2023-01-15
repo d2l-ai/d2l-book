@@ -276,7 +276,6 @@ latex_elements = {
 'pointsize': '11pt',
 'fvset':r'''\fvset{fontsize=\small}''',
 'preamble': r'''
-\PassOptionsToPackage{asymmetric}{geometry} %%DAT added assymetric option
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{amsthm}
@@ -323,7 +322,7 @@ latex_elements = {
 \renewcommand{\floatpagefraction}{.8}
 
 % Set the page margin size
-\geometry{left=1.9in, right=1.4in, includefoot, bottom=2.25in} %%DAT changed bottom from 0.5in
+\geometry{left=1.9in, right=1.4in, includefoot, bottom=2.25in, asymmetric} %%DAT changed bottom from 0.5in, add asymmetric
 
 % Section and subsection style
 \titleformat{\section}{\LARGE\centering\bfseries}{\thesection}%
@@ -405,6 +404,53 @@ latex_elements = {
    {\sphinxcolorlet{VerbatimColor}{d2lbookInputCellBackgroundColor}%
     \sphinxsetup{verbatimwithframe=false,verbatimborder=0pt}%
    }%
+
+
+%DAT --BEGIN---
+% To add the section and chapter to the odd page running head, 
+% and to increase the indent in the toc to allow the subsection numbers more space
+
+% add \thesection\enskip to recto r/h
+\makeatletter
+\def\ps@headings{%
+\let\@mkboth=\markboth
+\def\@evenfoot{}%
+\def\@oddfoot {}%
+\def\@evenhead{\hspace*{-5pc}\hbox to 5pc{%
+\hfil\headandfootsize\seriffont\thepage\hfil\hspace{0.5pc}}%
+\hbox to \textwidth{%
+\hfill{\normalsize\seriffont%
+{\leftmark}}\hfill}%
+\hspace*{-35pc}{\thin@rule}%
+}%
+%
+\def\@oddhead{\hspace*{-5pc}\hbox to 5pc{%
+\hfil\headandfootsize\seriffont\thepage\hfil\hspace{0.5pc}}%
+\hbox to \textwidth{%
+\hfill\normalsize\seriffont
+{\thesection\enskip\rightmark}\hfill}%ajw added \thesection\enskip
+\hspace*{-35pc}{\thin@rule}%
+}%
+%\def\chaptermark##1{\markboth{##1}{##1}}%
+%\def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+% \thesection\enskip\fi ##1}}%
+\ifAJW@multisty
+\def\chaptermark##1{}%
+\def\sectionmark##1{}%
+\else
+\def\chaptermark##1{\markboth{##1}{##1}}%
+\def\sectionmark##1{\markright{\ifnum \c@secnumdepth >\z@
+\fi ##1}}%
+\fi
+}
+\ps@headings% you must include this command to get the original overwritten
+ 
+% change subsection tocindent 
+\renewcommand*\l@subsection {\@dottedtocline{2}{38pt}{51pt}} % changed the second number (it was 31pt)
+ 
+\makeatother
+%DAT --END---
+
 
 ''',
 'sphinxsetup': '''verbatimsep=2mm,
