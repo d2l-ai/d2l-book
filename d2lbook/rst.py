@@ -105,7 +105,8 @@ def _process_rst(body):
             assert line_i < len(line), "Original table label in rst file is assumed to be like Table: label:\ ``tab_intro_decade``"
             lines[i] = ".. _" + line[line_i+2:-2]  + ":"
             j = i
-            while j > 0 and not lines[j].startswith(":"):
+            directives_in_table_caption = [":cite", ":numref", "eqref"]
+            while j > 0 and (not lines[j].startswith(":") or lines[j].startswith(tuple(directives_in_table_caption))):
                 # Add indent for each line that is part of the table
                 if lines[j].startswith("+") or lines[j].startswith("|"):
                     lines[j] = "   " + lines[j]
