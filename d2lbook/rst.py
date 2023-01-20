@@ -69,6 +69,51 @@ def _process_rst(body):
         return indices
 
     lines = body.split('\n')
+
+    # Preprocess table directives (later processed by "move .. _label: before a image, a section, or a table" below)
+    #
+    # E.g., 
+    #
+    # :Dataset vs. computer memory and computational power
+    # 
+    # +----------+----------------------------------------+
+    # | Decade   | Dataset                                |
+    # +==========+========================================+
+    # | 1970     | 100 (Iris)                             |
+    # +----------+----------------------------------------+
+    #
+    # Table: label:\ ``tab_intro_decade``
+    #
+    # ->
+    #
+    # .. table:: Dataset vs. computer memory and computational power
+    # 
+    #    +----------+----------------------------------------+
+    #    | Decade   | Dataset                                |
+    #    +==========+========================================+
+    #    | 1970     | 100 (Iris)                             |
+    #    +----------+----------------------------------------+
+    # 
+    # .. _tab_intro_decade:    
+    i, deletes = 0, []
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith('Table: label:'):
+            line_i = 0
+            while line_i < len(line) and line[line_i] != '`':
+                line_i += 1
+            assert line_i < len(line), "Original table label in rst file is assumed to be like Table: label:\ ``tab_intro_decade``"
+            lines[i] = ".. _" + line[line_i+2:-2]  + ":"
+            j = i
+            while j > 0 and not lines[j].startswith(":"):
+                # Add indent for each line that is part of the table
+                if lines[j].startswith("+") or lines[j].startswith("|"):
+                    lines[j] = "   " + lines[j]
+                j -= 1
+            assert lines[j].startswith(":"), "Original table label in rst file is assumed to be like :Dataset vs. computer memory and computational power"
+            lines[j] = ".. table:: " + lines[j][1:]
+        i += 1
+
     # deletes: indices of lines to be deleted
     i, deletes = 0, []
     while i < len(lines):
