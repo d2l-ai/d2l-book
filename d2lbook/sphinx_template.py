@@ -292,7 +292,7 @@ latex_elements = {
 \protected\def\sphinxcite{\citep}
 
 % Add bib to TOC
-\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[nottoc]{tocbibind}
 
 % QR code sidenotes for all footnotes
 % Make sure to replace special charactors URL Encoding: https://www.urlencoder.io/learn/
