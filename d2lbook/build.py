@@ -130,6 +130,7 @@ class Builder(object):
         """Evaluate the notebooks and save them in a different folder"""
         # TODO(mli) if tabs is enabled, and a .md doesn't have the default tab,
         # then the current implementation will not run the eval.
+        os.environ['PYTHONWARNINGS']='ignore'
         eval_tik = datetime.datetime.now()
         notebooks, pure_markdowns, depends = self._find_md_files()
         depends_mtimes = get_mtimes(depends)
