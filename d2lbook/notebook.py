@@ -98,6 +98,7 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str,
             return None
 
     matched_tab = False
+    required_libs = []
     new_cells = []
     for i, cell in enumerate(nb.cells):
         new_cell = copy.deepcopy(cell)
@@ -109,6 +110,13 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str,
             if cell_tab == ['all'] or tab in cell_tab:
                 # drop the cell contains `%load_ext d2lbook.tab`
                 if '%load_ext d2lbook.tab' in new_cell.source:
+                    # Check if chapter specific libraries are required
+                    match = common.source_libs_required_pattern.search(new_cell.source)
+                    if match:
+                        # Extract the content within the square brackets
+                        libs_content = match.group(1)
+                        # Split the content into individual libraries
+                        required_libs = [lib.strip("'") for lib in libs_content.split(", ")]
                     continue
                 new_cell.metadata['tab'] = [tab]
                 matched_tab = True
@@ -126,6 +134,8 @@ def get_tab_notebook(nb: notebooknode.NotebookNode, tab: str,
                     lines = _clean_if_branches(lines, tab)
                     new_cell.source = '\n'.join(lines)
                 new_cells.append(new_cell)
+
+    nb.metadata['required_libs'] = required_libs
     if not matched_tab and any([cell.cell_type == 'code'
                                 for cell in nb.cells]):
         return None

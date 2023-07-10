@@ -159,9 +159,11 @@ def _get_installation_cell(notebook, libs):
                     m = lib2_re.search(l)
                 if m and m[1] in lib_dict:
                     find_libs.append(m[1])
-    if not find_libs:
+    if not find_libs and not notebook.metadata['required_libs']:
         return None
     install_str = ''
     for lib in set(find_libs):
         install_str += '!pip install ' + lib_dict[lib] + '\n'
+    for lib in notebook.metadata['required_libs']:
+        install_str += '!pip install ' + lib + '\n'
     return nbformat.v4.new_code_cell(source=install_str)
