@@ -8,6 +8,8 @@ rst_mark_pattern = re.compile(':([-\/\\._\w]+):(``[\ \*-\/\\\._\w]+``)?')
 # The source code tab mark
 source_tab_pattern = re.compile('# *@tab +([\w\,\ ]+)')
 source_tab_pattern_2 = re.compile('%%tab +([\w\,\ ]+)')
+# Pattern to match notebook specific required libraries
+source_libs_required_pattern = re.compile(r"# *required_libs\((.*?)\)")
 
 # Markdown code fence
 md_code_fence = re.compile('(```+) *(.*)')
