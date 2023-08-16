@@ -345,6 +345,9 @@ latex_elements = {
 % Rewrite mathsf
 \DeclareMathAlphabet      {\newmathsf}{OT1}{cmss}{m}{n}
 \renewcommand{\mathsf}[1]{\newmathsf{#1}}
+% Rewrite mathit
+\DeclareMathAlphabet      {\newmathit}{OT1}{cmr}{m}{it}
+\renewcommand{\mathit}[1]{\newmathit{#1}}
 
 % Resize all figures
 \let\ORIincludegraphics\includegraphics
