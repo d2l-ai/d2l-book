@@ -4,23 +4,23 @@ with open('d2lbook/_version.py') as ver_file:
     exec(ver_file.read())
 
 requirements = [
-    'jupyter==1.0.0',
-    'regex==2022.7.25',
+    'jupyter',
+    'regex',
     'sphinx==5.3.0', # >=5.1.1 to enable pre_border-radius in code cells, 6.1.3 shows blank webpages
-    'recommonmark==0.7.1',
+    'recommonmark',
     'sphinxcontrib-bibtex==2.4.2', # >=2.2 to enable citet and citep
-    'pybtex-apa-style==1.3',
-    'd2l-notedown==2.1.0',
-    'mxtheme==0.3.17',
-    'sphinxcontrib-svg2pdfconverter==1.2.0',
-    'numpydoc==1.4.0',
-    'awscli==1.25.44',
-    'gitpython==3.1.27',
-    'sphinx_autodoc_typehints==1.19.1',
-    'astor==0.8.1',
-    'yapf==0.32.0',
-    'fasteners==0.17.3',
-    'isort==5.10.1'
+    'pybtex-apa-style',
+    'd2l-notedown',
+    'mxtheme>=0.3.17',
+    'sphinxcontrib-svg2pdfconverter',
+    'numpydoc',
+    'awscli',
+    'gitpython',
+    'sphinx_autodoc_typehints',
+    'astor',
+    'yapf',
+    'fasteners',
+    'isort'
 ]
 
 setup(
