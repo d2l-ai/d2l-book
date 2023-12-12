@@ -2,25 +2,27 @@ from setuptools import setup, find_packages
 from d2lbook import __version__
 
 requirements = [
-    'jupyter',
-    'regex',
-    'sphinx>=2.2.1',
-    'recommonmark',
-    'nbformat',
-    'nbconvert',
-    'sphinxcontrib-bibtex<2.0.0',
-    'pybtex-apa-style',
-    'mu-notedown',
-    'mxtheme>=0.3.16',
-    'sphinxcontrib-svg2pdfconverter',
-    'numpydoc',
-    'awscli',
-    'gitpython',
-    'sphinx_autodoc_typehints',
-    'astor',
-    'yapf',
-    'fasteners',
-    'isort'
+   'jupyter',
+   'regex',
+   'sphinx==5.2.0',
+   'recommonmark',
+   'nbformat',
+   'nbconvert',
+   'sphinxcontrib-bibtex<2.0.0',
+   'pybtex-apa-style',
+   'mu-notedown',
+   'mxtheme>=0.3.16',
+   'sphinxcontrib-svg2pdfconverter',
+   'numpydoc',
+   'awscli',
+   'gitpython',
+   'sphinx_autodoc_typehints==1.10.1',
+   'astor',
+   'yapf',
+   'fasteners',
+   'isort',
+   'anyio==3.7.1',
+   'h11==0.12.0'
 ]
 
 setup(
