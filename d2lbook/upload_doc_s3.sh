@@ -41,6 +41,13 @@ aws s3 sync --exclude '*.*' --include '*.js' \
      --acl 'public-read' --quiet \
      $DIR $BUCKET
 
+# declare utf-8 for text files such as _sources/*.txt, otherwise browsers fall
+# back to a locale-dependent encoding (e.g. GBK) and show garbled text
+aws s3 sync --exclude '*.*' --include '*.txt' \
+     --content-type 'text/plain; charset=utf-8' \
+     --acl 'public-read' --quiet \
+     $DIR $BUCKET
+
 # use a large expire time for fonts
 aws s3 sync --exclude '*.*' --include '*.woff' --include '*.woff2' \
      --expires "$(date -d '+24 months' --utc +'%Y-%m-%dT%H:%M:%SZ')" \
